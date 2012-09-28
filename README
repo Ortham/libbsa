@@ -1,0 +1,12 @@
+libbsa
+
+A free software library for reading and writing BSA files.
+
+libbsa uses code from BSAOpt <https://github.com/Ethatron/bsaopt> to read and
+write BSA files.
+
+Note: This library is very much a work in progress and subject to significant
+change. It is not release-ready.
+
+libbsa is licensed under the GNU General Public License v3.0. For the full
+text of the license, see the included "LICENSE" file.
