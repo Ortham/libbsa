@@ -267,7 +267,7 @@ LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * re
 ------------------------------*/
 
 /* Replaces all the assets in the given BSA with the given assets. */
-LIBBSA uint32_t SetAssets(bsa_handle bh, const bsa_asset * assets) {
+LIBBSA uint32_t SetAssets(bsa_handle bh, const bsa_asset * assets, const size_t numAssets) {
 	if (bh == NULL || assets == NULL) //Check for valid args.
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
 
@@ -299,9 +299,45 @@ LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath) {
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** content) {
-	if (bh == NULL || contentPath == NULL || destPath == NULL || content == NULL) //Check for valid args.
+LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets) {
+	if (bh == NULL || contentPath == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+
+	//Free memory if in use.
+	if (bh->extAssets != NULL) {
+		for (size_t i=0; i < bh->extAssetsNum; i++)
+			delete [] bh->extAssets[i];
+		delete [] bh->extAssets;
+		bh->extAssets = NULL;
+		bh->extAssetsNum = 0;
+	}
+
+	//Init values.
+	*assetPaths = NULL;
+	*numAssets = 0;
+
+	if (bh->paths.empty())
+		return LIBBSA_OK;
+
+	//Build regex expression. Also check that it is valid.
+	boost::regex regex;
+	try {
+		regex = boost::regex(string(reinterpret_cast<const char*>(contentPath)), boost::regex::extended|boost::regex::icase);
+	} catch (boost::regex_error e) {
+		return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid regular expression passed.").code();
+	}
+
+	//We don't know how many matches there will be, so put all matches into a temporary buffer first.
+	boost::unordered_map<string, FileRecordData> temp;
+	for (boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.begin(), endIt = bh->paths.end(); it != endIt; ++it) {
+		if (boost::regex_match(it->first, regex))
+			temp.insert(*it);
+	}
+
+	if (temp.empty())
+		return LIBBSA_OK;
+
+	//Now iterate through temp hashmap, extracting each file.
 
 	return LIBBSA_OK;
 }
@@ -310,6 +346,8 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath) {
 	if (bh == NULL || assetPath == NULL || destPath == NULL) //Check for valid args.
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+
+	string assetStr = FixPath(assetPath);
 
 	return LIBBSA_OK;
 }

@@ -172,7 +172,7 @@ LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * re
 ------------------------------*/
 
 /* Replaces all the assets in the given BSA with the given assets. */
-LIBBSA uint32_t SetAssets(bsa_handle bh, const bsa_asset * assets);
+LIBBSA uint32_t SetAssets(bsa_handle bh, const bsa_asset * assets, const size_t numAssets);
 
 /* Adds a specific asset to a BSA. */
 LIBBSA uint32_t AddAsset(bsa_handle bh, const bsa_asset asset);
@@ -189,7 +189,7 @@ LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath);
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** content);
+LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets);
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
 LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath);
