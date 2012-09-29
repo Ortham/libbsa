@@ -46,7 +46,7 @@ int main() {
 	uint8_t * contentPath = reinterpret_cast<uint8_t *>("");
 	uint8_t ** assetPaths;
 
-	std::ofstream out("libstrings-tester.txt");
+	std::ofstream out("libbsa-tester.txt");
 	if (!out.good()){
 		std::cout << "File could not be opened for reading.";
 		exit(1);

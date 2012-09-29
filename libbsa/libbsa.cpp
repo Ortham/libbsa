@@ -189,6 +189,40 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 	if (bh == NULL || contentPath == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
 
+	//Free memory if in use.
+	if (bh->extAssets != NULL) {
+		for (size_t i=0; i < bh->extAssetsNum; i++)
+			delete [] bh->extAssets[i];
+		delete [] bh->extAssets;
+		bh->extAssets = NULL;
+		bh->extAssetsNum = 0;
+	}
+
+	//Init values.
+	*assetPaths = NULL;
+	*numAssets = 0;
+
+	if (bh->paths.empty())
+		return LIBBSA_OK;
+
+	bh->extAssetsNum = bh->paths.size();
+
+	try {
+		bh->extAssets = new uint8_t*[bh->extAssetsNum];
+		size_t i = 0;
+		for (boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.begin(), endIt = bh->paths.end(); it != endIt; ++it) {
+			bh->extAssets[i] = bh->GetString(it->first);
+			i++;
+		}
+	} catch (bad_alloc& /*e*/) {
+		return error(LIBBSA_ERROR_NO_MEM).code();
+	} catch (error& e) {
+		return e.code();
+	}
+
+	*assetPaths = bh->extAssets;
+	*numAssets = bh->extAssetsNum;
+
 	return LIBBSA_OK;
 }
 

@@ -48,4 +48,4 @@ externals/
 out/
 bin/
 ipch/
-libstrings-tester.txt
+libbsa-tester.txt

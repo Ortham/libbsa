@@ -24,14 +24,42 @@
 #ifndef LIBBSA_FORMAT_H
 #define LIBBSA_FORMAT_H
 
+#include "helpers.h"
 #include <stdint.h>
 #include <string>
+#include <boost/unordered_map.hpp>
 
-//#include <io/bsa.C>
-
-struct bsa_handle_int /*: public bsarchive*/ {
-	bsa_handle_int(std::string path);
-	~bsa_handle_int();
+struct FileRecordData {  //Who cares about the hash, anyway?
+	uint32_t size;
+	uint32_t offset;
 };
 
+struct bsa_handle_int {
+	bsa_handle_int(const std::string path);
+	~bsa_handle_int();
+
+	void Save(std::string path, const uint32_t flags);
+
+	uint8_t * GetString(std::string str);
+	
+	//File data.
+	uint32_t archiveFlags;
+	uint32_t fileFlags;
+	boost::unordered_map<std::string, FileRecordData> paths;
+
+	//Outputted strings/arrays.
+	uint8_t ** extAssets;
+	size_t extAssetsNum;
+
+	//For Windows-1252 <-> UTF-8 encoding conversion.
+	libbsa::Transcoder trans;
+	
+	private:
+		// Calculates a mini-hash.
+		uint32_t HashString(std::string str);
+		
+		//Implemented following the Python example here:
+		//<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
+		uint64_t CalcHash(std::string path);
+};
 #endif
