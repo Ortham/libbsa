@@ -27,6 +27,8 @@
 #include "exception.h"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <locale>
+#include <boost/regex.hpp>
+#include <boost/unordered_set.hpp>
 
 using namespace std;
 using namespace libbsa;
@@ -174,7 +176,7 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
 /* Closes the BSA associated with the given handle, freeing any memory 
    allocated during its use. */
 LIBBSA void CloseBSA(bsa_handle bh) {
-
+	delete bh;
 }
 
 
@@ -205,13 +207,31 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 	if (bh->paths.empty())
 		return LIBBSA_OK;
 
-	bh->extAssetsNum = bh->paths.size();
-
+	//Build regex expression. Also check that it is valid.
+	boost::regex regex;
 	try {
+		regex = boost::regex(string(reinterpret_cast<const char*>(contentPath)), boost::regex::extended|boost::regex::icase);
+	} catch (boost::regex_error e) {
+		return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid regular expression passed.").code();
+	}
+
+	//We don't know how many matches there will be, so put all matches into a temporary buffer first.
+	boost::unordered_set<string> temp;
+	for (boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.begin(), endIt = bh->paths.end(); it != endIt; ++it) {
+		if (boost::regex_match(it->first, regex))
+			temp.insert(it->first);
+	}
+
+	if (temp.empty())
+		return LIBBSA_OK;
+	
+	//Fill external array.
+	try {
+		bh->extAssetsNum = temp.size();
 		bh->extAssets = new uint8_t*[bh->extAssetsNum];
 		size_t i = 0;
-		for (boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.begin(), endIt = bh->paths.end(); it != endIt; ++it) {
-			bh->extAssets[i] = bh->GetString(it->first);
+		for (boost::unordered_set<string>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
+			bh->extAssets[i] = bh->GetString(*it);
 			i++;
 		}
 	} catch (bad_alloc& /*e*/) {
@@ -230,6 +250,13 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * result) {
 	if (bh == NULL || assetPath == NULL || result == NULL) //Check for valid args.
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+
+	string assetStr = FixPath(assetPath);
+
+	if (bh->paths.find(assetStr) != bh->paths.end())
+		*result = true;
+	else
+		*result = false;
 
 	return LIBBSA_OK;
 }

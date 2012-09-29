@@ -29,6 +29,7 @@
 #include <boost/spirit/include/support_istream_iterator.hpp>
 #include <boost/spirit/include/karma.hpp>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 
 #if _WIN32 || _WIN64
 #	include "Windows.h"
@@ -49,6 +50,16 @@ namespace libbsa {
 		}
 		p[length - 1] = '\0';
 		return p;
+	}
+
+	//Replaces all forwardslashes with backslashes, and lowercases letters.
+	string FixPath(const uint8_t * path) {
+		string out = string(reinterpret_cast<const char*>(path));
+		boost::to_lower(out);
+
+		boost::replace_all(out, "/", "\\");
+
+		return out;
 	}
 
 

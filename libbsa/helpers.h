@@ -32,6 +32,9 @@ namespace libbsa {
 	// std::string to null-terminated uint8_t string converter.
 	uint8_t * ToUint8_tString(std::string str);
 
+	//Replaces all forwardslashes with backslashes, and lowercases letters.
+	std::string FixPath(const uint8_t * path);
+
 	// converts between encodings.
 	class Transcoder {
 	private:

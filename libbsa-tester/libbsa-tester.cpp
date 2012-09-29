@@ -39,12 +39,14 @@ int main() {
 	std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
 	boost::filesystem::path::imbue(loc);
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Skyrim - Shaders.bsa");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Skyrim - Meshes.bsa");
+	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/clothes/monk/monkhood_f_0.nif");
 	bsa_handle bh;
 	uint32_t ret;
 	size_t numAssets;
-	uint8_t * contentPath = reinterpret_cast<uint8_t *>("");
+	uint8_t * contentPath = reinterpret_cast<uint8_t *>("meshes\\\\architecture\\\\.+\\.nif");
 	uint8_t ** assetPaths;
+	bool result;
 
 	std::ofstream out("libbsa-tester.txt");
 	if (!out.good()){
@@ -71,6 +73,13 @@ int main() {
 			out << '\t' << assetPaths[i] << endl;
 		}
 	}
+
+	out << "TESTING IsAssetInBSA(...)" << endl;
+	ret = IsAssetInBSA(bh, asset, &result);
+	if (ret != LIBBSA_OK)
+		out << '\t' << "IsAssetInBSA(...) failed! Return code: " << ret << endl;
+	else
+		out << '\t' << "IsAssetInBSA(...) successful! Is \"" << asset << "\" in BSA: " << result << endl;
 
 	out << "TESTING CloseBSA(...)" << endl;
 	CloseBSA(bh);
