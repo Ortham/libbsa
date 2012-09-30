@@ -41,6 +41,8 @@ struct bsa_handle_int {
 	void Save(std::string path, const uint32_t flags);
 
 	uint8_t * GetString(std::string str);
+
+	void Extract(uint32_t size, uint32_t offset, std::string outPath);
 	
 	//File data.
 	uint32_t archiveFlags;

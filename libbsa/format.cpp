@@ -58,13 +58,19 @@ struct Tes4Header {
 	uint32_t fileFlags;
 };
 
-struct FolderRecord {
+struct Tes3Header {
+	uint32_t version;
+	uint32_t hashOffset;
+	uint32_t fileCount;
+};
+
+struct Tes4FolderRecord {
 	uint64_t nameHash;	//Hash of folder name.
 	uint32_t count;		//Number of files in folder.
 	uint32_t offset;	//Offset to the fileRecords for this folder, including the folder name, from the beginning of the file.
 };
 
-struct FileRecord {
+struct Tes4FileRecord {
 	uint64_t nameHash;	//Hash of the filename.
 	uint32_t size;		//Size of the data. See TES4Mod wiki page for details.
 	uint32_t offset;	//Offset to the raw file data, from byte 0.
@@ -111,8 +117,61 @@ bsa_handle_int::bsa_handle_int(string path) :
 			isTES3BSA = true;
 		else if (magic != LIBBSA_BSA_MAGIC_TES4)
 			throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
-		
-		if (!isTES3BSA) {
+
+		if (isTES3BSA) {
+			in.seekg(0, ios_base::beg);  //Set back to beginning.
+			Tes3Header header;
+			in.read((char*)&header, sizeof(Tes3Header));
+
+			/* We want:
+			- file names
+			- file sizes
+			- raw data offsets
+
+			Load the FileRecordData (size,offset), filename offsets and filename records into memory, then work on them there.
+			*/
+			FileRecordData * fileRecordData;
+			uint32_t * filenameOffsets;
+			uint8_t * filenameRecords;
+			uint32_t filenameRecordsSize = header.hashOffset - sizeof(FileRecordData) * header.fileCount - sizeof(uint32_t) * header.fileCount;
+			try {
+				fileRecordData = new FileRecordData[header.fileCount];
+				in.read((char*)fileRecordData, sizeof(FileRecordData) * header.fileCount);
+				
+				filenameOffsets = new uint32_t[header.fileCount];
+				in.read((char*)filenameOffsets, sizeof(uint32_t) * header.fileCount);
+				
+				filenameRecords = new uint8_t[filenameRecordsSize];
+				in.read((char*)filenameRecords, sizeof(uint8_t) * filenameRecordsSize);
+			} catch (bad_alloc &e) {
+				throw error(LIBBSA_ERROR_NO_MEM);
+			}
+
+			in.close(); //No longer need the file open.
+
+			//All three arrays have the same ordering, so we just need to loop through one and look at the corresponding position in the other.
+			for (uint32_t i=0; i < header.fileCount; i++) {
+				FileRecordData fileData;
+				fileData.size = fileRecordData[i].size;
+				fileData.offset = fileRecordData[i].offset;
+
+				//Now we need to build the file path. First: file name.
+				//Find position of null pointer.
+				char * nptr = strchr((char*)(filenameRecords + filenameOffsets[i]), '\0');
+				if (nptr == NULL)
+					throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
+
+				string fileName = string((char*)(filenameRecords + filenameOffsets[i]), nptr - (char*)(filenameRecords + filenameOffsets[i]));
+
+				//Finally, add file path and object to unordered map.
+				paths.insert(pair<string, FileRecordData>(fileName, fileData));
+			}
+
+			delete [] fileRecordData;
+			delete [] filenameOffsets;
+			delete [] filenameRecords;
+
+		} else {
 			in.seekg(0, ios_base::beg);  //Set back to beginning.
 			
 			Tes4Header header;
@@ -124,16 +183,16 @@ bsa_handle_int::bsa_handle_int(string path) :
 			//Now we get to the real meat of the file.
 			//Folder records are followed by file records in blocks by folder name, followed by file names.
 			//File records and file names have the same ordering.
-			FolderRecord * folderRecords;
+			Tes4FolderRecord * folderRecords;
 			uint8_t * fileRecords;
 			//Three terms are the number of folder name string length bytes, the total length of folder strings and the total number of file records.
-			uint32_t startOfFileRecords = sizeof(Tes4Header) + sizeof(FolderRecord) * header.folderCount;
-			uint32_t fileRecordsSize = header.folderCount * sizeof(uint8_t) + header.totalFolderNameLength + sizeof(FileRecord) * header.fileCount;
+			uint32_t startOfFileRecords = sizeof(Tes4Header) + sizeof(Tes4FolderRecord) * header.folderCount;
+			uint32_t fileRecordsSize = header.folderCount * sizeof(uint8_t) + header.totalFolderNameLength + sizeof(Tes4FileRecord) * header.fileCount;
 			uint32_t startOfFileNames = startOfFileRecords + fileRecordsSize;
 			uint8_t * fileNames;	//A list of null-terminated filenames, one after another.
 			try {
-				folderRecords = new FolderRecord[header.folderCount];
-				in.read((char*)folderRecords, sizeof(FolderRecord) * header.folderCount);
+				folderRecords = new Tes4FolderRecord[header.folderCount];
+				in.read((char*)folderRecords, sizeof(Tes4FolderRecord) * header.folderCount);
 				
 				fileRecords = new uint8_t[fileRecordsSize];
 				in.read((char*)fileRecords, sizeof(uint8_t) * fileRecordsSize);
@@ -143,6 +202,8 @@ bsa_handle_int::bsa_handle_int(string path) :
 			} catch (bad_alloc &e) {
 				throw error(LIBBSA_ERROR_NO_MEM);
 			}
+
+			in.close(); //No longer need the file open.
 			
 			/* Now we have the folder records, file records and file names in memory. This gives us:
 			
@@ -177,9 +238,9 @@ bsa_handle_int::bsa_handle_int(string path) :
 				string folderName = string((char*)(fileRecords + startOfFileRecordBlock + 1), folderNameLength);
 				
 				
-				//Now loop through the file records for this folder. For each file record, look up the corresponding filename. Keep a counter outside the FolderRecord loop as the filename list is for all folders.
+				//Now loop through the file records for this folder. For each file record, look up the corresponding filename. Keep a counter outside the Tes4FolderRecord loop as the filename list is for all folders.
 				uint32_t j = startOfFileRecordBlock + 1 + folderNameLength + 1 + (uint32_t)fileRecords;
-				uint32_t max = j + folderRecords[i].count * sizeof(FileRecord);
+				uint32_t max = j + folderRecords[i].count * sizeof(Tes4FileRecord);
 				while (j < max) {
 					//Fill in file data.
 					FileRecordData fileData;
@@ -202,7 +263,7 @@ bsa_handle_int::bsa_handle_int(string path) :
 					//Finally, add file path and object to unordered map.
 					paths.insert(pair<string, FileRecordData>(filePath, fileData));
 				
-					j += sizeof(FileRecord);
+					j += sizeof(Tes4FileRecord);
 					fileNameListPos += fileName.length() + 1;
 				}
 			}
@@ -223,6 +284,11 @@ bsa_handle_int::~bsa_handle_int() {
 }
 
 void bsa_handle_int::Save(std::string path, const uint32_t flags) {
+
+}
+
+void bsa_handle_int::Extract(uint32_t size, uint32_t offset, std::string outPath) {
+	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
 
 }
 
