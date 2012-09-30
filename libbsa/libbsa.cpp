@@ -55,7 +55,8 @@ LIBBSA const uint32_t LIBBSA_ERROR_FILE_NOT_FOUND		= 3;
 LIBBSA const uint32_t LIBBSA_ERROR_FILE_WRITE_FAIL		= 4;
 LIBBSA const uint32_t LIBBSA_ERROR_FILE_READ_FAIL		= 5;
 LIBBSA const uint32_t LIBBSA_ERROR_BAD_STRING			= 6;
-LIBBSA const uint32_t LIBBSA_RETURN_MAX					= LIBBSA_ERROR_BAD_STRING;
+LIBBSA const uint32_t LIBBSA_ERROR_ZLIB_ERROR			= 7;
+LIBBSA const uint32_t LIBBSA_RETURN_MAX					= LIBBSA_ERROR_ZLIB_ERROR;
 /* No doubt there will be more... */
 
 /* BSA save flags */

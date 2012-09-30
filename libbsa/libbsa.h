@@ -86,6 +86,7 @@ LIBBSA extern const uint32_t LIBBSA_ERROR_FILE_NOT_FOUND;
 LIBBSA extern const uint32_t LIBBSA_ERROR_FILE_WRITE_FAIL;
 LIBBSA extern const uint32_t LIBBSA_ERROR_FILE_READ_FAIL;
 LIBBSA extern const uint32_t LIBBSA_ERROR_BAD_STRING;
+LIBBSA extern const uint32_t LIBBSA_ERROR_ZLIB_ERROR;
 LIBBSA extern const uint32_t LIBBSA_RETURN_MAX;
 /* No doubt there will be more... */
 

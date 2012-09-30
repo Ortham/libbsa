@@ -27,6 +27,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+#include <zlib.h>
 
 namespace fs = boost::filesystem;
 
@@ -312,7 +313,7 @@ void bsa_handle_int::Extract(FileRecordData data, std::string outPath) {
 		offset += sizeof(Tes3Header) + hashOffset + fileCount * sizeof(uint64_t);
 
 	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
-	if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && size & LIBBSA_FILE_COMPRESSED) || archiveFlags & ~LIBBSA_BSA_COMPRESSED) {
+/*	if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && size & LIBBSA_FILE_COMPRESSED) || archiveFlags & ~LIBBSA_BSA_COMPRESSED) {
 		//Just need to use size and offset to write to binary file stream.
 		uint8_t * buffer;
 
@@ -343,8 +344,48 @@ void bsa_handle_int::Extract(FileRecordData data, std::string outPath) {
 
 		delete [] buffer;
 	} else {
-		//Use zlib.
-	}
+*/		//Use zlib.
+		size -= sizeof(uint32_t);  //First uint32_t of data is the size of the uncompressed data.
+		uint32_t uncompressedSize;
+
+		//Open input and output streams.
+		ifstream in(filePath.c_str(), ios::binary);
+		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		//Get the uncompressed size.
+		in.seekg(offset, ios_base::beg);
+		in.read((char*)&uncompressedSize, sizeof(uint32_t));
+
+		//in and out are now at their starting locations for reading and writing, and we have the compressed and uncompressed size.
+		//Allocate memory for the compressed file and the uncompressed file.
+		uint8_t * compressedFile;
+		uint8_t * uncompressedFile;
+		try {
+			compressedFile = new uint8_t[size];
+			uncompressedFile = new uint8_t[uncompressedSize];
+		} catch (bad_alloc &e) {
+			throw error(LIBBSA_ERROR_NO_MEM);
+		}
+
+		in.read((char*)compressedFile, size);
+		in.close();
+
+		//We can use a pre-made utility function instead of having to mess around with zlib proper.
+		int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, size);
+		if (ret != Z_OK)
+			throw error(LIBBSA_ERROR_ZLIB_ERROR);
+
+		//Now output to file.
+		ofstream out(outPath.c_str(), ios::binary | ios::trunc);
+		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		out.write((char*)uncompressedFile, uncompressedSize);
+		out.close();
+
+		//Free memory.
+		delete [] compressedFile;
+		delete [] uncompressedFile;
+//	}
 }
 
 void bsa_handle_int::Extract(boost::unordered_map<std::string, FileRecordData>& data, std::string outPath) {

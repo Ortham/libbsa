@@ -39,14 +39,14 @@ int main() {
 	std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
 	boost::filesystem::path::imbue(loc);
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Foo\\Morrowind.bsa");
-	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
-	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Foo\\probe_journeyman_01.nif");
-	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Foo");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Program Files (x86)\\Steam\\steamapps\\common\\oblivion\\Data\\Oblivion - Textures - Compressed.bsa");
+	uint8_t * asset = reinterpret_cast<uint8_t *>("textures/architecture/anvil/altarcloth.dds");
+	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\altarcloth.dds.extract");
+	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads");
 	bsa_handle bh;
 	uint32_t ret;
 	size_t numAssets;
-	uint8_t * contentPath = reinterpret_cast<uint8_t *>("meshes\\\\m\\\\.+");
+	uint8_t * contentPath = reinterpret_cast<uint8_t *>(".+");
 	uint8_t ** assetPaths;
 	bool result;
 
@@ -64,7 +64,7 @@ int main() {
 		out << '\t' << "OpenBSA(...) failed! Return code: " << ret << endl;
 	else
 		out << '\t' << "OpenBSA(...) successful!" << endl;
-
+	/*
 	out << "TESTING GetAssets(...)" << endl;
 	ret = GetAssets(bh, contentPath, &assetPaths, &numAssets);
 	if (ret != LIBBSA_OK)
@@ -75,7 +75,7 @@ int main() {
 			out << '\t' << assetPaths[i] << endl;
 		}
 	}
-
+	*/
 	out << "TESTING IsAssetInBSA(...)" << endl;
 	ret = IsAssetInBSA(bh, asset, &result);
 	if (ret != LIBBSA_OK)
@@ -89,7 +89,7 @@ int main() {
 		out << '\t' << "ExtractAsset(...) failed! Return code: " << ret << endl;
 	else
 		out << '\t' << "ExtractAsset(...) successful!" << endl;
-
+	/*
 	out << "TESTING ExtractAssets(...)" << endl;
 	ret = ExtractAssets(bh, contentPath, destPath, &assetPaths, &numAssets);
 	if (ret != LIBBSA_OK)
@@ -100,7 +100,7 @@ int main() {
 			out << '\t' << assetPaths[i] << endl;
 		}
 	}
-
+	*/
 	out << "TESTING CloseBSA(...)" << endl;
 	CloseBSA(bh);
 
