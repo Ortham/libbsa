@@ -29,6 +29,7 @@
 #include <string>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
+#include <fstream>
 
 struct FileRecordData {  //Who cares about the hash, anyway?
 	uint32_t size;
@@ -75,5 +76,7 @@ struct bsa_handle_int {
 		//Implemented following the Python example here:
 		//<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
 		uint64_t CalcTes4Hash(std::string path);
+
+		void ExtractFromStream(std::ifstream& in, FileRecordData data, std::string outPath);
 };
 #endif

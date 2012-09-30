@@ -306,86 +306,13 @@ void bsa_handle_int::Extract(FileRecordData data, std::string outPath) {
 	if (fs::exists(outPath) || !fs::exists(fs::path(outPath).parent_path()))
 		throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
 
-	uint32_t size = data.size;
-	uint32_t offset = data.offset;
+	//Open input stream.
+	ifstream in(filePath.c_str(), ios::binary);
+	in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-	if (isTes3BSA)
-		offset += sizeof(Tes3Header) + hashOffset + fileCount * sizeof(uint64_t);
+	ExtractFromStream(in, data, outPath);
 
-	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
-/*	if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && size & LIBBSA_FILE_COMPRESSED) || archiveFlags & ~LIBBSA_BSA_COMPRESSED) {
-		//Just need to use size and offset to write to binary file stream.
-		uint8_t * buffer;
-
-		//We probably need to get rid of the compression flag from size though, it can't purely be byte size with it there.
-		if (!isTes3BSA && size & LIBBSA_FILE_COMPRESSED)
-			size ^= LIBBSA_FILE_COMPRESSED;
-
-		try {
-			buffer = new uint8_t[size];
-		} catch (bad_alloc &e) {
-			throw error(LIBBSA_ERROR_NO_MEM);
-		}
-
-		ifstream in(filePath.c_str(), ios::binary);
-		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-		in.seekg(offset, ios_base::beg);
-		in.read((char*)buffer, size);
-
-		in.close();
-
-		ofstream out(outPath.c_str(), ios::binary | ios::trunc);
-		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-		out.write((char*)buffer, size);
-
-		out.close();
-
-		delete [] buffer;
-	} else {
-*/		//Use zlib.
-		size -= sizeof(uint32_t);  //First uint32_t of data is the size of the uncompressed data.
-		uint32_t uncompressedSize;
-
-		//Open input and output streams.
-		ifstream in(filePath.c_str(), ios::binary);
-		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-		//Get the uncompressed size.
-		in.seekg(offset, ios_base::beg);
-		in.read((char*)&uncompressedSize, sizeof(uint32_t));
-
-		//in and out are now at their starting locations for reading and writing, and we have the compressed and uncompressed size.
-		//Allocate memory for the compressed file and the uncompressed file.
-		uint8_t * compressedFile;
-		uint8_t * uncompressedFile;
-		try {
-			compressedFile = new uint8_t[size];
-			uncompressedFile = new uint8_t[uncompressedSize];
-		} catch (bad_alloc &e) {
-			throw error(LIBBSA_ERROR_NO_MEM);
-		}
-
-		in.read((char*)compressedFile, size);
-		in.close();
-
-		//We can use a pre-made utility function instead of having to mess around with zlib proper.
-		int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, size);
-		if (ret != Z_OK)
-			throw error(LIBBSA_ERROR_ZLIB_ERROR);
-
-		//Now output to file.
-		ofstream out(outPath.c_str(), ios::binary | ios::trunc);
-		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-		out.write((char*)uncompressedFile, uncompressedSize);
-		out.close();
-
-		//Free memory.
-		delete [] compressedFile;
-		delete [] uncompressedFile;
-//	}
+	in.close();
 }
 
 void bsa_handle_int::Extract(boost::unordered_map<std::string, FileRecordData>& data, std::string outPath) {
@@ -393,7 +320,7 @@ void bsa_handle_int::Extract(boost::unordered_map<std::string, FileRecordData>& 
 	if (!fs::exists(outPath) || !fs::is_directory(outPath))
 		throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
 
-	//Open source BSA.
+	//Open the source BSA.
 	ifstream in(filePath.c_str(), ios::binary);
 	in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
@@ -406,41 +333,7 @@ void bsa_handle_int::Extract(boost::unordered_map<std::string, FileRecordData>& 
 		if (fs::exists(fullPath))
 			throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, fullPath.string());
 
-		uint32_t size = it->second.size;
-		uint32_t offset = it->second.offset;
-
-		if (isTes3BSA)
-			offset += sizeof(Tes3Header) + hashOffset + fileCount * sizeof(uint64_t);
-
-		//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
-		if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && size & LIBBSA_FILE_COMPRESSED) || archiveFlags & ~LIBBSA_BSA_COMPRESSED) {
-			//Just need to use size and offset to write to binary file stream.
-			uint8_t * buffer;
-
-			//We probably need to get rid of the compression flag from size though, it can't purely be byte size with it there.
-			if (!isTes3BSA && size & LIBBSA_FILE_COMPRESSED)
-				size ^= LIBBSA_FILE_COMPRESSED;
-
-			try {
-				buffer = new uint8_t[size];
-			} catch (bad_alloc &e) {
-				throw error(LIBBSA_ERROR_NO_MEM);
-			}
-
-			in.seekg(offset, ios_base::beg);
-			in.read((char*)buffer, size);
-
-			ofstream out(fullPath.c_str(), ios::binary | ios::trunc);
-			out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-			out.write((char*)buffer, size);
-
-			out.close();
-
-			delete [] buffer;
-		} else {
-			//Use zlib.
-		}
+		ExtractFromStream(in, it->second, outPath);
 	}
 
 	in.close();
@@ -500,4 +393,71 @@ uint64_t bsa_handle_int::CalcTes4Hash(std::string path) {
 uint8_t * bsa_handle_int::GetString(std::string str) {
 	str = trans.EncToUtf8(str);
 	return ToUint8_tString(str);
+}
+
+void bsa_handle_int::ExtractFromStream(ifstream& in, FileRecordData data, std::string outPath) {
+	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
+	if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && data.size & LIBBSA_FILE_COMPRESSED) || !(archiveFlags & LIBBSA_BSA_COMPRESSED)) {
+		//Just need to use size and offset to write to binary file stream.
+		uint8_t * buffer;
+
+		if (isTes3BSA)
+			data.offset += sizeof(Tes3Header) + hashOffset + fileCount * sizeof(uint64_t);
+		else if (data.size & LIBBSA_FILE_COMPRESSED)  //Remove compression flag from size to get actual size.
+			data.size ^= LIBBSA_FILE_COMPRESSED;
+
+		try {
+			buffer = new uint8_t[data.size];
+		} catch (bad_alloc &e) {
+			throw error(LIBBSA_ERROR_NO_MEM);
+		}
+
+		in.seekg(data.offset, ios_base::beg);
+		in.read((char*)buffer, data.size);
+
+		ofstream out(outPath.c_str(), ios::binary | ios::trunc);
+		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		out.write((char*)buffer, data.size);
+
+		out.close();
+
+		delete [] buffer;
+	} else {
+		//Use zlib.
+		//Get the uncompressed size.
+		uint32_t uncompressedSize;
+		in.seekg(data.offset, ios_base::beg);
+		in.read((char*)&uncompressedSize, sizeof(uint32_t));
+
+		//in and out are now at their starting locations for reading and writing, and we have the compressed and uncompressed size.
+		//Allocate memory for the compressed file and the uncompressed file.
+		uint8_t * compressedFile;
+		uint8_t * uncompressedFile;
+		data.size -= sizeof(uint32_t);  //First uint32_t of data is the size of the uncompressed data.
+		try {
+			compressedFile = new uint8_t[data.size];
+			uncompressedFile = new uint8_t[uncompressedSize];
+		} catch (bad_alloc &e) {
+			throw error(LIBBSA_ERROR_NO_MEM);
+		}
+
+		in.read((char*)compressedFile, data.size);
+
+		//We can use a pre-made utility function instead of having to mess around with zlib proper.
+		int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, data.size);
+		if (ret != Z_OK)
+			throw error(LIBBSA_ERROR_ZLIB_ERROR);
+
+		//Now output to file.
+		ofstream out(outPath.c_str(), ios::binary | ios::trunc);
+		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		out.write((char*)uncompressedFile, uncompressedSize);
+		out.close();
+
+		//Free memory.
+		delete [] compressedFile;
+		delete [] uncompressedFile;
+	}
 }

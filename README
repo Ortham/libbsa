@@ -10,3 +10,6 @@ change. It is not release-ready.
 
 libbsa is licensed under the GNU General Public License v3.0. For the full
 text of the license, see the included "LICENSE" file.
+
+zlib modifications:
+	build 'zlibvc', then 'zlibstat', removing ZLIB_WINAPI from its preprocessor definitions.
