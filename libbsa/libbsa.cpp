@@ -28,7 +28,6 @@
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <locale>
 #include <boost/regex.hpp>
-#include <boost/unordered_set.hpp>
 
 using namespace std;
 using namespace libbsa;
@@ -337,7 +336,30 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 	if (temp.empty())
 		return LIBBSA_OK;
 
-	//Now iterate through temp hashmap, extracting each file.
+	//Extract files.
+	try {
+		bh->Extract(temp, string(reinterpret_cast<const char*>(destPath)));
+	} catch (error& e) {
+		return e.code();
+	}
+
+	//Now iterate through temp hashmap, outputting filenames.
+	try {
+		bh->extAssetsNum = temp.size();
+		bh->extAssets = new uint8_t*[bh->extAssetsNum];
+		size_t i = 0;
+		for (boost::unordered_map<string, FileRecordData>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
+			bh->extAssets[i] = bh->GetString(it->first);
+			i++;
+		}
+	} catch (bad_alloc& /*e*/) {
+		return error(LIBBSA_ERROR_NO_MEM).code();
+	} catch (error& e) {
+		return e.code();
+	}
+
+	*assetPaths = bh->extAssets;
+	*numAssets = bh->extAssetsNum;
 
 	return LIBBSA_OK;
 }
@@ -348,6 +370,17 @@ LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uin
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
 
 	string assetStr = FixPath(assetPath);
+
+	boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.find(assetStr);
+
+	if (it == bh->paths.end())
+		return error(LIBBSA_ERROR_FILE_NOT_FOUND, assetStr).code();
+
+	try {
+		bh->Extract(it->second, string(reinterpret_cast<const char*>(destPath)));
+	} catch (error& e) {
+		return e.code();
+	}
 
 	return LIBBSA_OK;
 }

@@ -42,9 +42,14 @@ using namespace libbsa;
 */
 
 const uint32_t LIBBSA_BSA_MAGIC_TES4 = '\0ASB';  //Also for TES5, FO3 and probably FNV too.
+
 const uint32_t LIBBSA_BSA_VERSION_TES3 = 0x100;  //Yeah, MW's BSA version is higher than later games'.
 const uint32_t LIBBSA_BSA_VERSION_TES4 = 0x67;
 const uint32_t LIBBSA_BSA_VERSION_TES5 = 0x68;   //Also for FO3 and probably FNV too.
+
+const uint32_t LIBBSA_BSA_COMPRESSED = 0x0004;
+
+const uint32_t LIBBSA_FILE_COMPRESSED = 0x40000000;  //Reverses the existence of LIBBSA_BSA_COMPRESSED for the file if set.
 
 struct Tes4Header {
 	uint32_t field;
@@ -78,14 +83,15 @@ struct Tes4FileRecord {
 
 bsa_handle_int::bsa_handle_int(string path) :
 	extAssets(NULL),
-	extAssetsNum(0) {
+	extAssetsNum(0),
+	isTes3BSA(false),
+	filePath(path) {
 	
 	//Set transcoding up.
 	trans.SetEncoding(1252);
 
 	//Check if file exists.
 	if (fs::exists(path)) {
-		bool isTES3BSA = false;  //Morrowind BSAs have a different format.
 	
 		ifstream in(path.c_str(), ios::binary);
 		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
@@ -114,14 +120,17 @@ bsa_handle_int::bsa_handle_int(string path) :
 		in.read((char*)&magic, sizeof(uint32_t));
 		
 		if (magic == LIBBSA_BSA_VERSION_TES3)  //Magic is actually tes3 bsa version.
-			isTES3BSA = true;
+			isTes3BSA = true;
 		else if (magic != LIBBSA_BSA_MAGIC_TES4)
 			throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
 
-		if (isTES3BSA) {
+		if (isTes3BSA) {
 			in.seekg(0, ios_base::beg);  //Set back to beginning.
 			Tes3Header header;
 			in.read((char*)&header, sizeof(Tes3Header));
+
+			hashOffset = header.hashOffset;
+			fileCount = header.fileCount;
 
 			/* We want:
 			- file names
@@ -179,6 +188,10 @@ bsa_handle_int::bsa_handle_int(string path) :
 			
 			if ((header.version != LIBBSA_BSA_VERSION_TES4 && header.version != LIBBSA_BSA_VERSION_TES5) || header.offset != 36)
 				throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
+
+			//Record the file and archive flags.
+			fileFlags = header.fileFlags;
+			archiveFlags = header.archiveFlags;
 
 			//Now we get to the real meat of the file.
 			//Folder records are followed by file records in blocks by folder name, followed by file names.
@@ -287,13 +300,113 @@ void bsa_handle_int::Save(std::string path, const uint32_t flags) {
 
 }
 
-void bsa_handle_int::Extract(uint32_t size, uint32_t offset, std::string outPath) {
-	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
+void bsa_handle_int::Extract(FileRecordData data, std::string outPath) {
+	//Check if outPath exists, and if its parent exists.
+	if (fs::exists(outPath) || !fs::exists(fs::path(outPath).parent_path()))
+		throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
 
+	uint32_t size = data.size;
+	uint32_t offset = data.offset;
+
+	if (isTes3BSA)
+		offset += sizeof(Tes3Header) + hashOffset + fileCount * sizeof(uint64_t);
+
+	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
+	if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && size & LIBBSA_FILE_COMPRESSED) || archiveFlags & ~LIBBSA_BSA_COMPRESSED) {
+		//Just need to use size and offset to write to binary file stream.
+		uint8_t * buffer;
+
+		//We probably need to get rid of the compression flag from size though, it can't purely be byte size with it there.
+		if (!isTes3BSA && size & LIBBSA_FILE_COMPRESSED)
+			size ^= LIBBSA_FILE_COMPRESSED;
+
+		try {
+			buffer = new uint8_t[size];
+		} catch (bad_alloc &e) {
+			throw error(LIBBSA_ERROR_NO_MEM);
+		}
+
+		ifstream in(filePath.c_str(), ios::binary);
+		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		in.seekg(offset, ios_base::beg);
+		in.read((char*)buffer, size);
+
+		in.close();
+
+		ofstream out(outPath.c_str(), ios::binary | ios::trunc);
+		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		out.write((char*)buffer, size);
+
+		out.close();
+
+		delete [] buffer;
+	} else {
+		//Use zlib.
+	}
+}
+
+void bsa_handle_int::Extract(boost::unordered_map<std::string, FileRecordData>& data, std::string outPath) {
+	//Check if outPath exists and that it is a directory.
+	if (!fs::exists(outPath) || !fs::is_directory(outPath))
+		throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
+
+	//Open source BSA.
+	ifstream in(filePath.c_str(), ios::binary);
+	in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+	//Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
+	for (boost::unordered_map<string, FileRecordData>::iterator it = data.begin(), endIt = data.end(); it != endIt; ++it) {
+		//Create parent directories.
+		fs::path fullPath = fs::path(outPath) / it->first;
+		fs::create_directories(fullPath.parent_path());  //This creates any directories in the path that don't already exist.
+
+		if (fs::exists(fullPath))
+			throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, fullPath.string());
+
+		uint32_t size = it->second.size;
+		uint32_t offset = it->second.offset;
+
+		if (isTes3BSA)
+			offset += sizeof(Tes3Header) + hashOffset + fileCount * sizeof(uint64_t);
+
+		//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
+		if (isTes3BSA || (archiveFlags & LIBBSA_BSA_COMPRESSED && size & LIBBSA_FILE_COMPRESSED) || archiveFlags & ~LIBBSA_BSA_COMPRESSED) {
+			//Just need to use size and offset to write to binary file stream.
+			uint8_t * buffer;
+
+			//We probably need to get rid of the compression flag from size though, it can't purely be byte size with it there.
+			if (!isTes3BSA && size & LIBBSA_FILE_COMPRESSED)
+				size ^= LIBBSA_FILE_COMPRESSED;
+
+			try {
+				buffer = new uint8_t[size];
+			} catch (bad_alloc &e) {
+				throw error(LIBBSA_ERROR_NO_MEM);
+			}
+
+			in.seekg(offset, ios_base::beg);
+			in.read((char*)buffer, size);
+
+			ofstream out(fullPath.c_str(), ios::binary | ios::trunc);
+			out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+			out.write((char*)buffer, size);
+
+			out.close();
+
+			delete [] buffer;
+		} else {
+			//Use zlib.
+		}
+	}
+
+	in.close();
 }
 
 // Calculates a mini-hash.
-uint32_t bsa_handle_int::HashString(std::string str) {
+uint32_t bsa_handle_int::Tes4HashString(std::string str) {
 	uint32_t hash = 0;
 	for (size_t i=0, len=str.length(); i < len; i++) {
 		hash = 0x1003F * hash + str[i];
@@ -303,7 +416,7 @@ uint32_t bsa_handle_int::HashString(std::string str) {
 
 //Implemented following the Python example here:
 //<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
-uint64_t bsa_handle_int::CalcHash(std::string path) {
+uint64_t bsa_handle_int::CalcTes4Hash(std::string path) {
 	uint64_t hash1 = 0;
 	uint32_t hash2 = 0;
 	uint32_t hash3 = 0;
@@ -322,7 +435,7 @@ uint64_t bsa_handle_int::CalcHash(std::string path) {
 		if (len > 2) {
 			hash1 |= file[len - 2] << 8;
 			if (len > 3)
-				hash2 = HashString(file);
+				hash2 = Tes4HashString(file);
 		}
 	}
 	
@@ -336,7 +449,7 @@ uint64_t bsa_handle_int::CalcHash(std::string path) {
 		else if (ext == ".wav")
 			hash1 |= 0x80000000;
 	
-		hash3 = HashString(file);
+		hash3 = Tes4HashString(file);
 	}
 	
 	hash2 = hash2 + hash3;

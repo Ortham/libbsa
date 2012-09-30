@@ -39,12 +39,14 @@ int main() {
 	std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
 	boost::filesystem::path::imbue(loc);
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Morrowind.bsa");
-	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/clothes/monk/monkhood_f_0.nif");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Foo\\Morrowind.bsa");
+	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
+	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Foo\\probe_journeyman_01.nif");
+	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Foo");
 	bsa_handle bh;
 	uint32_t ret;
 	size_t numAssets;
-	uint8_t * contentPath = reinterpret_cast<uint8_t *>(".+");
+	uint8_t * contentPath = reinterpret_cast<uint8_t *>("meshes\\\\m\\\\.+");
 	uint8_t ** assetPaths;
 	bool result;
 
@@ -80,6 +82,24 @@ int main() {
 		out << '\t' << "IsAssetInBSA(...) failed! Return code: " << ret << endl;
 	else
 		out << '\t' << "IsAssetInBSA(...) successful! Is \"" << asset << "\" in BSA: " << result << endl;
+
+	out << "TESTING ExtractAsset(...)" << endl;
+	ret = ExtractAsset(bh, asset, extPath);
+	if (ret != LIBBSA_OK)
+		out << '\t' << "ExtractAsset(...) failed! Return code: " << ret << endl;
+	else
+		out << '\t' << "ExtractAsset(...) successful!" << endl;
+
+	out << "TESTING ExtractAssets(...)" << endl;
+	ret = ExtractAssets(bh, contentPath, destPath, &assetPaths, &numAssets);
+	if (ret != LIBBSA_OK)
+		out << '\t' << "ExtractAssets(...) failed! Return code: " << ret << endl;
+	else {
+		out << '\t' << "ExtractAssets(...) successful! Number of paths: " << numAssets << endl;
+		for (size_t i=0; i < numAssets; i++) {
+			out << '\t' << assetPaths[i] << endl;
+		}
+	}
 
 	out << "TESTING CloseBSA(...)" << endl;
 	CloseBSA(bh);

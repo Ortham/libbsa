@@ -59,6 +59,9 @@ namespace libbsa {
 
 		boost::replace_all(out, "/", "\\");
 
+		if (out[0] == '\\')
+			out = out.substr(1);
+
 		return out;
 	}
 

@@ -28,12 +28,14 @@
 #include <stdint.h>
 #include <string>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 struct FileRecordData {  //Who cares about the hash, anyway?
 	uint32_t size;
 	uint32_t offset;
 };
 
+//File data is written on load and save. All strings are Windows-1252 encoded.
 struct bsa_handle_int {
 	bsa_handle_int(const std::string path);
 	~bsa_handle_int();
@@ -42,12 +44,22 @@ struct bsa_handle_int {
 
 	uint8_t * GetString(std::string str);
 
-	void Extract(uint32_t size, uint32_t offset, std::string outPath);
+	void Extract(FileRecordData data, std::string outPath);
+
+	void Extract(boost::unordered_map<std::string, FileRecordData>& data, std::string outPath);
 	
-	//File data.
+	//Generic File data.
+	bool isTes3BSA;
+	std::string filePath;
+	boost::unordered_map<std::string, FileRecordData> paths;
+
+	//Tes4 file data.
 	uint32_t archiveFlags;
 	uint32_t fileFlags;
-	boost::unordered_map<std::string, FileRecordData> paths;
+
+	//Tes3 file data.
+	uint32_t hashOffset;
+	uint32_t fileCount;
 
 	//Outputted strings/arrays.
 	uint8_t ** extAssets;
@@ -58,10 +70,10 @@ struct bsa_handle_int {
 	
 	private:
 		// Calculates a mini-hash.
-		uint32_t HashString(std::string str);
+		uint32_t Tes4HashString(std::string str);
 		
 		//Implemented following the Python example here:
 		//<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
-		uint64_t CalcHash(std::string path);
+		uint64_t CalcTes4Hash(std::string path);
 };
 #endif
