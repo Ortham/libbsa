@@ -28,6 +28,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <zlib.h>
+#include <map>
+#include <sstream>
+#include <vector>
 
 namespace fs = boost::filesystem;
 
@@ -53,7 +56,7 @@ const uint32_t LIBBSA_BSA_COMPRESSED = 0x0004;
 const uint32_t LIBBSA_FILE_COMPRESSED = 0x40000000;  //Reverses the existence of LIBBSA_BSA_COMPRESSED for the file if set.
 
 struct Tes4Header {
-	uint32_t field;
+	uint32_t fileId;
 	uint32_t version;
 	uint32_t offset;
 	uint32_t archiveFlags;
@@ -80,6 +83,13 @@ struct Tes4FileRecord {
 	uint64_t nameHash;	//Hash of the filename.
 	uint32_t size;		//Size of the data. See TES4Mod wiki page for details.
 	uint32_t offset;	//Offset to the raw file data, from byte 0.
+};
+
+struct FileData {
+	string name;
+	string parent;
+	uint32_t size;
+	uint32_t offset;
 };
 
 bsa_handle_int::bsa_handle_int(string path) :
@@ -297,8 +307,303 @@ bsa_handle_int::~bsa_handle_int() {
 	}
 }
 
-void bsa_handle_int::Save(std::string path, const uint32_t flags) {
+void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32_t compression) {
+	//Version and compression have been validated.
+	if (version == LIBBSA_VERSION_TES3) {
+		//Build file header.
+		Tes3Header header;
+		header.version = LIBBSA_BSA_VERSION_TES3;
+		header.fileCount = paths.size();
+		//Can't set hashOffset until the size of the names array is known.
 
+		//All records apart from actual data are sorted by hash, so we need to calculate the hashes of all records, and put that into a map with their name strings.
+		//File data is stored alphabetically by filename, so make the unordered map ordered.
+		std::map<uint64_t, string> hashmap;
+		std::map<string, FileRecordData> fileList;
+		for (boost::unordered_map<string, FileRecordData>::iterator it = paths.begin(), endIt = paths.end(); it != endIt; ++it) {
+			uint64_t hash = CalcTes3Hash(it->first);
+			hashmap.insert(pair<uint64_t, string>(hash, it->first));
+			fileList.insert(*it);
+		}
+		//fileList will be the same as paths, but with updated offsets.
+		//hashmap will be used to get fileList data in hash order.
+
+		//Allocate memory for info blocks.
+		FileRecordData * fileRecordData;
+		uint32_t * filenameOffsets;
+		uint64_t * hashes;
+		//Can't allocate memory for filenames, because we don't know how long they are to be. Use a string buffer instead.
+		string filenameRecords;
+		try {
+			fileRecordData = new FileRecordData[header.fileCount];
+			filenameOffsets = new uint32_t[header.fileCount];
+			hashes = new uint64_t[header.fileCount];
+		} catch (bad_alloc &e) {
+			throw error(LIBBSA_ERROR_NO_MEM);
+		}
+
+		//Update the file data offsets by looping through the map and incrementing it with file sizes.
+		uint32_t fileDataOffset = 0;
+		for (map<string, FileRecordData>::iterator it = fileList.begin(), endIt = fileList.end(); it != endIt; ++it) {
+			it->second.offset = fileDataOffset;  //This results in the wrong offsets for 1185 files in Morrowind.bsa.
+			//All the other files are OK, only thing I can think of is that hashes are wrong.
+			fileDataOffset += it->second.size;
+		}
+
+		//file data, names and hashes are all done in hash order.
+		uint32_t filenameOffset = 0;
+		uint32_t i = 0;
+		for (map<uint64_t, string>::iterator it = hashmap.begin(), endIt = hashmap.end(); it != endIt; ++it) {
+			
+			//Find file record data in map.
+			map<string, FileRecordData>::iterator itr = fileList.find(it->second);
+			if (itr == fileList.end())
+				throw error(LIBBSA_ERROR_FILE_WRITE_FAIL);
+
+			//Set size and offset.
+			fileRecordData[i].size = itr->second.size;
+			fileRecordData[i].offset = itr->second.offset;
+			
+			//Set filename offset, and store filename.
+			filenameOffsets[i] = filenameOffset;
+			filenameRecords += it->second + '\0';
+			filenameOffset += it->second.length() + 1;
+			
+			hashes[i] = it->first;
+			i++;
+		}
+
+		//fileRecordData, filenameOffsets, hashes and filenameRecords are now complete.
+		//We can now calculate the header's hashOffset to complete it.
+		header.hashOffset = (sizeof(FileRecordData) + sizeof(uint32_t)) * header.fileCount + filenameRecords.length();
+
+		//Now open up the input and output streams and start reading/writing file data.
+		//Open out stream.
+		if (path == filePath)
+			path += ".new";  //Avoid read/write collisions.
+		ofstream out(path.c_str(), ios::binary | ios::trunc);
+		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		ifstream in(filePath.c_str(), ios::binary);
+		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		//Only thing left to do is to write out the completed BSA sections, then
+		//read the file data from the input and write it to the output.
+
+		//Write out completed BSA sections.
+		out.write((char*)&header, sizeof(Tes3Header));
+		out.write((char*)fileRecordData, sizeof(FileRecordData) * header.fileCount);
+		out.write((char*)filenameOffsets, sizeof(uint32_t) * header.fileCount);
+		out.write((char*)filenameRecords.data(), filenameRecords.length());
+		out.write((char*)hashes, sizeof(uint64_t) * header.fileCount);
+
+		//Now write out raw file data in alphabetical filename order.
+		for (map<string, FileRecordData>::iterator it = fileList.begin(), endIt = fileList.end(); it != endIt; ++it) {
+			//it->second.offset is the offset for the data in the new file. We don't need it though, because we're doing writes in sequence.
+			//We want the offset for the data in the old file.
+			boost::unordered_map<string, FileRecordData>::iterator itr = paths.find(it->first);
+
+			if (itr == paths.end())
+				throw error(LIBBSA_ERROR_FILE_WRITE_FAIL);
+
+			//Allocate memory for this file's data, read it in, write it out, then free memory.
+			uint8_t * fileData;
+			try {
+				fileData = new uint8_t[it->second.size];  //Doesn't matter where we get size from.
+			} catch (bad_alloc &e) {
+				throw error(LIBBSA_ERROR_NO_MEM);
+			}
+
+			//Read data in.
+			in.seekg(itr->second.offset + sizeof(Tes3Header) + header.hashOffset + header.fileCount * sizeof(uint64_t), ios_base::beg);
+			in.read((char*)fileData, it->second.size);
+
+			//Write data out.
+			out.write((char*)fileData, it->second.size);
+
+			//Free memory.
+			delete [] fileData;
+
+			//As Save() could be called at any point in the BSA handle's use, we need to ensure that the data is
+			//valid going foward.
+			itr->second.offset = it->second.offset;
+		}
+
+		out.close();
+		in.close();
+
+		//Now rename the output file.
+		if (fs::path(path).extension().string() == ".new") {
+			try {
+				fs::rename(path, fs::path(path).stem());
+			} catch (fs::filesystem_error& e) {
+				throw LIBBSA_ERROR_FILE_WRITE_FAIL;
+			}
+		}
+
+		//Update member vars.
+		isTes3BSA = true;
+		filePath = path;
+		hashOffset = header.hashOffset;
+		fileCount = header.fileCount;
+	} else {
+
+		///////////////////////////////
+		// Set header up
+		///////////////////////////////
+
+		Tes4Header header;
+
+		header.fileId = LIBBSA_BSA_MAGIC_TES4;
+
+		if (version == LIBBSA_VERSION_TES4)
+			header.version = LIBBSA_BSA_VERSION_TES4;
+		else if (version == LIBBSA_VERSION_TES5)
+			header.version = LIBBSA_BSA_VERSION_TES5;
+
+		header.offset = 36;
+
+		header.archiveFlags = archiveFlags;
+		if (compression == LIBBSA_COMPRESS_LEVEL_0 && header.archiveFlags & LIBBSA_BSA_COMPRESSED)
+			header.archiveFlags ^= LIBBSA_BSA_COMPRESSED;
+		else if (compression != LIBBSA_COMPRESS_LEVEL_0 && !(header.archiveFlags & LIBBSA_BSA_COMPRESSED))
+			header.archiveFlags |= LIBBSA_BSA_COMPRESSED;
+
+		//Need to sort folder and file names separately into hash-sorted maps before header.folderCount and name lengths can be set.
+		std::map<uint64_t, string> folderHashmap;
+		std::map<uint64_t, FileData> fileHashmap;
+		for (boost::unordered_map<string, FileRecordData>::iterator it = paths.begin(), endIt = paths.end(); it != endIt; ++it) {
+			string folder = fs::path(it->first).parent_path().string();
+			string file = fs::path(it->first).filename().string();
+
+			uint64_t folderHash = CalcTes4Hash(folder);
+			uint64_t fileHash = CalcTes4Hash(file);
+
+			FileData fd;
+			fd.name = file;
+			fd.parent = folder;
+			fd.size = it->second.size;
+			fd.offset = it->second.offset;
+
+			folderHashmap.insert(pair<uint64_t, string>(folderHash, folder));
+			fileHashmap.insert(pair<uint64_t, FileData>(fileHash, fd));
+		}
+		header.folderCount = folderHashmap.size();
+
+		header.fileCount = paths.size();
+
+		header.totalFolderNameLength = 0;
+		for (map<uint64_t, string>::iterator it = folderHashmap.begin(), endIt=folderHashmap.end(); it != endIt; ++it) {
+			header.totalFolderNameLength += it->second.length() + 1;
+		}
+
+		string fileNameBlock;
+		header.totalFileNameLength = 0;
+		for (map<uint64_t, FileData>::iterator it = fileHashmap.begin(), endIt=fileHashmap.end(); it != endIt; ++it) {
+			fileNameBlock += it->second.name + '\0';
+		}
+		header.totalFileNameLength = fileNameBlock.length();
+		
+		header.fileFlags = fileFlags;
+
+		/////////////////////////////
+		// Set folder record array
+		/////////////////////////////
+
+		/* Iterate through the folder hashmap.
+		   For each folder, scan the file hashmap for files with matching parent paths.
+		   For any such files, write out their nameHash, size and the offset at which their data can be found (calculated from the sum of previous sizes).
+		   Also prepend the length of the folder name and the folder name to this file data list.
+		   Once all matching files have been found, add their count and offset to the folder record stream.
+		*/
+
+		ostringstream folderRecords;
+		ostringstream fileRecordBlocks;
+		uint32_t fileRecordBlockOffset = header.totalFileNameLength;
+		uint32_t fileDataOffset = sizeof(Tes3Header) + sizeof(Tes4FolderRecord) * header.folderCount + header.totalFolderNameLength + header.folderCount + sizeof(Tes4FileRecord) * header.fileCount + header.totalFileNameLength;
+		vector<FileData> dataVec;
+		for (map<uint64_t, string>::iterator it = folderHashmap.begin(), endIt=folderHashmap.end(); it != endIt; ++it) {
+			size_t fileCount = 0;
+			uint8_t nameLength = it->second.length() + 1;
+
+			//Write folder name length, folder name to fileRecordBlocks stream.
+			fileRecordBlocks.write((char*)&nameLength, 1);
+			fileRecordBlocks.write((it->second + '\0').data(), nameLength);
+
+			for (map<uint64_t, FileData>::iterator itr = fileHashmap.begin(), endItr=fileHashmap.end(); itr != endItr; ++itr) {
+				if (itr->second.parent == it->second) {
+					//Write file hash, size and offset to fileRecordBlocks stream.
+					fileRecordBlocks.write((char*)&(itr->first), sizeof(uint64_t));
+					uint32_t size = itr->second.size;
+					itr->second.offset = fileDataOffset;
+					fileRecordBlocks.write((char*)&size, sizeof(uint32_t));
+					fileRecordBlocks.write((char*)&fileDataOffset, sizeof(uint32_t));
+					//Increment count and data offset.
+					fileCount++;
+					fileDataOffset += size;
+					//Add record data to vector for later ordered extraction.
+					dataVec.push_back(itr->second);
+				}
+			}
+
+			//Now write folder record.
+			folderRecords.write((char*)&(it->first), sizeof(uint64_t));
+			folderRecords.write((char*)&fileCount, sizeof(uint32_t));
+			folderRecords.write((char*)&fileRecordBlockOffset, sizeof(uint32_t));
+
+			//Increment fileRecordBlockOffset.
+			fileRecordBlockOffset = fileRecordBlocks.str().length();
+		}
+
+		////////////////////////
+		// Write out
+		////////////////////////
+
+		if (path == filePath)
+			path += ".new";  //Avoid read/write collisions.
+		ofstream out(path.c_str(), ios::binary | ios::trunc);
+		out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		out.write((char*)&header, sizeof(Tes4Header));
+		out.write(folderRecords.str().data(), sizeof(Tes4FolderRecord) * header.folderCount);
+		out.write(fileRecordBlocks.str().data(), fileRecordBlocks.str().length());
+		out.write(fileNameBlock.data(), header.totalFileNameLength);
+
+		ifstream in(filePath.c_str(), ios::binary);
+		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+		//Now write out raw file data in the same order it was listed in the FileRecordBlocks.
+		for (vector<FileData>::iterator it = dataVec.begin(), endIt = dataVec.end(); it != endIt; ++it) {
+			//Allocate memory for this file's data, read it in, write it out, then free memory.
+			uint8_t * fileData;
+			try {
+				fileData = new uint8_t[it->size];  //Doesn't matter where we get size from.
+			} catch (bad_alloc &e) {
+				throw error(LIBBSA_ERROR_NO_MEM);
+			}
+
+			//Read data in.
+			in.seekg(it->offset, ios_base::beg);
+			in.read((char*)fileData, it->size);
+
+			//Write data out.
+			out.write((char*)fileData, it->size);
+
+			//Free memory.
+			delete [] fileData;
+
+			//Update offset for this file in the paths map.
+			boost::unordered_map<string, FileRecordData>::iterator itr = paths.find(it->parent + '\\' + it->name);
+
+			if (itr == paths.end())
+				throw error(LIBBSA_ERROR_FILE_NOT_FOUND, it->parent + '\\' + it->name);
+
+			itr->second.offset = it->offset;
+		}
+
+		out.close();
+		in.close();
+	}
 }
 
 void bsa_handle_int::Extract(FileRecordData data, std::string outPath) {
@@ -357,17 +662,21 @@ uint64_t bsa_handle_int::CalcTes4Hash(std::string path) {
 
 	boost::to_lower(path);
 	const string ext = fs::path(path).extension().string();
-	const string file = fs::path(path).stem().string();
+	string file;
+	if (ext.empty())
+		file = fs::path(path).string();
+	else
+		file = fs::path(path).stem().string();
 	const size_t len = file.length(); 
 	
 	if (!file.empty()) {
 		hash1 =
-			file[len - 1]
-			| len << 16
-			| file[0] << 24;
+			(uint64_t)(file[len - 1])
+			+ ((uint64_t)(len) << 16)
+			+ ((uint64_t)(file[0]) << 24);
 		
 		if (len > 2) {
-			hash1 |= file[len - 2] << 8;
+			hash1 += ((uint64_t)(file[len - 2]) << 8);
 			if (len > 3)
 				hash2 = Tes4HashString(file);
 		}
@@ -375,19 +684,45 @@ uint64_t bsa_handle_int::CalcTes4Hash(std::string path) {
 	
 	if (!ext.empty()) {
 		if (ext == ".kf")
-			hash1 |= 0x80;
+			hash1 += 0x80;
 		else if (ext == ".nif")
-			hash1 |= 0x8000;
+			hash1 += 0x8000;
 		else if (ext == ".dds")
-			hash1 |= 0x8080;
+			hash1 += 0x8080;
 		else if (ext == ".wav")
-			hash1 |= 0x80000000;
-	
+			hash1 += 0x80000000;
+
 		hash3 = Tes4HashString(file);
 	}
 	
 	hash2 = hash2 + hash3;
 	return ((uint64_t)hash2 << 32) + hash1;
+}
+
+//Taken from: <http://www.uesp.net/wiki/Tes3Mod:BSA_File_Format#Hash_calculation>
+uint64_t bsa_handle_int::CalcTes3Hash(std::string path) {
+	size_t len = path.length();
+	uint32_t hash1 = 0;
+	uint32_t hash2 = 0;
+	unsigned l = path.length() >> 1;
+	unsigned sum, off, temp, i, n;
+
+	for (sum = off = i = 0; i < l; i++) {
+		sum ^= (((unsigned)(path[i])) << (off & 0x1F));
+		off += 8;
+	}
+	hash1 = sum;
+
+	for (sum = off = 0; i < len; i++) {
+		temp = (((unsigned)(path[i])) << (off & 0x1F));
+		sum ^= temp;
+		n = temp & 0x1F;
+		sum = (sum << (32 - n)) | (sum >> n);
+		off += 8;
+	}
+	hash2 = sum;
+
+	return ((uint64_t)hash1 << 32) + (uint64_t)hash2;
 }
 
 uint8_t * bsa_handle_int::GetString(std::string str) {

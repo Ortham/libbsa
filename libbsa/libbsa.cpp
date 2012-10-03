@@ -26,6 +26,7 @@
 #include "format.h"
 #include "exception.h"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
+#include <boost/filesystem.hpp>
 #include <locale>
 #include <boost/regex.hpp>
 
@@ -64,8 +65,6 @@ LIBBSA const uint32_t LIBBSA_RETURN_MAX					= LIBBSA_ERROR_ZLIB_ERROR;
 LIBBSA const uint32_t LIBBSA_VERSION_TES3				= 0x00000001;
 LIBBSA const uint32_t LIBBSA_VERSION_TES4				= 0x00000002;
 LIBBSA const uint32_t LIBBSA_VERSION_TES5				= 0x00000004;
-LIBBSA const uint32_t LIBBSA_VERSION_FO3				= 0x00000008;
-LIBBSA const uint32_t LIBBSA_VERSION_FNV				= 0x00000010;
 /* Use only one compression flag. */
 LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_0			= 0x00000020;
 LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_1			= 0x00000040;
@@ -77,10 +76,6 @@ LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_6			= 0x00000800;
 LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_7			= 0x00001000;
 LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_8			= 0x00002000;
 LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_9			= 0x00004000;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_MAX_QUICK	= 0x00008000;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_MAX_MAX		= 0x00010000;
-/* Use only one other flag. */
-LIBBSA const uint32_t LIBBSA_OTHER_FORCE_COMPRESSION	= 0x00020000;
 
 
 /*------------------------------
@@ -167,9 +162,51 @@ LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path) {
 LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flags) {
 	if (bh == NULL || path == NULL) //Check for valid args.
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
-	else if (flags == 0 /*|| ...*/)
-		return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid flags combination passed.").code();
+	
+	//Check that flags are valid.
+	uint32_t version = 0, compression = 0;
 
+		//First we need to see what flags are set.
+	if (flags & LIBBSA_VERSION_TES3 && !(flags & LIBBSA_COMPRESS_LEVEL_0))
+		return error(LIBBSA_ERROR_INVALID_ARGS, "Morrowind BSAs cannot be compressed.").code();
+
+
+	//Check for version flag duplication.
+	if (flags & LIBBSA_VERSION_TES3)
+		version = LIBBSA_VERSION_TES3;
+	if (flags & LIBBSA_VERSION_TES4) {
+		if (version > 0)
+			return error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.").code();
+		version = LIBBSA_VERSION_TES4;
+	}
+	if (flags & LIBBSA_VERSION_TES5) {
+		if (version > 0)
+			return error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.").code();
+		version = LIBBSA_VERSION_TES5;
+	}
+
+	//Now remove version flag from flags and check for compression flag duplication.
+	compression = flags ^ version;
+	if (!(
+		(compression & LIBBSA_COMPRESS_LEVEL_0 && !(compression & ~LIBBSA_COMPRESS_LEVEL_0))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_1 && !(compression & ~LIBBSA_COMPRESS_LEVEL_1))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_2 && !(compression & ~LIBBSA_COMPRESS_LEVEL_2))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_3 && !(compression & ~LIBBSA_COMPRESS_LEVEL_3))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_4 && !(compression & ~LIBBSA_COMPRESS_LEVEL_4))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_5 && !(compression & ~LIBBSA_COMPRESS_LEVEL_5))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_6 && !(compression & ~LIBBSA_COMPRESS_LEVEL_6))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_7 && !(compression & ~LIBBSA_COMPRESS_LEVEL_7))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_8 && !(compression & ~LIBBSA_COMPRESS_LEVEL_8))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_9 && !(compression & ~LIBBSA_COMPRESS_LEVEL_9))
+		))
+		return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.").code();	
+/*
+	try {
+		bh->Save(string(reinterpret_cast<const char *>(path)), version, compression);
+	} catch (error& e) {
+		return e.code();
+	}
+*/
 	return LIBBSA_OK;
 }
 

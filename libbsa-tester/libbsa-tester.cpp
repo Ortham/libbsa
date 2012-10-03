@@ -39,7 +39,8 @@ int main() {
 	std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
 	boost::filesystem::path::imbue(loc);
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Program Files (x86)\\Steam\\steamapps\\common\\oblivion\\Data\\Oblivion - Textures - Compressed.bsa");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Program Files (x86)\\Steam\\steamapps\\common\\oblivion\\Data\\All Natural.bsa");
+	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\AN.bsa");
 	uint8_t * asset = reinterpret_cast<uint8_t *>("textures/architecture/anvil/altarcloth.dds");
 	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\altarcloth.dds.extract");
 	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads");
@@ -76,7 +77,7 @@ int main() {
 		}
 	}
 	*/
-	out << "TESTING IsAssetInBSA(...)" << endl;
+/*	out << "TESTING IsAssetInBSA(...)" << endl;
 	ret = IsAssetInBSA(bh, asset, &result);
 	if (ret != LIBBSA_OK)
 		out << '\t' << "IsAssetInBSA(...) failed! Return code: " << ret << endl;
@@ -101,6 +102,14 @@ int main() {
 		}
 	}
 	*/
+
+	out << "TESTING SaveBSA(...)" << endl;
+	ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES4 | LIBBSA_COMPRESS_LEVEL_0);
+	if (ret != LIBBSA_OK)
+		out << '\t' << "SaveBSA(...) failed! Return code: " << ret << endl;
+	else
+		out << '\t' << "SaveBSA(...) successful!" << endl;
+
 	out << "TESTING CloseBSA(...)" << endl;
 	CloseBSA(bh);
 

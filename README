@@ -1,15 +1,92 @@
 libbsa
+======
 
-A free software library for reading and writing BSA files.
+libbsa is a free software library for reading and writing BSA files.
 
-libbsa uses code from BSAOpt <https://github.com/Ethatron/bsaopt> to read and
-write BSA files.
+Please see the HTML readme file at libbsa-readme.html for
+more information.
 
-Note: This library is very much a work in progress and subject to significant
-change. It is not release-ready.
 
-libbsa is licensed under the GNU General Public License v3.0. For the full
-text of the license, see the included "LICENSE" file.
+Build Instructions
+==================
 
-zlib modifications:
-	build 'zlibvc', then 'zlibstat', removing ZLIB_WINAPI from its preprocessor definitions.
+These instructions assume you are building on Windows. No Windows-specific code
+is used to the best of my knowledge, however, building on other platforms is 
+untested.
+
+All paths are given relative to the top level of the libstrings source code, 
+ie. the folder in which this readme lies.
+
+Requirements:
+
+  * Microsoft Visual C++ 2010 Express Edition
+    - <http://www.microsoft.com/visualstudio/en-us/products/2010-editions/visual-cpp-express>
+	- Proffesional Edition will also work.
+  * Boost C++ Libraries
+    - <http://sourceforge.net/projects/boost/files/boost/>
+	- Download the latest 7-zipped source code.
+	- Tested with v1.51.0.
+  * UTF8-CPP
+    - <http://sourceforge.net/projects/utfcpp/>
+	- Download the latest zipped v2.x source code.
+	- Tested with v2.3.2.
+  * zlib
+    - <http://zlib.net>
+	- Download the latest source code.
+	- Tested with v1.2.7.
+	
+	
+Preparing Requirements:
+
+  1. Install Microsoft Visual C++ 2010 if you haven't already.
+  2. Create an 'externals' folder in the top-level folder of the libstrings
+     source, beside this readme file.
+  3. Create a 'utf8' folder inside the 'externals' folder.
+  4. Place the folders inside the UTF8-CPP archive you downloaded (should be 
+     'source', 'doc') into the 'utf8' folder.
+  5. Prepare Boost (see instructions below).
+  6. Prepare zlib (see instructions below).
+  
+  Preparing Boost:
+  
+    1. Create a 'boost' folder inside your 'externals' folder.
+	2. Extract the downloaded Boost archive to your 'boost' folder, so that 
+	   (for example) 'b2.exe' is at 'externals/boost/b2.exe'.
+	3. Start a Command Prompt and cd to 'externals/boost'.
+	4. Run 'bootstrap.bat' from the Command Prompt window.
+	5. Run 'b2 --toolset=msvc-10.0 --build-type=complete stage' from the 
+	   Command Prompt. This will take a long time.
+	6. Rename 'externals/boost/stage/lib' to 'externals/boost/stage/lib-32'.
+	7. To build 64 bit binaries:
+	  a. Run 
+	    'b2 --toolset=msvc-10.0 --build-type=complete --address-model=64 stage' 
+		from the Command Prompt. This will take a long time.
+	  b. Rename 'externals/boost/stage/lib' to 'externals/boost/stage/lib-64'.
+	  
+  Preparing zlib:
+  
+    1. Create a 'zlib' folder inside your 'externals' folder.
+	2. Extract the downloaded zlib archive to your 'zlib' folder, so that
+	   (for example) 'zlib.h' is at 'externals/zlib/zlib.h'.
+	3. Open 'externals/zlib/contrib/vstudio/vc10/zlibvc.sln' in Microsoft
+	   Visual C++ 2010.
+	4. Remove 'ZLIB_WINAPI' from the 'zlibstat' preprocessor definitions.
+	5. Select the build architecture, and set build type to 'Release'.
+	6. Build 'zlibvc'.
+	7. Build 'zlibstat'.
+	  
+
+Building libstrings:
+
+  1. Open the 'libstrings.sln' file in Visual C++ 2010.
+  2. Set the build configuration, selecting build type and architecture:
+    - 'Release' will build the library as a DLL.
+	- 'StaticRelease' will build the library as a static .lib library.
+  3. Select Build->Build Solution to build the library and the tester 
+     application. The tester application is not necessary for use of
+	 the library, but it takes seconds to build any may serve as a useful 
+	 example.
+  4. Binaries are located in 'bin/<type>-<architecture>', eg. 
+     'bin/StaticRelease-32'.
+	 
+	 

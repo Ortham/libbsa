@@ -94,12 +94,10 @@ LIBBSA extern const uint32_t LIBBSA_RETURN_MAX;
 /* Use only one version flag. */
 LIBBSA extern const uint32_t LIBBSA_VERSION_TES3;
 LIBBSA extern const uint32_t LIBBSA_VERSION_TES4;
-LIBBSA extern const uint32_t LIBBSA_VERSION_TES5;
-LIBBSA extern const uint32_t LIBBSA_VERSION_FO3;
-LIBBSA extern const uint32_t LIBBSA_VERSION_FNV;
+LIBBSA extern const uint32_t LIBBSA_VERSION_TES5;  //Use for Fallout 3 and Fallout: New Vegas too.
 /* Use only one compression flag. */
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_0;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_1;
+LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_0;  //No compression.
+LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_1;  //Least compression.
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_2;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_3;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_4;
@@ -107,11 +105,7 @@ LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_5;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_6;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_7;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_8;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_9;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_MAX_QUICK;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_MAX_MAX;
-/* Use only one other flag. */
-LIBBSA extern const uint32_t LIBBSA_OTHER_FORCE_COMPRESSION;
+LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_9;  //Most compression.
 
 
 /*------------------------------

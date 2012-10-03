@@ -25,16 +25,10 @@
 #include "libbsa.h"
 #include "exception.h"
 #include <sstream>
+#include <fstream>
 #include <source/utf8.h>
-#include <boost/spirit/include/support_istream_iterator.hpp>
-#include <boost/spirit/include/karma.hpp>
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
-
-#if _WIN32 || _WIN64
-#	include "Windows.h"
-#	include "Shlobj.h"
-#endif
+#include <boost/crc.hpp>
 
 using namespace std;
 
@@ -63,6 +57,23 @@ namespace libbsa {
 			out = out.substr(1);
 
 		return out;
+	}
+
+	//Calculate the CRC of the given file for comparison purposes.
+	uint32_t GetCrc32(const string filename) {
+		uint32_t chksum = 0;
+		static const size_t buffer_size = 8192;
+		char buffer[buffer_size];
+		ifstream ifile(filename.c_str(), ios::binary);
+		boost::crc_32_type result;
+		if (ifile.good()) {
+			do {
+				ifile.read(buffer, buffer_size);
+				result.process_bytes(buffer, ifile.gcount());
+			} while (ifile);
+			chksum = result.checksum();
+		}
+        return chksum;
 	}
 
 

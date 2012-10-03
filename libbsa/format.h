@@ -41,7 +41,7 @@ struct bsa_handle_int {
 	bsa_handle_int(const std::string path);
 	~bsa_handle_int();
 
-	void Save(std::string path, const uint32_t flags);
+	void Save(std::string path, const uint32_t version, const uint32_t compression);
 
 	uint8_t * GetString(std::string str);
 
@@ -76,6 +76,8 @@ struct bsa_handle_int {
 		//Implemented following the Python example here:
 		//<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
 		uint64_t CalcTes4Hash(std::string path);
+
+		uint64_t CalcTes3Hash(std::string path);
 
 		void ExtractFromStream(std::ifstream& in, FileRecordData data, std::string outPath);
 };

@@ -26,7 +26,6 @@
 
 #include <string>
 #include <boost/unordered_map.hpp>
-#include <boost/filesystem.hpp>
 
 namespace libbsa {
 	// std::string to null-terminated uint8_t string converter.
@@ -34,6 +33,8 @@ namespace libbsa {
 
 	//Replaces all forwardslashes with backslashes, and lowercases letters.
 	std::string FixPath(const uint8_t * path);
+
+	uint32_t GetCrc32(const std::string filename);
 
 	// converts between encodings.
 	class Transcoder {
