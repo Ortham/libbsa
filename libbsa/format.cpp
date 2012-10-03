@@ -497,13 +497,11 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 			header.totalFolderNameLength += it->second.length() + 1;
 		}
 
-		string fileNameBlock;
 		header.totalFileNameLength = 0;
 		for (map<uint64_t, FileData>::iterator it = fileHashmap.begin(), endIt=fileHashmap.end(); it != endIt; ++it) {
-			fileNameBlock += it->second.name + '\0';
+			header.totalFileNameLength += it->second.name.length() + 1;
 		}
-		header.totalFileNameLength = fileNameBlock.length();
-		
+
 		header.fileFlags = fileFlags;
 
 		/////////////////////////////
@@ -519,6 +517,7 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 
 		ostringstream folderRecords;
 		ostringstream fileRecordBlocks;
+		string fileNameBlock;
 		uint32_t fileRecordBlockOffset = header.totalFileNameLength;
 		uint32_t fileDataOffset = sizeof(Tes3Header) + sizeof(Tes4FolderRecord) * header.folderCount + header.totalFolderNameLength + header.folderCount + sizeof(Tes4FileRecord) * header.fileCount + header.totalFileNameLength;
 		vector<FileData> dataVec;
@@ -543,6 +542,8 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 					fileDataOffset += size;
 					//Add record data to vector for later ordered extraction.
 					dataVec.push_back(itr->second);
+					//Also write out filename to fileNameBlock.
+					fileNameBlock += itr->second.name + '\0';
 				}
 			}
 
