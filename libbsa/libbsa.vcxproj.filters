@@ -24,7 +24,16 @@
     <ClInclude Include="helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="format.h">
+    <ClInclude Include="tes3bsa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tes4bsa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="genericbsa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bsahandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,10 +44,13 @@
     <ClCompile Include="helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="format.cpp">
+    <ClCompile Include="libbsa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libbsa.cpp">
+    <ClCompile Include="bsahandle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="genericbsa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

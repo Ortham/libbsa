@@ -39,11 +39,12 @@ int main() {
 	std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
 	boost::filesystem::path::imbue(loc);
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Program Files (x86)\\Steam\\steamapps\\common\\oblivion\\Data\\All Natural.bsa");
-	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\AN.bsa");
-	uint8_t * asset = reinterpret_cast<uint8_t *>("textures/architecture/anvil/altarcloth.dds");
-	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\altarcloth.dds.extract");
-	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads");
+	//uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Program Files (x86)\\Steam\\steamapps\\common\\oblivion\\Data\\All Natural.bsa");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Morrowind.bsa");
+	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\MW.bsa");
+	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
+	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
+	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\MW");
 	bsa_handle bh;
 	uint32_t ret;
 	size_t numAssets;
@@ -63,55 +64,56 @@ int main() {
 	ret = OpenBSA(&bh, path);
 	if (ret != LIBBSA_OK)
 		out << '\t' << "OpenBSA(...) failed! Return code: " << ret << endl;
-	else
+	else {
 		out << '\t' << "OpenBSA(...) successful!" << endl;
-	/*
-	out << "TESTING GetAssets(...)" << endl;
-	ret = GetAssets(bh, contentPath, &assetPaths, &numAssets);
-	if (ret != LIBBSA_OK)
-		out << '\t' << "GetAssets(...) failed! Return code: " << ret << endl;
-	else {
-		out << '\t' << "GetAssets(...) successful! Number of paths: " << numAssets << endl;
-		for (size_t i=0; i < numAssets; i++) {
-			out << '\t' << assetPaths[i] << endl;
+/*
+		out << "TESTING GetAssets(...)" << endl;
+		ret = GetAssets(bh, contentPath, &assetPaths, &numAssets);
+		if (ret != LIBBSA_OK)
+			out << '\t' << "GetAssets(...) failed! Return code: " << ret << endl;
+		else {
+			out << '\t' << "GetAssets(...) successful! Number of paths: " << numAssets << endl;
+			for (size_t i=0; i < numAssets; i++) {
+				out << '\t' << assetPaths[i] << endl;
+			}
 		}
-	}
-	*/
-/*	out << "TESTING IsAssetInBSA(...)" << endl;
-	ret = IsAssetInBSA(bh, asset, &result);
-	if (ret != LIBBSA_OK)
-		out << '\t' << "IsAssetInBSA(...) failed! Return code: " << ret << endl;
-	else
-		out << '\t' << "IsAssetInBSA(...) successful! Is \"" << asset << "\" in BSA: " << result << endl;
 
-	out << "TESTING ExtractAsset(...)" << endl;
-	ret = ExtractAsset(bh, asset, extPath);
-	if (ret != LIBBSA_OK)
-		out << '\t' << "ExtractAsset(...) failed! Return code: " << ret << endl;
-	else
-		out << '\t' << "ExtractAsset(...) successful!" << endl;
-	/*
-	out << "TESTING ExtractAssets(...)" << endl;
-	ret = ExtractAssets(bh, contentPath, destPath, &assetPaths, &numAssets);
-	if (ret != LIBBSA_OK)
-		out << '\t' << "ExtractAssets(...) failed! Return code: " << ret << endl;
-	else {
-		out << '\t' << "ExtractAssets(...) successful! Number of paths: " << numAssets << endl;
-		for (size_t i=0; i < numAssets; i++) {
-			out << '\t' << assetPaths[i] << endl;
+		out << "TESTING IsAssetInBSA(...)" << endl;
+		ret = IsAssetInBSA(bh, asset, &result);
+		if (ret != LIBBSA_OK)
+			out << '\t' << "IsAssetInBSA(...) failed! Return code: " << ret << endl;
+		else
+			out << '\t' << "IsAssetInBSA(...) successful! Is \"" << asset << "\" in BSA: " << result << endl;
+
+		out << "TESTING ExtractAsset(...)" << endl;
+		ret = ExtractAsset(bh, asset, extPath);
+		if (ret != LIBBSA_OK)
+			out << '\t' << "ExtractAsset(...) failed! Return code: " << ret << endl;
+		else
+			out << '\t' << "ExtractAsset(...) successful!" << endl;
+
+		out << "TESTING ExtractAssets(...)" << endl;
+		ret = ExtractAssets(bh, contentPath, destPath, &assetPaths, &numAssets);
+		if (ret != LIBBSA_OK)
+			out << '\t' << "ExtractAssets(...) failed! Return code: " << ret << endl;
+		else {
+			out << '\t' << "ExtractAssets(...) successful! Number of paths: " << numAssets << endl;
+			for (size_t i=0; i < numAssets; i++) {
+				out << '\t' << assetPaths[i] << endl;
+			}
 		}
-	}
+	
 	*/
-
-	out << "TESTING SaveBSA(...)" << endl;
-	ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES4 | LIBBSA_COMPRESS_LEVEL_0);
-	if (ret != LIBBSA_OK)
-		out << '\t' << "SaveBSA(...) failed! Return code: " << ret << endl;
-	else
-		out << '\t' << "SaveBSA(...) successful!" << endl;
-
-	out << "TESTING CloseBSA(...)" << endl;
-	CloseBSA(bh);
+		out << "TESTING SaveBSA(...)" << endl;
+		ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES3 | LIBBSA_COMPRESS_LEVEL_0);
+		if (ret != LIBBSA_OK)
+			out << '\t' << "SaveBSA(...) failed! Return code: " << ret << endl;
+		else
+			out << '\t' << "SaveBSA(...) successful!" << endl;
+	
+		out << "TESTING CloseBSA(...)" << endl;
+		CloseBSA(bh);
+	}
 
 	out.close();
 	return 0;

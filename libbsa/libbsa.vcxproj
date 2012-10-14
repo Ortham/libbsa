@@ -28,13 +28,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="exception.h" />
-    <ClInclude Include="format.h" />
+    <ClInclude Include="bsahandle.h" />
+    <ClInclude Include="genericbsa.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="libbsa.h" />
+    <ClInclude Include="tes3bsa.h" />
+    <ClInclude Include="tes4bsa.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="exception.cpp" />
-    <ClCompile Include="format.cpp" />
+    <ClCompile Include="bsahandle.cpp" />
+    <ClCompile Include="genericbsa.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="libbsa.cpp" />
   </ItemGroup>
@@ -171,8 +175,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)externals\boost\stage\lib-$(PlatformArchitecture)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)externals\boost\stage\lib-$(PlatformArchitecture);$(SolutionDir)externals\zlib\contrib\vstudio\vc10\x86\ZlibStatRelease\</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
+      <AdditionalDependencies>zlibstat.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -191,8 +196,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)externals\boost\stage\lib-$(PlatformArchitecture)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)externals\boost\stage\lib-$(PlatformArchitecture);$(SolutionDir)externals\zlib\contrib\vstudio\vc10\x64\ZlibStatRelease\</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
+      <AdditionalDependencies>zlibstat.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">

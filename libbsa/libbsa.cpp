@@ -23,12 +23,13 @@
 
 #include "libbsa.h"
 #include "helpers.h"
-#include "format.h"
+#include "bsahandle.h"
 #include "exception.h"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/filesystem.hpp>
 #include <locale>
 #include <boost/regex.hpp>
+#include <boost/unordered_set.hpp>
 
 using namespace std;
 using namespace libbsa;
@@ -200,13 +201,13 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
 		|| (compression & LIBBSA_COMPRESS_LEVEL_9 && !(compression & ~LIBBSA_COMPRESS_LEVEL_9))
 		))
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.").code();	
-/*
+
 	try {
 		bh->Save(string(reinterpret_cast<const char *>(path)), version, compression);
 	} catch (error& e) {
 		return e.code();
 	}
-*/
+
 	return LIBBSA_OK;
 }
 
@@ -241,9 +242,6 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 	*assetPaths = NULL;
 	*numAssets = 0;
 
-	if (bh->paths.empty())
-		return LIBBSA_OK;
-
 	//Build regex expression. Also check that it is valid.
 	boost::regex regex;
 	try {
@@ -253,11 +251,8 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 	}
 
 	//We don't know how many matches there will be, so put all matches into a temporary buffer first.
-	boost::unordered_set<string> temp;
-	for (boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.begin(), endIt = bh->paths.end(); it != endIt; ++it) {
-		if (boost::regex_match(it->first, regex))
-			temp.insert(it->first);
-	}
+	list<BsaAsset> temp;
+	bh->GetMatchingAssets(regex, temp);
 
 	if (temp.empty())
 		return LIBBSA_OK;
@@ -267,8 +262,8 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 		bh->extAssetsNum = temp.size();
 		bh->extAssets = new uint8_t*[bh->extAssetsNum];
 		size_t i = 0;
-		for (boost::unordered_set<string>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
-			bh->extAssets[i] = bh->GetString(*it);
+		for (list<BsaAsset>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
+			bh->extAssets[i] = ToUint8_tString(it->path);
 			i++;
 		}
 	} catch (bad_alloc& /*e*/) {
@@ -290,10 +285,7 @@ LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * re
 
 	string assetStr = FixPath(assetPath);
 
-	if (bh->paths.find(assetStr) != bh->paths.end())
-		*result = true;
-	else
-		*result = false;
+	*result = bh->HasAsset(assetStr);
 
 	return LIBBSA_OK;
 }
@@ -353,9 +345,6 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 	*assetPaths = NULL;
 	*numAssets = 0;
 
-	if (bh->paths.empty())
-		return LIBBSA_OK;
-
 	//Build regex expression. Also check that it is valid.
 	boost::regex regex;
 	try {
@@ -365,11 +354,8 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 	}
 
 	//We don't know how many matches there will be, so put all matches into a temporary buffer first.
-	boost::unordered_map<string, FileRecordData> temp;
-	for (boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.begin(), endIt = bh->paths.end(); it != endIt; ++it) {
-		if (boost::regex_match(it->first, regex))
-			temp.insert(*it);
-	}
+	list<BsaAsset> temp;
+	bh->GetMatchingAssets(regex, temp);
 
 	if (temp.empty())
 		return LIBBSA_OK;
@@ -386,8 +372,8 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 		bh->extAssetsNum = temp.size();
 		bh->extAssets = new uint8_t*[bh->extAssetsNum];
 		size_t i = 0;
-		for (boost::unordered_map<string, FileRecordData>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
-			bh->extAssets[i] = bh->GetString(it->first);
+		for (list<BsaAsset>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
+			bh->extAssets[i] = ToUint8_tString(it->path);
 			i++;
 		}
 	} catch (bad_alloc& /*e*/) {
@@ -409,13 +395,8 @@ LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uin
 
 	string assetStr = FixPath(assetPath);
 
-	boost::unordered_map<string, FileRecordData>::iterator it = bh->paths.find(assetStr);
-
-	if (it == bh->paths.end())
-		return error(LIBBSA_ERROR_FILE_NOT_FOUND, assetStr).code();
-
 	try {
-		bh->Extract(it->second, string(reinterpret_cast<const char*>(destPath)));
+		bh->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)));
 	} catch (error& e) {
 		return e.code();
 	}

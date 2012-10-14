@@ -14,7 +14,7 @@ These instructions assume you are building on Windows. No Windows-specific code
 is used to the best of my knowledge, however, building on other platforms is 
 untested.
 
-All paths are given relative to the top level of the libstrings source code, 
+All paths are given relative to the top level of the libbsa source code, 
 ie. the folder in which this readme lies.
 
 Requirements:
@@ -39,7 +39,7 @@ Requirements:
 Preparing Requirements:
 
   1. Install Microsoft Visual C++ 2010 if you haven't already.
-  2. Create an 'externals' folder in the top-level folder of the libstrings
+  2. Create an 'externals' folder in the top-level folder of the libbsa
      source, beside this readme file.
   3. Create a 'utf8' folder inside the 'externals' folder.
   4. Place the folders inside the UTF8-CPP archive you downloaded (should be 
@@ -76,9 +76,9 @@ Preparing Requirements:
 	7. Build 'zlibstat'.
 	  
 
-Building libstrings:
+Building libbsa:
 
-  1. Open the 'libstrings.sln' file in Visual C++ 2010.
+  1. Open the 'libbsa.sln' file in Visual C++ 2010.
   2. Set the build configuration, selecting build type and architecture:
     - 'Release' will build the library as a DLL.
 	- 'StaticRelease' will build the library as a static .lib library.
