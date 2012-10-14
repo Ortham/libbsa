@@ -56,10 +56,10 @@ namespace libbsa {
 	//Comparison class for list::sort by hash.
 	bool hash_comp(const BsaAsset first, const BsaAsset second) {
 
-		uint32_t f1 = *(uint32_t*)(&(first.hash));
-		uint32_t f2 = *(uint32_t*)(&(first.hash) + sizeof(uint32_t));
-		uint32_t s1 = *(uint32_t*)(&(second.hash));
-		uint32_t s2 = *(uint32_t*)(&(second.hash) + sizeof(uint32_t));
+		uint32_t f1 = first.hash;
+		uint32_t f2 = first.hash >> 32;
+		uint32_t s1 = second.hash;
+		uint32_t s2 = second.hash >> 32;
 
 		if (f1 < s1)
 			return true;
@@ -71,8 +71,6 @@ namespace libbsa {
 			return false;
 
 		return first.path < second.path;
-
-		//return (first.hash > second.hash);
 	}
 
 	//Comparison class for list::sort by path.
@@ -157,9 +155,6 @@ bsa_handle_int::bsa_handle_int(const string path) :
 
 			in.close(); //No longer need the file open.
 
-	ofstream debug("debug.txt");
-	debug << "Original Hash" << '\t' << "Calc'ed Hash" << endl;
-
 			//All three arrays have the same ordering, so we just need to loop through one and look at the corresponding position in the other.
 			uint32_t startOfData = sizeof(tes3::Header) + header.hashOffset + header.fileCount * sizeof(uint64_t);
 			for (uint32_t i=0; i < header.fileCount; i++) {
@@ -176,18 +171,9 @@ bsa_handle_int::bsa_handle_int(const string path) :
 
 				fileData.path = trans.EncToUtf8(string((char*)(filenameRecords + filenameOffsets[i]), nptr - (char*)(filenameRecords + filenameOffsets[i])));
 				
-	//Test libbsa's hash function.
-	uint64_t hash = tes3::CalcHash(fileData.path);
-	if (fileData.hash != hash)
-		debug << fileData.hash << '\t' << hash << endl;
-
-//	debug << fileData.path << '\t' << fileData.hash << '\t' << fileData.size << '\t' << fileData.offset << endl;
-
 				//Finally, add fileData to list.
 				assets.push_back(fileData);
 			}
-
-	debug.close();
 
 			delete [] fileRecords;
 			delete [] filenameOffsets;

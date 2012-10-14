@@ -71,7 +71,7 @@ namespace libbsa { namespace tes3 {
 		}
 		hash2 = sum;
 
-		return ((uint64_t)hash1 << 32) + (uint64_t)hash2;
+		return ((uint64_t)hash1) + ((uint64_t)hash2 << 32);
 	}
 } }
 
