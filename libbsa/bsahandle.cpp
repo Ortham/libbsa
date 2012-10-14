@@ -48,22 +48,37 @@ namespace libbsa {
 	//Comparison class for list::unique.
 	class is_same_file {
 	public:
-		bool operator() (BsaAsset first, BsaAsset second) {
-			return (first.path == second.path);
+		bool operator() (const BsaAsset first, const BsaAsset second) {
+			return first.path == second.path;
 		}
 	};
 
 	//Comparison class for list::sort by hash.
-	bool hash_comp(BsaAsset first, BsaAsset second) {
-		return (first.hash < second.hash);
+	bool hash_comp(const BsaAsset first, const BsaAsset second) {
+
+		uint32_t f1 = *(uint32_t*)(&(first.hash));
+		uint32_t f2 = *(uint32_t*)(&(first.hash) + sizeof(uint32_t));
+		uint32_t s1 = *(uint32_t*)(&(second.hash));
+		uint32_t s2 = *(uint32_t*)(&(second.hash) + sizeof(uint32_t));
+
+		if (f1 < s1)
+			return true;
+		else if (f1 > s1)
+			return false;
+		else if (f2 < s2)
+			return true;
+		else if (f2 > s2)
+			return false;
+
+		return first.path < second.path;
+
+		//return (first.hash > second.hash);
 	}
 
 	//Comparison class for list::sort by path.
-	bool path_comp(BsaAsset first, BsaAsset second) {
-		return (first.path < second.path);
+	bool path_comp(const BsaAsset first, const BsaAsset second) {
+		return first.path < second.path;
 	}
-
-	
 }
 
 bsa_handle_int::bsa_handle_int(const string path) :
@@ -146,7 +161,7 @@ bsa_handle_int::bsa_handle_int(const string path) :
 	debug << "Original Hash" << '\t' << "Calc'ed Hash" << endl;
 
 			//All three arrays have the same ordering, so we just need to loop through one and look at the corresponding position in the other.
-			uint32_t startOfData = sizeof(tes3::Header) + hashOffset + header.fileCount * sizeof(uint64_t);
+			uint32_t startOfData = sizeof(tes3::Header) + header.hashOffset + header.fileCount * sizeof(uint64_t);
 			for (uint32_t i=0; i < header.fileCount; i++) {
 				BsaAsset fileData;
 				fileData.size = fileRecords[i].size;
@@ -352,13 +367,12 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 			//Transcode.
 			string filename = trans.Utf8ToEnc(it->path) + '\0';
 			filenameRecords += filename;
-			filenameOffset += filename.length() + 1;
+			filenameOffset += filename.length();
 			
 			hashes[i] = it->hash;
 			i++;
 		}
 
-		//fileRecordData, filenameOffsets, hashes and filenameRecords are now complete.
 		//We can now calculate the header's hashOffset to complete it.
 		header.hashOffset = (sizeof(tes3::FileRecord) + sizeof(uint32_t)) * header.fileCount + filenameRecords.length();
 

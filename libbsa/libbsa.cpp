@@ -206,6 +206,8 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
 		bh->Save(string(reinterpret_cast<const char *>(path)), version, compression);
 	} catch (error& e) {
 		return e.code();
+	} catch (ios_base::failure& e) {
+		throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, string(reinterpret_cast<const char *>(path)));
 	}
 
 	return LIBBSA_OK;
