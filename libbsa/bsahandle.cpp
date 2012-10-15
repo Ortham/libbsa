@@ -122,8 +122,6 @@ bsa_handle_int::bsa_handle_int(const string path) :
 			in.seekg(0, ios_base::beg);
 			in.read((char*)&header, sizeof(tes3::Header));
 
-			hashOffset = header.hashOffset;
-
 			/* We want:
 			- file names
 			- file sizes
@@ -175,6 +173,8 @@ bsa_handle_int::bsa_handle_int(const string path) :
 				assets.push_back(fileData);
 			}
 
+			hashOffset = header.hashOffset;
+
 			delete [] fileRecords;
 			delete [] filenameOffsets;
 			delete [] filenameRecords;
@@ -182,14 +182,11 @@ bsa_handle_int::bsa_handle_int(const string path) :
 
 		} else {
 			tes4::Header header;
+			in.seekg(0, ios_base::beg);
 			in.read((char*)&header, sizeof(tes4::Header));
 			
 			if ((header.version != tes4::BSA_VERSION_TES4 && header.version != tes4::BSA_VERSION_TES5) || header.offset != tes4::BSA_FOLDER_RECORD_OFFSET)
 				throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
-
-			//Record the file and archive flags.
-			fileFlags = header.fileFlags;
-			archiveFlags = header.archiveFlags;
 
 			//Now we get to the real meat of the file.
 			//Folder records are followed by file records in blocks by folder name, followed by file names.
@@ -197,10 +194,10 @@ bsa_handle_int::bsa_handle_int(const string path) :
 			tes4::FolderRecord * folderRecords;
 			uint8_t * fileRecords;
 			uint8_t * fileNames;	//A list of null-terminated filenames, one after another.
-			//Three terms are the number of folder name string length bytes, the total length of folder strings and the total number of file records.
-			uint32_t startOfFileRecords = sizeof(tes4::Header) + sizeof(tes4::FolderRecord) * header.folderCount;
-			uint32_t fileRecordsSize = header.folderCount * sizeof(uint8_t) + header.totalFolderNameLength + sizeof(tes4::FileRecord) * header.fileCount;
-			uint32_t startOfFileNames = startOfFileRecords + fileRecordsSize;
+			uint32_t fileRecordsSize = 
+				header.folderCount + //Folder name string length (in 1 byte).
+				header.totalFolderNameLength + //Total length of folder name strings.
+				sizeof(tes4::FileRecord) * header.fileCount;  //Total size of all file records.
 			try {
 				folderRecords = new tes4::FolderRecord[header.folderCount];
 				in.read((char*)folderRecords, sizeof(tes4::FolderRecord) * header.folderCount);
@@ -215,67 +212,60 @@ bsa_handle_int::bsa_handle_int(const string path) :
 			}
 
 			in.close(); //No longer need the file open.
-			
-			/* Now we have the folder records, file records and file names in memory. This gives us:
-			
-				- folder name hashes
-				- numbers of files in each folder
-				- the offsets of the file records for the files in each folder
-				- the folder names
-				- the file name hashes
-				- the file sizes, plus compression data
-				- the offsets to the raw data of each file
-				- the file names
-				
-			After we've processed all the files in each folder, we can discard their numbers.
-			After we've processed all the file records for each folder, we can discard their offsets.
-			We want to keep everything else.
-			
-			We'll need a bunch of nested loops.
-			First level: loop through the folder records.
-			*/
-			
+
+ofstream debug("debug.txt");
+			/* Loop through the folder records, for each folder looking up the file records associated with it,
+			and the filenames associated with those records. */
 			uint32_t fileNameListPos = 0;
+			uint32_t startOfFileRecords = sizeof(tes4::Header) + sizeof(tes4::FolderRecord) * header.folderCount;
 			for (uint32_t i=0; i < header.folderCount; i++) {
-				//For each folder record, we want the count and the offset.
-				//Go to the offset to get the folder name.
-				//Offset is from 0th byte of file and includes totalFileNameLength for some reason.
-				uint32_t startOfFileRecordBlock = folderRecords[i].offset - startOfFileRecords - header.totalFileNameLength;
-				uint8_t folderNameLength = *(fileRecords + startOfFileRecordBlock) - 1;
-				string folderName = trans.EncToUtf8(string((char*)(fileRecords + startOfFileRecordBlock + 1), folderNameLength));
-				
-				//Now loop through the file records for this folder. For each file record, look up the corresponding filename. Keep a counter outside the Tes4FolderRecord loop as the filename list is for all folders.
-				uint32_t j = startOfFileRecordBlock + 1 + folderNameLength + 1 + (uint32_t)fileRecords;
-				uint32_t max = j + folderRecords[i].count * sizeof(tes4::FileRecord);
-				while (j < max) {
-					//Fill in file data.
+				/* folderRecords[i].count gives the number of file records associated with this folder.
+				   folderRecords[i].offset gives the offset to the file records associated with this folder,
+				   from the beginning of the file, plus the total filenames length.
+				   folderRecords[i].hash can be discarded. */
+
+				folderRecords[i].offset -= header.totalFileNameLength + startOfFileRecords;  //Get rid of this first.
+
+				//Need to get folder name to add before file name in internal data store.
+				uint8_t folderNameLength = *(fileRecords + folderRecords[i].offset) - 1;
+				string folderName = trans.EncToUtf8(string((char*)(fileRecords + folderRecords[i].offset + 1), folderNameLength));
+
+				//Now loop through file records for this folder record.
+				uint32_t startOfFolderFileRecords = (uint32_t)fileRecords + folderRecords[i].offset + folderNameLength + 2;
+				for (uint32_t j=0; j < folderRecords[i].count; j++) {
 					BsaAsset fileData;
-					fileData.hash = *(uint64_t*)j;
-					fileData.size = *(uint32_t*)(j + sizeof(uint64_t));
-					fileData.offset = *(uint32_t*)(j + sizeof(uint64_t) + sizeof(uint32_t));
-						
+					tes4::FileRecord fr = *(tes4::FileRecord*)(startOfFolderFileRecords + j * sizeof(tes4::FileRecord));
+					fileData.hash = fr.nameHash;
+					fileData.size = fr.size;
+					fileData.offset = fr.offset;
+
 					//Now we need to build the file path. First: file name.
+					char * filenameStart = (char*)(fileNames + fileNameListPos);
 					//Find position of null pointer.
-					char * nptr = strchr((char*)(fileNames + fileNameListPos), '\0');
+					char * nptr = strchr(filenameStart, '\0');
 					if (nptr == NULL)
 						throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
 
-					fileData.path += trans.EncToUtf8(string((char*)(fileNames + fileNameListPos), nptr - (char*)(fileNames + fileNameListPos)));
-
-		//Do hash test.
-		if (fileData.hash != tes4::CalcHash(fileData.path))
-			throw exception("hash mismatch!");
+					fileData.path += trans.EncToUtf8(string(filenameStart, nptr - filenameStart));
+					fileNameListPos += fileData.path.length() + 1;
 
 					if (!folderName.empty())
 						fileData.path = folderName + '\\' + fileData.path;
 
 					//Finally, add file path and object to list.
 					assets.push_back(fileData);
-				
-					j += sizeof(tes4::FileRecord);
-					fileNameListPos += fileData.path.length() + 1;
+
+//Do hash test.
+uint64_t hash = tes4::CalcHash(fileData.path);
+if (fileData.hash != hash)
+	debug << fileData.path << '\t' << fileData.hash << '\t' << hash << endl;
 				}
 			}
+debug.close();
+
+			//Record the file and archive flags.
+			fileFlags = header.fileFlags;
+			archiveFlags = header.archiveFlags;
 			
 			delete [] folderRecords;
 			delete [] fileRecords;
@@ -331,18 +321,28 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 		assets.sort(path_comp);
 		uint32_t fileDataOffset = 0;
 		vector<uint32_t> oldOffsets;
+ofstream debug("debug.txt");
 		for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+
+
+
+uint32_t offset = it->offset - (hashOffset + sizeof(tes3::Header) + header.fileCount * sizeof(uint64_t));
+if (offset != fileDataOffset)
+	debug << it->path << '\t' << offset << '\t' << fileDataOffset << '\t' << int(offset - fileDataOffset) << endl;
+
+
 			oldOffsets.push_back(it->offset);
-			it->offset = fileDataOffset;  //This results in the wrong offsets for 1185 files in Morrowind.bsa.
+			it->offset = fileDataOffset;  //This results in the wrong offsets for some files - see README for details.
+//it->offset -= hashOffset + sizeof(tes3::Header) + header.fileCount * sizeof(uint64_t);
 			fileDataOffset += it->size;
 		}
+debug.close();
 
 		//file data, names and hashes are all done in hash order, so sort list by hash.
 		assets.sort(hash_comp);
 		uint32_t filenameOffset = 0;
 		uint32_t i = 0;
-		for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-			
+		for (list<BsaAsset>::const_iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
 			//Set size and offset.
 			fileRecords[i].size = it->size;
 			fileRecords[i].offset = it->offset;
@@ -367,15 +367,15 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 
 		//Write out completed BSA sections.
 		out.write((char*)&header, sizeof(tes3::Header));   //ok
-		out.write((char*)fileRecords, sizeof(tes3::FileRecord) * header.fileCount);  //offsets are wrong
+		out.write((char*)fileRecords, sizeof(tes3::FileRecord) * header.fileCount);  //some offsets are wrong
 		out.write((char*)filenameOffsets, sizeof(uint32_t) * header.fileCount);  //ok
 		out.write(filenameRecords.data(), filenameRecords.length());  //OK.
-		out.write((char*)hashes, sizeof(uint64_t) * header.fileCount);       //wrong
+		out.write((char*)hashes, sizeof(uint64_t) * header.fileCount);       //OK
 
 		//Now write out raw file data in alphabetical filename order.
 		assets.sort(path_comp);
 		i = 0;
-		for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+		for (list<BsaAsset>::const_iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
 			//it->second.offset is the offset for the data in the new file. We don't need it though, because we're doing writes in sequence.
 			//We want the offset for the data in the old file.
 
@@ -589,7 +589,7 @@ void bsa_handle_int::ExtractFromStream(ifstream& in, const BsaAsset data, const 
 	uint32_t size = data.size;
 	//Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
 	/* BSA-TYPE-SPECIFIC CHECK */
-	if (isTes3BSA || (archiveFlags & tes4::BSA_COMPRESSED && data.size & tes4::FILE_INVERT_COMPRESSED) || !(archiveFlags & tes4::BSA_COMPRESSED)) {
+	if (isTes3BSA || (archiveFlags & tes4::BSA_COMPRESSED && size & tes4::FILE_INVERT_COMPRESSED) || !(archiveFlags & tes4::BSA_COMPRESSED) && !(size & tes4::FILE_INVERT_COMPRESSED)) {
 		//Just need to use size and offset to write to binary file stream.
 		uint8_t * buffer;
 		uint32_t offset = data.offset;
@@ -621,6 +621,11 @@ void bsa_handle_int::ExtractFromStream(ifstream& in, const BsaAsset data, const 
 		delete [] buffer;
 	} else {
 		//Use zlib.
+
+		/* BSA-TYPE-SPECIFIC CHECK */
+		if (size & tes4::FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual compressed size.
+			size ^= tes4::FILE_INVERT_COMPRESSED;
+
 		//Get the uncompressed size.
 		uint32_t uncompressedSize;
 		in.seekg(data.offset, ios_base::beg);

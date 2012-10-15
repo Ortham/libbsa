@@ -21,34 +21,59 @@
 	<http://www.gnu.org/licenses/>.
 */
 
+#include "libbsa.h"
 #include <iostream>
 #include <stdint.h>
 #include <fstream>
-#include <clocale>
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
-#include <boost/filesystem.hpp>
-
-#include "libbsa.h"
 
 using std::endl;
 
 int main() {
-	//Set the locale to get encoding conversions working correctly.
-	setlocale(LC_CTYPE, "");
-	std::locale global_loc = std::locale();
-	std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
-	boost::filesystem::path::imbue(loc);
+	/* List of official BSAs for testing. 
+	R = Reads OK, E = Extracts OK, W = Writes OK.
+	!R = Doesn't read OK, !E and !W similar.
+	If a bsa is missing a R/!R, E/!E, W/!W, it means that hasn't been tested yet.
+	Morrowind:
+		Morrowind.bsa                           R	E	!W
+		Bloodmoon.bsa                           R	E	!W
+		Tribunal.bsa                            R	E	W
 
-	//uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Program Files (x86)\\Steam\\steamapps\\common\\oblivion\\Data\\All Natural.bsa");
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Morrowind.bsa");
-	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\MW.bsa");
-	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
-	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
-	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\MW");
+	Oblivion:
+		Oblivion - Meshes.bsa                   R	E
+		Oblivion - Misc.bsa                     R	E
+		Oblivion - Sounds.bsa                   R	E
+		Oblivion - Textures - Compressed.bsa    R	E
+		Oblivion - Voices1.bsa                  R	E
+		Oblivion - Voices2.bsa                  R	E
+		Knights.bsa                             R	E	!W
+		DLCShiveringIsles - Meshes.bsa          R	E
+		DLCShiveringIsles - Sounds.bsa          R	E
+		DLCShiveringIsles - Textures.bsa        R	E
+		DLCShiveringIsles - Voices.bsa          R	E
+
+	Skyrim:
+		Skyrim - Animations.bsa                 R	E
+		Skyrim - Interface.bsa                  R	E
+		Skyrim - Meshes.bsa                     R	E
+		Skyrim - Misc.bsa                       R	E
+		Skyrim - Shaders.bsa                    R	E
+		Skyrim - Sounds.bsa                     R	E
+		Skyrim - Textures.bsa                   R	E
+		Skyrim - Voices.bsa                     R	E
+		Skyrim - VoicesExtra.bsa                R	E
+		Update.bsa                              R	E
+	*/
+
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc.bsa");
+	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc.bsa.new");
+//	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
+//	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
+	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc");
 	bsa_handle bh;
 	uint32_t ret;
 	size_t numAssets;
 	uint8_t * contentPath = reinterpret_cast<uint8_t *>(".+");
+	uint8_t * err;
 	uint8_t ** assetPaths;
 	bool result;
 
@@ -102,15 +127,14 @@ int main() {
 				out << '\t' << assetPaths[i] << endl;
 			}
 		}
-	
-	*/
+*/	
 		out << "TESTING SaveBSA(...)" << endl;
 		ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES3 | LIBBSA_COMPRESS_LEVEL_0);
 		if (ret != LIBBSA_OK)
 			out << '\t' << "SaveBSA(...) failed! Return code: " << ret << endl;
 		else
 			out << '\t' << "SaveBSA(...) successful!" << endl;
-	
+
 		out << "TESTING CloseBSA(...)" << endl;
 		CloseBSA(bh);
 	}
