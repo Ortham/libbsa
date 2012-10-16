@@ -64,8 +64,8 @@ int main() {
 		Update.bsa                              R	E
 	*/
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc.bsa");
-	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc.bsa.new");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Update.bsa");
+	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Update.bsa.new");
 //	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
 //	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
 	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc");
@@ -91,7 +91,7 @@ int main() {
 		out << '\t' << "OpenBSA(...) failed! Return code: " << ret << endl;
 	else {
 		out << '\t' << "OpenBSA(...) successful!" << endl;
-/*
+
 		out << "TESTING GetAssets(...)" << endl;
 		ret = GetAssets(bh, contentPath, &assetPaths, &numAssets);
 		if (ret != LIBBSA_OK)
@@ -102,7 +102,7 @@ int main() {
 				out << '\t' << assetPaths[i] << endl;
 			}
 		}
-
+/*
 		out << "TESTING IsAssetInBSA(...)" << endl;
 		ret = IsAssetInBSA(bh, asset, &result);
 		if (ret != LIBBSA_OK)
@@ -129,7 +129,7 @@ int main() {
 		}
 */	
 		out << "TESTING SaveBSA(...)" << endl;
-		ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES3 | LIBBSA_COMPRESS_LEVEL_0);
+		ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES5 | LIBBSA_COMPRESS_LEVEL_NOCHANGE);
 		if (ret != LIBBSA_OK)
 			out << '\t' << "SaveBSA(...) failed! Return code: " << ret << endl;
 		else

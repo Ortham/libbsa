@@ -67,16 +67,17 @@ LIBBSA const uint32_t LIBBSA_VERSION_TES3				= 0x00000001;
 LIBBSA const uint32_t LIBBSA_VERSION_TES4				= 0x00000002;
 LIBBSA const uint32_t LIBBSA_VERSION_TES5				= 0x00000004;
 /* Use only one compression flag. */
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_0			= 0x00000020;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_1			= 0x00000040;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_2			= 0x00000080;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_3			= 0x00000100;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_4			= 0x00000200;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_5			= 0x00000400;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_6			= 0x00000800;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_7			= 0x00001000;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_8			= 0x00002000;
-LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_9			= 0x00004000;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_0			= 0x00000010;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_1			= 0x00000020;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_2			= 0x00000040;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_3			= 0x00000080;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_4			= 0x00000100;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_5			= 0x00000200;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_6			= 0x00000400;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_7			= 0x00000800;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_8			= 0x00001000;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_9			= 0x00002000;
+LIBBSA const uint32_t LIBBSA_COMPRESS_LEVEL_NOCHANGE    = 0x00004000;
 
 
 /*------------------------------
@@ -199,6 +200,7 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
 		|| (compression & LIBBSA_COMPRESS_LEVEL_7 && !(compression & ~LIBBSA_COMPRESS_LEVEL_7))
 		|| (compression & LIBBSA_COMPRESS_LEVEL_8 && !(compression & ~LIBBSA_COMPRESS_LEVEL_8))
 		|| (compression & LIBBSA_COMPRESS_LEVEL_9 && !(compression & ~LIBBSA_COMPRESS_LEVEL_9))
+		|| (compression & LIBBSA_COMPRESS_LEVEL_NOCHANGE && !(compression & ~LIBBSA_COMPRESS_LEVEL_NOCHANGE))
 		))
 		return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.").code();	
 
@@ -207,7 +209,7 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
 	} catch (error& e) {
 		return e.code();
 	} catch (ios_base::failure& e) {
-		throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, string(reinterpret_cast<const char *>(path)));
+		return error(LIBBSA_ERROR_FILE_WRITE_FAIL, string(reinterpret_cast<const char *>(path))).code();
 	}
 
 	return LIBBSA_OK;

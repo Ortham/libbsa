@@ -24,6 +24,7 @@
 #ifndef LIBBSA_TES4STRUCTS_H
 #define LIBBSA_TES4STRUCTS_H
 
+#include "genericbsa.h"
 #include <stdint.h>
 #include <string>
 #include <boost/filesystem.hpp>
@@ -131,6 +132,18 @@ namespace libbsa { namespace tes4 {
 		return ((uint64_t)hash2 << 32) + hash1;
 	}
 
+	//Comparison function for list::sort by hash.
+	inline bool hash_comp(const BsaAsset first, const BsaAsset second) {
+		return first.hash < second.hash;
+	}
+
+	//Comparison class for list::unique.
+	class is_same_file {
+	public:
+		bool operator() (const BsaAsset first, const BsaAsset second) {
+			return first.path == second.path;
+		}
+	} same_file_comp;
 } }
 
 #endif

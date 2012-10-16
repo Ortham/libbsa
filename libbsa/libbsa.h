@@ -106,6 +106,7 @@ LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_6;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_7;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_8;
 LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_9;  //Most compression.
+LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_NOCHANGE;  //Use compression used in the opened BSA.
 
 
 /*------------------------------

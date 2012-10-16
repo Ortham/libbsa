@@ -33,51 +33,12 @@
 #include <set>
 #include <sstream>
 #include <vector>
+#include <cstring>
 
 namespace fs = boost::filesystem;
 
 using namespace std;
 using namespace libbsa;
-
-namespace libbsa {
-
-	/////////////////////////////////////////////////
-	// Comparison classes for list sorting.
-	/////////////////////////////////////////////////
-
-	//Comparison class for list::unique.
-	class is_same_file {
-	public:
-		bool operator() (const BsaAsset first, const BsaAsset second) {
-			return first.path == second.path;
-		}
-	};
-
-	//Comparison class for list::sort by hash.
-	bool hash_comp(const BsaAsset first, const BsaAsset second) {
-
-		uint32_t f1 = first.hash;
-		uint32_t f2 = first.hash >> 32;
-		uint32_t s1 = second.hash;
-		uint32_t s2 = second.hash >> 32;
-
-		if (f1 < s1)
-			return true;
-		else if (f1 > s1)
-			return false;
-		else if (f2 < s2)
-			return true;
-		else if (f2 > s2)
-			return false;
-
-		return first.path < second.path;
-	}
-
-	//Comparison class for list::sort by path.
-	bool path_comp(const BsaAsset first, const BsaAsset second) {
-		return first.path < second.path;
-	}
-}
 
 bsa_handle_int::bsa_handle_int(const string path) :
 	BSA(path),
@@ -311,7 +272,7 @@ void bsa_handle_int::Save(std::string path, const uint32_t version, const uint32
 
 		//Need to update the file data offsets before populating the records. This requires the list to be sorted by path.
 		//We still want to keep the old offsets for writing the raw file data though.
-		assets.sort(path_comp);
+		assets.sort(tes3::path_comp);
 		uint32_t fileDataOffset = 0;
 		vector<uint32_t> oldOffsets;
 ofstream debug("debug.txt");
@@ -332,7 +293,7 @@ if (offset != fileDataOffset)
 debug.close();
 
 		//file data, names and hashes are all done in hash order, so sort list by hash.
-		assets.sort(hash_comp);
+		assets.sort(tes3::hash_comp);
 		uint32_t filenameOffset = 0;
 		uint32_t i = 0;
 		for (list<BsaAsset>::const_iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
@@ -365,12 +326,17 @@ debug.close();
 		out.write(filenameRecords.data(), filenameRecords.length());  //OK.
 		out.write((char*)hashes, sizeof(uint64_t) * header.fileCount);       //OK
 
+		delete [] fileRecords;
+		delete [] filenameOffsets;
+		delete [] hashes;
+
 		//Now write out raw file data in alphabetical filename order.
-		assets.sort(path_comp);
+		assets.sort(tes3::path_comp);
 		i = 0;
 		for (list<BsaAsset>::const_iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
 			//it->second.offset is the offset for the data in the new file. We don't need it though, because we're doing writes in sequence.
 			//We want the offset for the data in the old file.
+			//This doesn't yet support assets that have been added to the BSA.
 
 			//Allocate memory for this file's data, read it in, write it out, then free memory.
 			uint8_t * fileData;
@@ -415,15 +381,16 @@ debug.close();
 		header.offset = 36;
 
 		header.archiveFlags = archiveFlags;
-		if (compression == LIBBSA_COMPRESS_LEVEL_0 && header.archiveFlags & tes4::BSA_COMPRESSED)
-			header.archiveFlags ^= tes4::BSA_COMPRESSED;
-		else if (compression != LIBBSA_COMPRESS_LEVEL_0 && !(header.archiveFlags & tes4::BSA_COMPRESSED))
-			header.archiveFlags |= tes4::BSA_COMPRESSED;
+		if (compression != LIBBSA_COMPRESS_LEVEL_NOCHANGE) {
+			if (compression == LIBBSA_COMPRESS_LEVEL_0 && header.archiveFlags & tes4::BSA_COMPRESSED)
+				header.archiveFlags ^= tes4::BSA_COMPRESSED;
+			else if (compression != LIBBSA_COMPRESS_LEVEL_0 && !(header.archiveFlags & tes4::BSA_COMPRESSED))
+				header.archiveFlags |= tes4::BSA_COMPRESSED;
+		}
 
 		//Need to sort folder and file names separately into hash-sorted sets before header.folderCount and name lengths can be set.
-		bool(*hash_comp_p)(BsaAsset,BsaAsset) = hash_comp;
-		set<BsaAsset, bool(*)(BsaAsset,BsaAsset)> folderHashset(hash_comp_p);
-		set<BsaAsset, bool(*)(BsaAsset,BsaAsset)> fileHashset(hash_comp_p);
+		list<BsaAsset> folderHashset;
+		list<BsaAsset> fileHashset;
 		for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
 			BsaAsset folderAsset;
 			BsaAsset fileAsset;
@@ -438,20 +405,22 @@ debug.close();
 			fileAsset.size = it->size;
 			fileAsset.offset = it->offset;
 
-			folderHashset.insert(folderAsset);  //Size and offset are zero for now.
-			fileHashset.insert(fileAsset);
+			folderHashset.push_back(folderAsset);  //Size and offset are zero for now.
+			fileHashset.push_back(fileAsset);
 		}
+		folderHashset.unique(tes4::same_file_comp);
+		fileHashset.unique(tes4::same_file_comp);
 		header.folderCount = folderHashset.size();
 
 		header.fileCount = assets.size();
 
 		header.totalFolderNameLength = 0;
-		for (set<BsaAsset, bool(*)(BsaAsset,BsaAsset)>::iterator it = folderHashset.begin(), endIt=folderHashset.end(); it != endIt; ++it) {
+		for (list<BsaAsset>::iterator it = folderHashset.begin(), endIt=folderHashset.end(); it != endIt; ++it) {
 			header.totalFolderNameLength += it->path.length() + 1;
 		}
 
 		header.totalFileNameLength = 0;
-		for (set<BsaAsset, bool(*)(BsaAsset,BsaAsset)>::iterator it = fileHashset.begin(), endIt=fileHashset.end(); it != endIt; ++it) {
+		for (list<BsaAsset>::iterator it = fileHashset.begin(), endIt=fileHashset.end(); it != endIt; ++it) {
 			header.totalFileNameLength += fs::path(it->path).filename().string().length() + 1;
 		}
 
@@ -468,45 +437,65 @@ debug.close();
 		   Once all matching files have been found, add their count and offset to the folder record stream.
 		*/
 
-		ostringstream folderRecords;
-		ostringstream fileRecordBlocks;
-		string fileNameBlock;
-		uint32_t fileRecordBlockOffset = header.totalFileNameLength;
-		uint32_t fileDataOffset = sizeof(tes4::Header) + sizeof(tes4::FolderRecord) * header.folderCount + header.totalFolderNameLength + header.folderCount + sizeof(tes4::FileRecord) * header.fileCount + header.totalFileNameLength;
+		tes4::FolderRecord * folderRecords;
+		uint8_t * fileRecordBlocks;
+		uint8_t * fileNames;
+		uint32_t fileRecordBlocksSize = header.folderCount + header.totalFolderNameLength + header.fileCount * sizeof(tes4::FileRecord);
+		try {
+			folderRecords = new tes4::FolderRecord[header.folderCount];
+			fileRecordBlocks = new uint8_t[fileRecordBlocksSize];
+			fileNames = new uint8_t[header.totalFileNameLength];
+		} catch (bad_alloc &e) {
+			throw error(LIBBSA_ERROR_NO_MEM);
+		}
+
+		uint32_t startOfFileRecordBlock = sizeof(tes4::Header) + header.folderCount * sizeof(tes4::FolderRecord) + header.totalFileNameLength;  //For some reason offsets include this.
+		uint32_t fileDataOffset = startOfFileRecordBlock + fileRecordBlocksSize;
 		list<BsaAsset> orderedAssets;
-		for (set<BsaAsset, bool(*)(BsaAsset,BsaAsset)>::iterator it = folderHashset.begin(), endIt=folderHashset.end(); it != endIt; ++it) {
+		uint32_t i = 0;
+		uint32_t currFileRecordBlockPos = 0;
+		uint32_t currFileNamePos = 0;
+		folderHashset.sort(tes4::hash_comp);
+		fileHashset.sort(tes4::hash_comp);
+		for (list<BsaAsset>::iterator it = folderHashset.begin(), endIt=folderHashset.end(); it != endIt; ++it) {
+			//Write folder hash and offset, write count later.
+			folderRecords[i].nameHash = it->hash;
+			folderRecords[i].offset = startOfFileRecordBlock + currFileRecordBlockPos;
+
+			//Write folder name length, folder name to fileRecordBlocks buffer.
 			size_t fileCount = 0;
 			uint8_t nameLength = it->path.length() + 1;
+			fileRecordBlocks[currFileRecordBlockPos] = nameLength;
+			currFileRecordBlockPos++;
+			strcpy((char*)fileRecordBlocks + currFileRecordBlockPos, (it->path + '\0').data());
+			currFileRecordBlockPos += nameLength;
 
-			//Write folder name length, folder name to fileRecordBlocks stream.
-			fileRecordBlocks.write((char*)&nameLength, 1);
-			fileRecordBlocks.write((it->path + '\0').data(), nameLength);
-
-			for (set<BsaAsset, bool(*)(BsaAsset,BsaAsset)>::iterator itr = fileHashset.begin(), endItr=fileHashset.end(); itr != endItr; ++itr) {
+			uint32_t j = 0;
+			for (list<BsaAsset>::iterator itr = fileHashset.begin(), endItr=fileHashset.end(); itr != endItr; ++itr) {
 				if (fs::path(itr->path).parent_path().string() == it->path) {
 					//Write file hash, size and offset to fileRecordBlocks stream.
-					fileRecordBlocks.write((char*)&(itr->hash), sizeof(uint64_t));
-					uint32_t size = itr->size;
-					fileRecordBlocks.write((char*)&size, sizeof(uint32_t));
-					fileRecordBlocks.write((char*)&fileDataOffset, sizeof(uint32_t));
+					memcpy(fileRecordBlocks + currFileRecordBlockPos, &(itr->hash), sizeof(uint64_t));
+					currFileRecordBlockPos += sizeof(uint64_t);
+					memcpy(fileRecordBlocks + currFileRecordBlockPos, &(itr->size), sizeof(uint32_t));
+					currFileRecordBlockPos += sizeof(uint32_t);
+					memcpy(fileRecordBlocks + currFileRecordBlockPos, &fileDataOffset, sizeof(uint32_t));
+					currFileRecordBlockPos += sizeof(uint32_t);
 					//Increment count and data offset.
 					fileCount++;
-					fileDataOffset += size;
-					//Add record data to vector for later ordered extraction.
+					fileDataOffset += itr->size;
+					//Add record data to list for later ordered extraction.
 					orderedAssets.push_back(*itr);
 					orderedAssets.back().offset = fileDataOffset;  //Can't update the offset in the set.
 					//Also write out filename to fileNameBlock.
-					fileNameBlock += fs::path(itr->path).filename().string() + '\0';
+					string filename = fs::path(itr->path).filename().string() + '\0';
+					strcpy((char*)fileNames + currFileNamePos, filename.data());
+					currFileNamePos += filename.length();
 				}
 			}
 
-			//Now write folder record.
-			folderRecords.write((char*)&(it->hash), sizeof(uint64_t));
-			folderRecords.write((char*)&fileCount, sizeof(uint32_t));
-			folderRecords.write((char*)&fileRecordBlockOffset, sizeof(uint32_t));
+			folderRecords[i].count = fileCount;
 
-			//Increment fileRecordBlockOffset.
-			fileRecordBlockOffset = fileRecordBlocks.str().length();
+			i++;
 		}
 
 		////////////////////////
@@ -514,16 +503,26 @@ debug.close();
 		////////////////////////
 
 		out.write((char*)&header, sizeof(tes4::Header));
-		out.write(folderRecords.str().data(), sizeof(tes4::FolderRecord) * header.folderCount);
-		out.write(fileRecordBlocks.str().data(), fileRecordBlocks.str().length());
-		out.write(fileNameBlock.data(), header.totalFileNameLength);
+		out.write((char*)folderRecords, sizeof(tes4::FolderRecord) * header.folderCount);
+		out.write((char*)fileRecordBlocks, fileRecordBlocksSize);
+		out.write((char*)fileNames, header.totalFileNameLength);
+
+		delete [] folderRecords;
+		delete [] fileRecordBlocks;
+		delete [] fileNames;
 
 		//Now write out raw file data in the same order it was listed in the FileRecordBlocks.
 		for (list<BsaAsset>::iterator it = orderedAssets.begin(), endIt = orderedAssets.end(); it != endIt; ++it) {
 			//Allocate memory for this file's data, read it in, write it out, then free memory.
+			//This doesn't yet support compression level changing or assets that have been added to the BSA.
+
+			uint32_t size = it->size;
+			if (size & tes4::FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual size.
+				size ^= tes4::FILE_INVERT_COMPRESSED;
+
 			uint8_t * fileData;
 			try {
-				fileData = new uint8_t[it->size];  //Doesn't matter where we get size from.
+				fileData = new uint8_t[size];
 			} catch (bad_alloc &e) {
 				throw error(LIBBSA_ERROR_NO_MEM);
 			}
@@ -540,10 +539,10 @@ debug.close();
 
 			//Read data in.
 			in.seekg(itr->offset, ios_base::beg);  //This is the offset in the old BSA.
-			in.read((char*)fileData, it->size);
+			in.read((char*)fileData, size);
 
 			//Write data out.
-			out.write((char*)fileData, it->size);
+			out.write((char*)fileData, size);
 
 			//Free memory.
 			delete [] fileData;
@@ -563,13 +562,13 @@ debug.close();
 	out.close();
 
 	//Now rename the output file.
-	if (fs::path(path).extension().string() == ".new") {
+/*	if (fs::path(path).extension().string() == ".new") {
 		try {
 			fs::rename(path, fs::path(path).stem());
 		} catch (fs::filesystem_error& e) {
-			throw LIBBSA_ERROR_FILE_WRITE_FAIL;
+			throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, fs::path(path).stem().string());
 		}
-	}
+	}*/
 }
 
 void bsa_handle_int::ExtractFromStream(ifstream& in, const BsaAsset data, const std::string outPath) {

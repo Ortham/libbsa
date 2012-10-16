@@ -24,6 +24,7 @@
 #ifndef LIBBSA_TES3STRUCTS_H
 #define LIBBSA_TES3STRUCTS_H
 
+#include "genericbsa.h"
 #include <stdint.h>
 #include <string>
 
@@ -72,6 +73,32 @@ namespace libbsa { namespace tes3 {
 		hash2 = sum;
 
 		return ((uint64_t)hash1) + ((uint64_t)hash2 << 32);
+	}
+
+	//Comparison function for list::sort by hash.
+	inline bool hash_comp(const BsaAsset first, const BsaAsset second) {
+		 
+		//Data losses are intentional.
+		uint32_t f1 = first.hash;
+		uint32_t f2 = first.hash >> 32;
+		uint32_t s1 = second.hash;
+		uint32_t s2 = second.hash >> 32;
+
+		if (f1 < s1)
+			return true;
+		else if (f1 > s1)
+			return false;
+		else if (f2 < s2)
+			return true;
+		else if (f2 > s2)
+			return false;
+
+		return first.path < second.path;
+	}
+
+	//Comparison function for list::sort by path.
+	inline bool path_comp(const BsaAsset first, const BsaAsset second) {
+		return first.path < second.path;
 	}
 } }
 
