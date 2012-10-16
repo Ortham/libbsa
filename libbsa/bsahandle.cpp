@@ -213,7 +213,6 @@ bsa_handle_int::bsa_handle_int(const string path) :
 
 			in.close(); //No longer need the file open.
 
-ofstream debug("debug.txt");
 			/* Loop through the folder records, for each folder looking up the file records associated with it,
 			and the filenames associated with those records. */
 			uint32_t fileNameListPos = 0;
@@ -254,14 +253,8 @@ ofstream debug("debug.txt");
 
 					//Finally, add file path and object to list.
 					assets.push_back(fileData);
-
-//Do hash test.
-uint64_t hash = tes4::CalcHash(fileData.path);
-if (fileData.hash != hash)
-	debug << fileData.path << '\t' << fileData.hash << '\t' << hash << endl;
 				}
 			}
-debug.close();
 
 			//Record the file and archive flags.
 			fileFlags = header.fileFlags;

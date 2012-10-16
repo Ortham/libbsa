@@ -80,7 +80,7 @@ namespace libbsa { namespace tes4 {
 	inline uint32_t HashString(std::string str) {
 		uint32_t hash = 0;
 		for (size_t i=0, len=str.length(); i < len; i++) {
-			hash = 0x1003F * hash + str[i];
+			hash = 0x1003F * hash + (uint8_t)str[i];
 		}
 		return hash;
 	}
@@ -92,7 +92,6 @@ namespace libbsa { namespace tes4 {
 		uint32_t hash2 = 0;
 		uint32_t hash3 = 0;
 
-		boost::to_lower(path);
 		const std::string ext = boost::filesystem::path(path).extension().string();
 		std::string file;
 		if (ext.empty())
@@ -102,15 +101,16 @@ namespace libbsa { namespace tes4 {
 		const size_t len = file.length(); 
 	
 		if (!file.empty()) {
-			hash1 =
-				(uint64_t)(file[len - 1])
-				+ ((uint64_t)(len) << 16)
-				+ ((uint64_t)(file[0]) << 24);
+			hash1 = (uint64_t)(
+					((uint8_t)file[len - 1])
+					+ (len << 16)
+					+ ((uint8_t)file[0] << 24)
+				);
 		
 			if (len > 2) {
-				hash1 += ((uint64_t)(file[len - 2]) << 8);
+				hash1 += ((uint8_t)file[len - 2] << 8);
 				if (len > 3)
-					hash2 = HashString(file);
+					hash2 = HashString(file.substr(1, len - 3));
 			}
 		}
 	
@@ -124,7 +124,7 @@ namespace libbsa { namespace tes4 {
 			else if (ext == ".wav")
 				hash1 += 0x80000000;
 
-			hash3 = HashString(file);
+			hash3 = HashString(ext);
 		}
 	
 		hash2 = hash2 + hash3;
