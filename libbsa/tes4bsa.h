@@ -88,30 +88,23 @@ namespace libbsa { namespace tes4 {
 
 	//Implemented following the Python example here:
 	//<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
-	inline uint64_t CalcHash(std::string path) {
+	inline uint64_t CalcHash(std::string path, std::string ext) {
 		uint64_t hash1 = 0;
 		uint32_t hash2 = 0;
 		uint32_t hash3 = 0;
-
-		const std::string ext = boost::filesystem::path(path).extension().string();
-		std::string file;
-		if (ext.empty())
-			file = boost::filesystem::path(path).string();
-		else
-			file = boost::filesystem::path(path).stem().string();
-		const size_t len = file.length(); 
+		const size_t len = path.length(); 
 	
-		if (!file.empty()) {
+		if (!path.empty()) {
 			hash1 = (uint64_t)(
-					((uint8_t)file[len - 1])
+					((uint8_t)path[len - 1])
 					+ (len << 16)
-					+ ((uint8_t)file[0] << 24)
+					+ ((uint8_t)path[0] << 24)
 				);
 		
 			if (len > 2) {
-				hash1 += ((uint8_t)file[len - 2] << 8);
+				hash1 += ((uint8_t)path[len - 2] << 8);
 				if (len > 3)
-					hash2 = HashString(file.substr(1, len - 3));
+					hash2 = HashString(path.substr(1, len - 3));
 			}
 		}
 	

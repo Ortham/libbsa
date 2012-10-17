@@ -32,40 +32,40 @@ int main() {
 	/* List of official BSAs for testing. 
 	R = Reads OK, E = Extracts OK, W = Writes OK.
 	!R = Doesn't read OK, !E and !W similar.
-	If a bsa is missing a R/!R, E/!E, W/!W, it means that hasn't been tested yet.
+
 	Morrowind:
 		Morrowind.bsa                           R	E	!W
 		Bloodmoon.bsa                           R	E	!W
 		Tribunal.bsa                            R	E	W
 
 	Oblivion:
-		Oblivion - Meshes.bsa                   R	E
-		Oblivion - Misc.bsa                     R	E
-		Oblivion - Sounds.bsa                   R	E
-		Oblivion - Textures - Compressed.bsa    R	E
-		Oblivion - Voices1.bsa                  R	E
-		Oblivion - Voices2.bsa                  R	E
+		Oblivion - Meshes.bsa                   R	E	!W
+		Oblivion - Misc.bsa                     R	E	W
+		Oblivion - Sounds.bsa                   R	E	W
+		Oblivion - Textures - Compressed.bsa    R	E	W
+		Oblivion - Voices1.bsa                  R	E	W
+		Oblivion - Voices2.bsa                  R	E	W
 		Knights.bsa                             R	E	!W
-		DLCShiveringIsles - Meshes.bsa          R	E
-		DLCShiveringIsles - Sounds.bsa          R	E
-		DLCShiveringIsles - Textures.bsa        R	E
-		DLCShiveringIsles - Voices.bsa          R	E
+		DLCShiveringIsles - Meshes.bsa          R	E	!W
+		DLCShiveringIsles - Sounds.bsa          R	E	W
+		DLCShiveringIsles - Textures.bsa        R	E	!W
+		DLCShiveringIsles - Voices.bsa          R	E	W
 
 	Skyrim:
-		Skyrim - Animations.bsa                 R	E
-		Skyrim - Interface.bsa                  R	E
-		Skyrim - Meshes.bsa                     R	E
-		Skyrim - Misc.bsa                       R	E
-		Skyrim - Shaders.bsa                    R	E
-		Skyrim - Sounds.bsa                     R	E
-		Skyrim - Textures.bsa                   R	E
-		Skyrim - Voices.bsa                     R	E
-		Skyrim - VoicesExtra.bsa                R	E
-		Update.bsa                              R	E
+		Skyrim - Animations.bsa                 R	E	!W
+		Skyrim - Interface.bsa                  R	E	W
+		Skyrim - Meshes.bsa                     R	E	!W
+		Skyrim - Misc.bsa                       R	E	!W
+		Skyrim - Shaders.bsa                    R	E	!W
+		Skyrim - Sounds.bsa                     R	E	W
+		Skyrim - Textures.bsa                   R	E	!W
+		Skyrim - Voices.bsa                     R	E	W
+		Skyrim - VoicesExtra.bsa                R	E	W
+		Update.bsa                              R	E	W
 	*/
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Update.bsa");
-	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Update.bsa.new");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Oblivion - Voices2.bsa");
+	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Oblivion - Voices2.bsa.new");
 //	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
 //	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
 	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc");
@@ -129,7 +129,7 @@ int main() {
 		}
 */	
 		out << "TESTING SaveBSA(...)" << endl;
-		ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES5 | LIBBSA_COMPRESS_LEVEL_NOCHANGE);
+		ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES4 | LIBBSA_COMPRESS_LEVEL_NOCHANGE);
 		if (ret != LIBBSA_OK)
 			out << '\t' << "SaveBSA(...) failed! Return code: " << ret << endl;
 		else

@@ -399,7 +399,7 @@ debug.close();
 			folderAsset.path = trans.Utf8ToEnc(fs::path(it->path).parent_path().string());
 			fileAsset.path = trans.Utf8ToEnc(it->path); /*fs::path(it->path).filename().string();*/
 
-			folderAsset.hash = tes4::CalcHash(folderAsset.path);
+			folderAsset.hash = tes4::CalcHash(folderAsset.path, "");
 			fileAsset.hash = it->hash;
 
 			fileAsset.size = it->size;
