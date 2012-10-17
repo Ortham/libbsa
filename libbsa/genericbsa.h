@@ -24,6 +24,7 @@
 #ifndef LIBBSA_GENERICBSA_H
 #define LIBBSA_GENERICBSA_H
 
+#include "helpers.h"
 #include <stdint.h>
 #include <string>
 #include <list>
@@ -53,27 +54,34 @@ namespace libbsa {
 		std::string extPath;  //Path of file in filesystem.
 		std::string intPath;  //Path of file in BSA.
 	};
-
-	//Class for generic BSA data manipulation functions.
-	class BSA {
-	public:
-		BSA(const std::string path);
-
-		bool HasAsset(const std::string assetPath);
-		BsaAsset GetAsset(const std::string assetPath);
-		void GetMatchingAssets(const boost::regex regex, std::list<BsaAsset> &matchingAssets);
-	
-		void Extract(const std::string assetPath, const std::string destPath);
-		void Extract(const std::list<libbsa::BsaAsset> &assetsToExtract, const std::string destPath);
-
-		virtual void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath) = 0;
-	protected:
-		std::string filePath;
-		std::list<BsaAsset> assets;			//Files not yet written to the BSA are in this and pendingAssets.
-		std::list<PendingBsaAsset> pendingAssets;  //Holds the internal->external path mapping for files not yet written to the BSA.
-	};
-
 }
+
+//Class for generic BSA data manipulation functions.
+struct bsa_handle_int {
+public:
+	bsa_handle_int(const std::string path);
+	~bsa_handle_int();
+	virtual void Save(std::string path, const uint32_t version, const uint32_t compression) = 0;
+
+	bool HasAsset(const std::string assetPath);
+	libbsa::BsaAsset GetAsset(const std::string assetPath);
+	void GetMatchingAssets(const boost::regex regex, std::list<libbsa::BsaAsset> &matchingAssets);
+	
+	void Extract(const std::string assetPath, const std::string destPath);
+	void Extract(const std::list<libbsa::BsaAsset> &assetsToExtract, const std::string destPath);
+
+	//External data array pointers and sizes.
+	uint8_t ** extAssets;
+	size_t extAssetsNum;
+protected:
+	virtual void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath) = 0;
+
+	std::string filePath;
+	std::list<libbsa::BsaAsset> assets;			//Files not yet written to the BSA are in this and pendingAssets.
+	std::list<libbsa::PendingBsaAsset> pendingAssets;  //Holds the internal->external path mapping for files not yet written to the BSA.
+
+	libbsa::Transcoder trans;  //For Windows-1252 <-> UTF-8 encoding conversion.
+};
 
 
 #endif

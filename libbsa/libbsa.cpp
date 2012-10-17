@@ -23,7 +23,9 @@
 
 #include "libbsa.h"
 #include "helpers.h"
-#include "bsahandle.h"
+#include "genericbsa.h"
+#include "tes3bsa.h"
+#include "tes4bsa.h"
 #include "exception.h"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/filesystem.hpp>
@@ -148,9 +150,15 @@ LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path) {
 	locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
 	boost::filesystem::path::imbue(loc);
 
-	//Create handle.
+	//Create handle for the appropriate BSA type.
 	try {
-		*bh = new bsa_handle_int(string(reinterpret_cast<const char *>(path)));
+		string pathStr = string(reinterpret_cast<const char *>(path));
+		if (tes3::IsBSA(pathStr))
+			*bh = new tes3::BSA(pathStr);
+		else if (tes4::IsBSA(pathStr))
+			*bh = new tes4::BSA(pathStr);
+		else
+			*bh = new tes4::BSA(pathStr);  //Arbitrary choice of BSA type.
 	} catch (error& e) {
 		return e.code();
 	}

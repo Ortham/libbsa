@@ -77,66 +77,34 @@ namespace libbsa { namespace tes4 {
 		uint32_t offset;	//Offset to the raw file data, from byte 0.
 	};
 
-	// Calculates a mini-hash.
-	inline uint32_t HashString(std::string str) {
-		uint32_t hash = 0;
-		for (size_t i=0, len=str.length(); i < len; i++) {
-			hash = 0x1003F * hash + (uint8_t)str[i];
-		}
-		return hash;
-	}
+	//Tes4-type BSA class.
+	class BSA : public bsa_handle_int {
+	public:
+		BSA(const std::string path);
+		void Save(std::string path, const uint32_t version, const uint32_t compression);
 
-	//Implemented following the Python example here:
-	//<http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
-	inline uint64_t CalcHash(std::string path, std::string ext) {
-		uint64_t hash1 = 0;
-		uint32_t hash2 = 0;
-		uint32_t hash3 = 0;
-		const size_t len = path.length(); 
-	
-		if (!path.empty()) {
-			hash1 = (uint64_t)(
-					((uint8_t)path[len - 1])
-					+ (len << 16)
-					+ ((uint8_t)path[0] << 24)
-				);
-		
-			if (len > 2) {
-				hash1 += ((uint8_t)path[len - 2] << 8);
-				if (len > 3)
-					hash2 = HashString(path.substr(1, len - 3));
-			}
-		}
-	
-		if (!ext.empty()) {
-			if (ext == ".kf")
-				hash1 += 0x80;
-			else if (ext == ".nif")
-				hash1 += 0x8000;
-			else if (ext == ".dds")
-				hash1 += 0x8080;
-			else if (ext == ".wav")
-				hash1 += 0x80000000;
+	private:
+		void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath);
 
-			hash3 = HashString(ext);
-		}
-	
-		hash2 = hash2 + hash3;
-		return ((uint64_t)hash2 << 32) + hash1;
-	}
+		uint32_t HashString(std::string str);
+		uint64_t CalcHash(std::string path, std::string ext);
 
-	//Comparison function for list::sort by hash.
-	inline bool hash_comp(const BsaAsset first, const BsaAsset second) {
-		return first.hash < second.hash;
-	}
+		uint32_t archiveFlags;
+		uint32_t fileFlags;
+	};
+
+	bool hash_comp(const BsaAsset first, const BsaAsset second);
 
 	//Comparison class for list::unique.
-	class is_same_file {
+	class path_comp {
 	public:
 		bool operator() (const BsaAsset first, const BsaAsset second) {
 			return first.path == second.path;
 		}
-	} same_file_comp;
+	};
+
+	//Check if a given file is a Tes4-type BSA.
+	bool IsBSA(std::string path);
 } }
 
 #endif

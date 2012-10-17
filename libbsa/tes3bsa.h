@@ -50,56 +50,25 @@ namespace libbsa { namespace tes3 {
 		uint32_t offset;
 	};
 
-	inline uint64_t CalcHash(const std::string path) {
-		size_t len = path.length();
-		uint32_t hash1 = 0;
-		uint32_t hash2 = 0;
-		unsigned l = path.length() >> 1;
-		unsigned sum, off, temp, i, n;
+	class BSA : public bsa_handle_int {
+	public:
+		BSA(const std::string path);
+		void Save(std::string path, const uint32_t version, const uint32_t compression);
 
-		for (sum = off = i = 0; i < l; i++) {
-			sum ^= (((unsigned)(path[i])) << (off & 0x1F));
-			off += 8;
-		}
-		hash1 = sum;
+	private:
+		void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath);
 
-		for (sum = off = 0; i < len; i++) {
-			temp = (((unsigned)(path[i])) << (off & 0x1F));
-			sum ^= temp;
-			n = temp & 0x1F;
-			sum = (sum << (32 - n)) | (sum >> n);
-			off += 8;
-		}
-		hash2 = sum;
+		uint64_t CalcHash(const std::string path);
 
-		return ((uint64_t)hash1) + ((uint64_t)hash2 << 32);
-	}
+		uint32_t hashOffset;
+	};
+	
+	bool hash_comp(const BsaAsset first, const BsaAsset second);
 
-	//Comparison function for list::sort by hash.
-	inline bool hash_comp(const BsaAsset first, const BsaAsset second) {
-		 
-		//Data losses are intentional.
-		uint32_t f1 = first.hash;
-		uint32_t f2 = first.hash >> 32;
-		uint32_t s1 = second.hash;
-		uint32_t s2 = second.hash >> 32;
+	bool path_comp(const BsaAsset first, const BsaAsset second);
 
-		if (f1 < s1)
-			return true;
-		else if (f1 > s1)
-			return false;
-		else if (f2 < s2)
-			return true;
-		else if (f2 > s2)
-			return false;
-
-		return first.path < second.path;
-	}
-
-	//Comparison function for list::sort by path.
-	inline bool path_comp(const BsaAsset first, const BsaAsset second) {
-		return first.path < second.path;
-	}
+	//Check if a given file is a Tes3-type BSA.
+	bool IsBSA(std::string path);
 } }
 
 #endif

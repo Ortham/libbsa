@@ -33,9 +33,6 @@
     <ClInclude Include="genericbsa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bsahandle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="exception.cpp">
@@ -47,10 +44,13 @@
     <ClCompile Include="libbsa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bsahandle.cpp">
+    <ClCompile Include="genericbsa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="genericbsa.cpp">
+    <ClCompile Include="tes4bsa.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tes3bsa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

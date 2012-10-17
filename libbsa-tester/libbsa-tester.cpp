@@ -64,8 +64,8 @@ int main() {
 		Update.bsa                              R	E	W
 	*/
 
-	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Oblivion - Voices2.bsa");
-	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Oblivion - Voices2.bsa.new");
+	uint8_t * path = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Update.bsa");
+	uint8_t * outPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Update.bsa.new");
 //	uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
 //	uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
 	uint8_t * destPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\Libbsa Testing\\BSAs\\Skyrim - Misc");

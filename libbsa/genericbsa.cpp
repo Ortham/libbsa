@@ -27,6 +27,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace libbsa;
 
 namespace libbsa {
 	//////////////////////////////////////////////
@@ -34,72 +35,77 @@ namespace libbsa {
 	//////////////////////////////////////////////
 
 	BsaAsset::BsaAsset() : hash(0), size(0), offset(0) {}
+}
 
-	//////////////////////////////////////////////
-	// BSA Class Methods
-	//////////////////////////////////////////////
+//////////////////////////////////////////////
+// BSA Class Methods
+//////////////////////////////////////////////
 
-	BSA::BSA(const std::string path) : filePath(path) {}
+bsa_handle_int::bsa_handle_int(const std::string path) : filePath(path), extAssets(NULL), extAssetsNum(0) {}
 
-	bool BSA::HasAsset(const std::string assetPath) {
-		for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-			if (it->path == assetPath)
-				return true;
-		}
-		return false;
+bsa_handle_int::~bsa_handle_int() {
+	for (size_t i=0; i < extAssetsNum; i++)
+		delete [] extAssets[i];
+	delete [] extAssets;
+}
+
+bool bsa_handle_int::HasAsset(const std::string assetPath) {
+	for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+		if (it->path == assetPath)
+			return true;
 	}
+	return false;
+}
 
-	BsaAsset BSA::GetAsset(const std::string assetPath) {
-		for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-			if (it->path == assetPath)
-				return *it;
-		}
-		BsaAsset ba;
-		return ba;
+BsaAsset bsa_handle_int::GetAsset(const std::string assetPath) {
+	for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+		if (it->path == assetPath)
+			return *it;
 	}
+	BsaAsset ba;
+	return ba;
+}
 
-	void BSA::GetMatchingAssets(const boost::regex regex, std::list<BsaAsset> &matchingAssets) {
-		matchingAssets.clear();
-		for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-			if (boost::regex_match(it->path, regex))
-				matchingAssets.push_back(*it);
-		}
+void bsa_handle_int::GetMatchingAssets(const boost::regex regex, std::list<BsaAsset> &matchingAssets) {
+	matchingAssets.clear();
+	for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+		if (boost::regex_match(it->path, regex))
+			matchingAssets.push_back(*it);
 	}
+}
 
-	void BSA::Extract(const std::string assetPath, const std::string outPath) {
-		//Get asset data.
-		BsaAsset data = GetAsset(assetPath);
-		if (data.path.empty())
-			throw error(LIBBSA_ERROR_FILE_NOT_FOUND, assetPath);
+void bsa_handle_int::Extract(const std::string assetPath, const std::string outPath) {
+	//Get asset data.
+	BsaAsset data = GetAsset(assetPath);
+	if (data.path.empty())
+		throw error(LIBBSA_ERROR_FILE_NOT_FOUND, assetPath);
 
-		try {
-			//Open input stream.
-			ifstream in(filePath.c_str(), ios::binary);
-			in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+	try {
+		//Open input stream.
+		ifstream in(filePath.c_str(), ios::binary);
+		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-			ExtractFromStream(in, data, outPath + '\\' + data.path);
+		ExtractFromStream(in, data, outPath + '\\' + data.path);
 
-			in.close();
-		} catch (ios_base::failure& e) {
-			throw error(LIBBSA_ERROR_FILE_READ_FAIL, filePath);
-		}
+		in.close();
+	} catch (ios_base::failure& e) {
+		throw error(LIBBSA_ERROR_FILE_READ_FAIL, filePath);
 	}
+}
 
-	void BSA::Extract(const list<BsaAsset>& assetsToExtract, const std::string outPath) {
-		try {
-			//Open the source BSA.
-			ifstream in(filePath.c_str(), ios::binary);
-			in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+void bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::string outPath) {
+	try {
+		//Open the source BSA.
+		ifstream in(filePath.c_str(), ios::binary);
+		in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 	
-			//Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
-			for (list<BsaAsset>::const_iterator it = assetsToExtract.begin(), endIt = assetsToExtract.end(); it != endIt; ++it) {
-				ExtractFromStream(in, *it, outPath + '\\' + it->path);
-			}
-
-			in.close();
-		} catch (ios_base::failure& e) {
-			throw error(LIBBSA_ERROR_FILE_READ_FAIL, filePath);
+		//Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
+		for (list<BsaAsset>::const_iterator it = assetsToExtract.begin(), endIt = assetsToExtract.end(); it != endIt; ++it) {
+			ExtractFromStream(in, *it, outPath + '\\' + it->path);
 		}
-	}
 
+		in.close();
+	} catch (ios_base::failure& e) {
+		throw error(LIBBSA_ERROR_FILE_READ_FAIL, filePath);
+	}
 }

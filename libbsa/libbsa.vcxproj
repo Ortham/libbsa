@@ -28,7 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="exception.h" />
-    <ClInclude Include="bsahandle.h" />
     <ClInclude Include="genericbsa.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="libbsa.h" />
@@ -37,10 +36,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="exception.cpp" />
-    <ClCompile Include="bsahandle.cpp" />
     <ClCompile Include="genericbsa.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="libbsa.cpp" />
+    <ClCompile Include="tes3bsa.cpp" />
+    <ClCompile Include="tes4bsa.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7268D869-BFE1-44CF-AD88-1C95A6A4CD74}</ProjectGuid>
