@@ -92,7 +92,9 @@ For cross-compiling to Windows:
 If both native and cross-compiling, you'll need to delete the 'build'
 folder otherwise CMake will get confused and only build one of them (it
 doesn't seem to overwrite all the necessary config files when it
-generates the build system the second time).
+generates the build system the second time). You'll also probably have
+to rebuild zlib for each configuration, as it outputs all the files to
+the same directory.
 
 To compile a shared library, swap -DLIBSTR_LINK=STATIC with
 -DLIBSTR_LINK=SHARED

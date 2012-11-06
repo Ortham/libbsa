@@ -7,8 +7,6 @@ set (libbsa_VERSION_MINOR 0)
 set (libbsa_VERSION_PATCH 0)
 
 set (LIBBSA_SRC "${CMAKE_SOURCE_DIR}/src")
-#pthread is Linux-only, that needs to be hidden behind an IF check.
-#z if on Linux, zlibstatic if Win32
 set (LIBBSA_LIBS boost_filesystem boost_regex boost_system zlibstatic)
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     set (LIBBSA_LIBS ${LIBBSA_LIBS} pthread)
