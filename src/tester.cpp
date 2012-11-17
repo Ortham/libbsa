@@ -64,11 +64,11 @@ int main() {
         Update.bsa                              R   E   W
     */
 
-    const uint8_t * path = reinterpret_cast<const uint8_t *>("/media/oliver/6CF05918F058EA3A/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Update.bsa");
-    const uint8_t * outPath = reinterpret_cast<const uint8_t *>("/media/oliver/6CF05918F058EA3A/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Update.bsa.new");
+    const uint8_t * path = reinterpret_cast<const uint8_t *>("/media/oliver/6CF05918F058EA3A/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Skyrim - Misc.bsa");
+    const uint8_t * outPath = reinterpret_cast<const uint8_t *>("/media/oliver/6CF05918F058EA3A/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Skyrim - Misc.bsa.new");
 //  const uint8_t * asset = reinterpret_cast<uint8_t *>("meshes/m/probe_journeyman_01.nif");
 //  const uint8_t * extPath = reinterpret_cast<uint8_t *>("C:\\Users\\Oliver\\Downloads\\probe_journeyman_01.nif.extract");
-    const uint8_t * destPath = reinterpret_cast<const uint8_t *>("/media/oliver/6CF05918F058EA3A/Program Files (x86)/Steam/steamapps/common/skyrim/Data/Update");
+    const uint8_t * destPath = reinterpret_cast<const uint8_t *>("/home/oliver/Testing/libbsa/Skyrim - Misc/");
     bsa_handle bh;
     uint32_t ret;
     size_t numAssets;
@@ -111,14 +111,14 @@ int main() {
             out << '\t' << "IsAssetInBSA(...) successful! Is \"" << asset << "\" in BSA: " << result << endl;
 
         out << "TESTING ExtractAsset(...)" << endl;
-        ret = ExtractAsset(bh, asset, extPath);
+        ret = ExtractAsset(bh, asset, extPath, true);
         if (ret != LIBBSA_OK)
             out << '\t' << "ExtractAsset(...) failed! Return code: " << ret << endl;
         else
             out << '\t' << "ExtractAsset(...) successful!" << endl;
-
+*/
         out << "TESTING ExtractAssets(...)" << endl;
-        ret = ExtractAssets(bh, contentPath, destPath, &assetPaths, &numAssets);
+        ret = ExtractAssets(bh, contentPath, destPath, &assetPaths, &numAssets, true);
         if (ret != LIBBSA_OK)
             out << '\t' << "ExtractAssets(...) failed! Return code: " << ret << endl;
         else {
@@ -127,7 +127,7 @@ int main() {
                 out << '\t' << assetPaths[i] << endl;
             }
         }
-
+/*
         out << "TESTING SaveBSA(...)" << endl;
         ret = SaveBSA(bh, outPath, LIBBSA_VERSION_TES4 | LIBBSA_COMPRESS_LEVEL_NOCHANGE);
         if (ret != LIBBSA_OK)

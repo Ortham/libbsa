@@ -352,11 +352,11 @@ namespace libbsa { namespace tes4 {
         }*/
     }
 
-    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath) {
+    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath, const bool overwrite) {
         //Create parent directories.
         fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
 
-        if (fs::exists(outPath))
+        if (!overwrite && fs::exists(outPath))
             throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
 
         uint32_t size = data.size;

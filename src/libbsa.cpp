@@ -340,7 +340,7 @@ LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath) {
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets) {
+LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets, const bool overwrite) {
     if (bh == NULL || contentPath == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
         return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
 
@@ -374,7 +374,7 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 
     //Extract files.
     try {
-        bh->Extract(temp, string(reinterpret_cast<const char*>(destPath)));
+        bh->Extract(temp, string(reinterpret_cast<const char*>(destPath)), overwrite);
     } catch (error& e) {
         return e.code();
     }
@@ -401,14 +401,14 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 }
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
-LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath) {
+LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath, const bool overwrite) {
     if (bh == NULL || assetPath == NULL || destPath == NULL) //Check for valid args.
         return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
 
     string assetStr = FixPath(assetPath);
 
     try {
-        bh->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)));
+        bh->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
     } catch (error& e) {
         return e.code();
     }

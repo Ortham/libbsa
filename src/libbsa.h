@@ -1,24 +1,24 @@
-/*	libbsa
-	
-	A library for reading and writing BSA files.
+/*      libbsa
+
+        A library for reading and writing BSA files.
 
     Copyright (C) 2012    WrinklyNinja
 
-	This file is part of libbsa.
+        This file is part of libbsa.
 
-    libbsa is free software: you can redistribute 
-	it and/or modify it under the terms of the GNU General Public License 
-	as published by the Free Software Foundation, either version 3 of 
-	the License, or (at your option) any later version.
+    libbsa is free software: you can redistribute
+        it and/or modify it under the terms of the GNU General Public License
+        as published by the Free Software Foundation, either version 3 of
+        the License, or (at your option) any later version.
 
-    libbsa is distributed in the hope that it will 
-	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    libbsa is distributed in the hope that it will
+        be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libbsa.  If not, see 
-	<http://www.gnu.org/licenses/>.
+    along with libbsa.  If not, see
+        <http://www.gnu.org/licenses/>.
 */
 
 #ifndef LIBBSA_H
@@ -29,16 +29,16 @@
 
 #if defined(_MSC_VER)
 //MSVC doesn't support C99, so do the stdbool.h definitions ourselves.
-//START OF stdbool.h DEFINITIONS. 
-#	ifndef __cplusplus
-#		define bool	_Bool
-#		define true	1
-#		define false   0
-#	endif
-#	define __bool_true_false_are_defined   1
+//START OF stdbool.h DEFINITIONS.
+#       ifndef __cplusplus
+#               define bool     _Bool
+#               define true     1
+#               define false   0
+#       endif
+#       define __bool_true_false_are_defined   1
 //END OF stdbool.h DEFINITIONS.
 #else
-#	include <stdbool.h>
+#       include <stdbool.h>
 #endif
 
 // set up dll import/export decorators
@@ -46,8 +46,8 @@
 // that use this header do not need to define anything to import the symbols
 // properly.
 #if defined(_WIN32) || defined(_WIN64)
-#	ifdef LIBBSA_STATIC
-#		define LIBBSA
+#       ifdef LIBBSA_STATIC
+#               define LIBBSA
 #   elif defined LIBBSA_EXPORT
 #       define LIBBSA __declspec(dllexport)
 #   else
@@ -70,12 +70,12 @@ extern "C"
 /* Abstraction of BSA info structure while providing type safety. */
 typedef struct bsa_handle_int * bsa_handle;
 
-/* Holds the source and destination paths for an asset to be added to a BSA. 
+/* Holds the source and destination paths for an asset to be added to a BSA.
    These paths must be valid until the BSA is saved, as they are not actually
    written until then. */
 typedef struct {
-	uint8_t * sourcePath;  //The path of the asset in the external filesystem.
-	uint8_t * destPath;    //The path of the asset when it is in the BSA.
+        uint8_t * sourcePath;  //The path of the asset in the external filesystem.
+        uint8_t * destPath;    //The path of the asset when it is in the BSA.
 } bsa_asset;
 
 /* Return codes */
@@ -136,7 +136,7 @@ LIBBSA void CleanUpErrorDetails();
    Lifecycle Management Functions
 ----------------------------------*/
 
-/* Opens a BSA at path, returning a handle bh. If the BSA doesn't exist 
+/* Opens a BSA at path, returning a handle bh. If the BSA doesn't exist
    then the function will create a handle for a new file. */
 LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path);
 
@@ -145,7 +145,7 @@ LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path);
    compression level used (and whether the compression is forced). */
 LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flags);
 
-/* Closes the BSA associated with the given handle, freeing any memory 
+/* Closes the BSA associated with the given handle, freeing any memory
    allocated during its use. */
 LIBBSA void CloseBSA(bsa_handle bh);
 
@@ -154,8 +154,8 @@ LIBBSA void CloseBSA(bsa_handle bh);
    Content Reading Functions
 ------------------------------*/
 
-/* Gets an array of all the assets in the given BSA that match the contentPath 
-   given. contentPath is a POSIX Extended regular expression that all asset 
+/* Gets an array of all the assets in the given BSA that match the contentPath
+   given. contentPath is a POSIX Extended regular expression that all asset
    paths within the BSA will be compared to. */
 LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t *** assetPaths, size_t * numAssets);
 
@@ -181,14 +181,14 @@ LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath);
    Content Extraction Functions
 --------------------------------*/
 
-/* Extracts all the files and folders that match the contentPath given to the 
+/* Extracts all the files and folders that match the contentPath given to the
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets);
+LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets, const bool overwrite);
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
-LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath);
+LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath, const bool overwrite);
 
 #ifdef __cplusplus
 }
