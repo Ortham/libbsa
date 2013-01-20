@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -21,8 +21,8 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LIBBSA_TES4STRUCTS_H
-#define LIBBSA_TES4STRUCTS_H
+#ifndef __LIBBSA_TES4STRUCTS_H__
+#define __LIBBSA_TES4STRUCTS_H__
 
 #include "genericbsa.h"
 #include <stdint.h>
@@ -78,33 +78,33 @@ namespace libbsa { namespace tes4 {
     };
 
     //Tes4-type BSA class.
-    class BSA : public bsa_handle_int {
+    class BSA : public _bsa_handle_int {
     public:
-        BSA(const std::string path);
+        BSA(const std::string& path);
         void Save(std::string path, const uint32_t version, const uint32_t compression);
 
     private:
-        void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath, const bool overwrite);
+        void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite);
 
-        uint32_t HashString(std::string str);
-        uint64_t CalcHash(std::string path, std::string ext);
+        uint32_t HashString(const std::string& str);
+        uint64_t CalcHash(const std::string& path, const std::string& ext);
 
         uint32_t archiveFlags;
         uint32_t fileFlags;
     };
 
-    bool hash_comp(const BsaAsset first, const BsaAsset second);
+    bool hash_comp(const BsaAsset& first, const BsaAsset& second);
 
     //Comparison class for list::unique.
     class path_comp {
     public:
-        bool operator() (const BsaAsset first, const BsaAsset second) {
+        bool operator() (const BsaAsset& first, const BsaAsset& second) {
             return first.path == second.path;
         }
     };
 
     //Check if a given file is a Tes4-type BSA.
-    bool IsBSA(std::string path);
+    bool IsBSA(const std::string& path);
 } }
 
 #endif

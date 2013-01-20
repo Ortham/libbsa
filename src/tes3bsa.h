@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -21,8 +21,8 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LIBBSA_TES3STRUCTS_H
-#define LIBBSA_TES3STRUCTS_H
+#ifndef __LIBBSA_TES3STRUCTS_H__
+#define __LIBBSA_TES3STRUCTS_H__
 
 #include "genericbsa.h"
 #include <stdint.h>
@@ -50,25 +50,25 @@ namespace libbsa { namespace tes3 {
         uint32_t offset;
     };
 
-    class BSA : public bsa_handle_int {
+    class BSA : public _bsa_handle_int {
     public:
-        BSA(const std::string path);
+        BSA(const std::string& path);
         void Save(std::string path, const uint32_t version, const uint32_t compression);
 
     private:
-        void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath, const bool overwrite);
+        void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite);
 
-        uint64_t CalcHash(const std::string path);
+        uint64_t CalcHash(const std::string& path);
 
         uint32_t hashOffset;
     };
 
-    bool hash_comp(const BsaAsset first, const BsaAsset second);
+    bool hash_comp(const BsaAsset& first, const BsaAsset& second);
 
-    bool path_comp(const BsaAsset first, const BsaAsset second);
+    bool path_comp(const BsaAsset& first, const BsaAsset& second);
 
     //Check if a given file is a Tes3-type BSA.
-    bool IsBSA(std::string path);
+    bool IsBSA(const std::string& path);
 } }
 
 #endif

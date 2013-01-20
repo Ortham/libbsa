@@ -1,30 +1,29 @@
-/*      libbsa
+/*  libbsa
 
-        A library for reading and writing BSA files.
+    A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
-        This file is part of libbsa.
+    This file is part of libbsa.
 
     libbsa is free software: you can redistribute
-        it and/or modify it under the terms of the GNU General Public License
-        as published by the Free Software Foundation, either version 3 of
-        the License, or (at your option) any later version.
+    it and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or (at your option) any later version.
 
     libbsa is distributed in the hope that it will
-        be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
     along with libbsa.  If not, see
-        <http://www.gnu.org/licenses/>.
+    <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LIBBSA_H
-#define LIBBSA_H
+#ifndef __LIBBSA_H__
+#define __LIBBSA_H__
 
-#include <stdint.h>
 #include <stddef.h>
 
 #if defined(_MSC_VER)
@@ -68,45 +67,44 @@ extern "C"
 ------------------------------*/
 
 /* Abstraction of BSA info structure while providing type safety. */
-typedef struct bsa_handle_int * bsa_handle;
+typedef struct _bsa_handle_int * bsa_handle;
 
 /* Holds the source and destination paths for an asset to be added to a BSA.
    These paths must be valid until the BSA is saved, as they are not actually
    written until then. */
 typedef struct {
-        uint8_t * sourcePath;  //The path of the asset in the external filesystem.
-        uint8_t * destPath;    //The path of the asset when it is in the BSA.
+        char * sourcePath;  //The path of the asset in the external filesystem.
+        char * destPath;    //The path of the asset when it is in the BSA.
 } bsa_asset;
 
 /* Return codes */
-LIBBSA extern const uint32_t LIBBSA_OK;
-LIBBSA extern const uint32_t LIBBSA_ERROR_INVALID_ARGS;
-LIBBSA extern const uint32_t LIBBSA_ERROR_NO_MEM;
-LIBBSA extern const uint32_t LIBBSA_ERROR_FILE_NOT_FOUND;
-LIBBSA extern const uint32_t LIBBSA_ERROR_FILE_WRITE_FAIL;
-LIBBSA extern const uint32_t LIBBSA_ERROR_FILE_READ_FAIL;
-LIBBSA extern const uint32_t LIBBSA_ERROR_BAD_STRING;
-LIBBSA extern const uint32_t LIBBSA_ERROR_ZLIB_ERROR;
-LIBBSA extern const uint32_t LIBBSA_RETURN_MAX;
+LIBBSA extern const unsigned int LIBBSA_OK;
+LIBBSA extern const unsigned int LIBBSA_ERROR_INVALID_ARGS;
+LIBBSA extern const unsigned int LIBBSA_ERROR_NO_MEM;
+LIBBSA extern const unsigned int LIBBSA_ERROR_FILESYSTEM_ERROR;
+LIBBSA extern const unsigned int LIBBSA_ERROR_BAD_STRING;
+LIBBSA extern const unsigned int LIBBSA_ERROR_ZLIB_ERROR;
+LIBBSA extern const unsigned int LIBBSA_ERROR_PARSE_FAIL;
+LIBBSA extern const unsigned int LIBBSA_RETURN_MAX;
 /* No doubt there will be more... */
 
 /* BSA save flags */
 /* Use only one version flag. */
-LIBBSA extern const uint32_t LIBBSA_VERSION_TES3;
-LIBBSA extern const uint32_t LIBBSA_VERSION_TES4;
-LIBBSA extern const uint32_t LIBBSA_VERSION_TES5;  //Use for Fallout 3 and Fallout: New Vegas too.
+LIBBSA extern const unsigned int LIBBSA_VERSION_TES3;
+LIBBSA extern const unsigned int LIBBSA_VERSION_TES4;
+LIBBSA extern const unsigned int LIBBSA_VERSION_TES5;  //Use for Fallout 3 and Fallout: New Vegas too.
 /* Use only one compression flag. */
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_0;  //No compression.
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_1;  //Least compression.
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_2;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_3;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_4;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_5;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_6;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_7;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_8;
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_9;  //Most compression.
-LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_NOCHANGE;  //Use compression used in the opened BSA.
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_0;  //No compression.
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_1;  //Least compression.
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_2;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_3;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_4;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_5;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_6;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_7;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_8;
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_9;  //Most compression.
+LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_NOCHANGE;  //Use compression used in the opened BSA.
 
 
 /*------------------------------
@@ -115,10 +113,10 @@ LIBBSA extern const uint32_t LIBBSA_COMPRESS_LEVEL_NOCHANGE;  //Use compression 
 
 /* Returns whether this version of libbsa is compatible with the given
    version of libbsa. */
-LIBBSA bool IsCompatibleVersion (const uint32_t versionMajor, const uint32_t versionMinor, const uint32_t versionPatch);
+LIBBSA bool bsa_is_compatible (const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch);
 
 /* Gets the version numbers for the libary. */
-LIBBSA void GetVersionNums(uint32_t * versionMajor, uint32_t * versionMinor, uint32_t * versionPatch);
+LIBBSA void bsa_get_version (unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch);
 
 
 /*------------------------------
@@ -126,10 +124,10 @@ LIBBSA void GetVersionNums(uint32_t * versionMajor, uint32_t * versionMinor, uin
 ------------------------------*/
 
 /* Gets a string with details about the last error returned. */
-LIBBSA uint32_t GetLastErrorDetails(uint8_t ** details);
+LIBBSA unsigned int bsa_get_error_message (const char ** const details);
 
 /* Frees the memory allocated to the last error details string. */
-LIBBSA void CleanUpErrorDetails();
+LIBBSA void bsa_cleanup ();
 
 
 /*----------------------------------
@@ -138,16 +136,16 @@ LIBBSA void CleanUpErrorDetails();
 
 /* Opens a BSA at path, returning a handle bh. If the BSA doesn't exist
    then the function will create a handle for a new file. */
-LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path);
+LIBBSA unsigned int bsa_open (bsa_handle * const bh, const char * const path);
 
 /* Create a BSA at the specified path. The 'flags' argument consists of a set
    of bitwise OR'd constants defining the version of the BSA and the
    compression level used (and whether the compression is forced). */
-LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flags);
+LIBBSA unsigned int bsa_save (bsa_handle bh, const char * const path, const unsigned int flags);
 
 /* Closes the BSA associated with the given handle, freeing any memory
    allocated during its use. */
-LIBBSA void CloseBSA(bsa_handle bh);
+LIBBSA void bsa_close (bsa_handle bh);
 
 
 /*------------------------------
@@ -157,10 +155,10 @@ LIBBSA void CloseBSA(bsa_handle bh);
 /* Gets an array of all the assets in the given BSA that match the contentPath
    given. contentPath is a POSIX Extended regular expression that all asset
    paths within the BSA will be compared to. */
-LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t *** assetPaths, size_t * numAssets);
+LIBBSA unsigned int bsa_get_assets (bsa_handle bh, const char * const contentPath, char *** const assetPaths, size_t * const numAssets);
 
 /* Checks if a specific asset, found within the BSA at assetPath, is in the given BSA. */
-LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * result);
+LIBBSA unsigned int bsa_contains_asset (bsa_handle bh, const char * const assetPath, bool * const result);
 
 
 /*------------------------------
@@ -168,13 +166,13 @@ LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * re
 ------------------------------*/
 
 /* Replaces all the assets in the given BSA with the given assets. */
-LIBBSA uint32_t SetAssets(bsa_handle bh, const bsa_asset * assets, const size_t numAssets);
+LIBBSA unsigned int bsa_set_assets (bsa_handle bh, const bsa_asset * const assets, const size_t numAssets);
 
 /* Adds a specific asset to a BSA. */
-LIBBSA uint32_t AddAsset(bsa_handle bh, const bsa_asset asset);
+LIBBSA unsigned int bsa_add_asset (bsa_handle bh, const bsa_asset asset);
 
 /* Removes a specific asset, found at assetPath, from a BSA. */
-LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath);
+LIBBSA unsigned int bsa_remove_asset (bsa_handle bh, const char * const assetPath);
 
 
 /*--------------------------------
@@ -185,10 +183,10 @@ LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath);
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets, const bool overwrite);
+LIBBSA unsigned int bsa_extract_assets (bsa_handle bh, const char * const contentPath, const char * const destPath, char *** const assetPaths, size_t * const numAssets, const bool overwrite);
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
-LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath, const bool overwrite);
+LIBBSA unsigned int bsa_extract_asset (bsa_handle bh, const char * const assetPath, const char * const destPath, const bool overwrite);
 
 #ifdef __cplusplus
 }

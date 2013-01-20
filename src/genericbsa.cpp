@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -23,7 +23,7 @@
 
 #include "genericbsa.h"
 #include "libbsa.h"
-#include "exception.h"
+#include "error.h"
 #include <fstream>
 
 using namespace std;
@@ -41,15 +41,15 @@ namespace libbsa {
 // BSA Class Methods
 //////////////////////////////////////////////
 
-bsa_handle_int::bsa_handle_int(const std::string path) : filePath(path), extAssets(NULL), extAssetsNum(0) {}
+_bsa_handle_int::_bsa_handle_int(const std::string& path) : filePath(path), extAssets(NULL), extAssetsNum(0) {}
 
-bsa_handle_int::~bsa_handle_int() {
+_bsa_handle_int::~_bsa_handle_int() {
     for (size_t i=0; i < extAssetsNum; i++)
         delete [] extAssets[i];
     delete [] extAssets;
 }
 
-bool bsa_handle_int::HasAsset(const std::string assetPath) {
+bool _bsa_handle_int::HasAsset(const std::string& assetPath) {
     for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
         if (it->path == assetPath)
             return true;
@@ -57,7 +57,7 @@ bool bsa_handle_int::HasAsset(const std::string assetPath) {
     return false;
 }
 
-BsaAsset bsa_handle_int::GetAsset(const std::string assetPath) {
+BsaAsset _bsa_handle_int::GetAsset(const std::string& assetPath) {
     for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
         if (it->path == assetPath)
             return *it;
@@ -66,7 +66,7 @@ BsaAsset bsa_handle_int::GetAsset(const std::string assetPath) {
     return ba;
 }
 
-void bsa_handle_int::GetMatchingAssets(const boost::regex regex, std::list<BsaAsset> &matchingAssets) {
+void _bsa_handle_int::GetMatchingAssets(const boost::regex& regex, std::list<BsaAsset>& matchingAssets) {
     matchingAssets.clear();
     for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
         if (boost::regex_match(it->path, regex))
@@ -74,11 +74,11 @@ void bsa_handle_int::GetMatchingAssets(const boost::regex regex, std::list<BsaAs
     }
 }
 
-void bsa_handle_int::Extract(const std::string assetPath, const std::string outPath, const bool overwrite) {
+void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
     //Get asset data.
     BsaAsset data = GetAsset(assetPath);
     if (data.path.empty())
-        throw error(LIBBSA_ERROR_FILE_NOT_FOUND, assetPath);
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
     try {
         //Open input stream.
@@ -89,11 +89,11 @@ void bsa_handle_int::Extract(const std::string assetPath, const std::string outP
 
         in.close();
     } catch (ios_base::failure& e) {
-        throw error(LIBBSA_ERROR_FILE_READ_FAIL, filePath);
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }
 
-void bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::string outPath, const bool overwrite) {
+void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
     try {
         //Open the source BSA.
         ifstream in(filePath.c_str(), ios::binary);
@@ -106,6 +106,6 @@ void bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::s
 
         in.close();
     } catch (ios_base::failure& e) {
-        throw error(LIBBSA_ERROR_FILE_READ_FAIL, filePath);
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }

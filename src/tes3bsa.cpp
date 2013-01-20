@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -22,7 +22,7 @@
 */
 
 #include "tes3bsa.h"
-#include "exception.h"
+#include "error.h"
 #include "libbsa.h"
 #include <fstream>
 #include <boost/filesystem.hpp>
@@ -33,8 +33,8 @@ using namespace std;
 
 namespace libbsa { namespace tes3 {
 
-    BSA::BSA(const std::string path)
-        : bsa_handle_int(path),
+    BSA::BSA(const std::string& path)
+        : _bsa_handle_int(path),
         hashOffset(0) {
 
         //Set transcoding up.
@@ -75,8 +75,8 @@ namespace libbsa { namespace tes3 {
 
                 hashRecords = new uint64_t[header.fileCount];
                 in.read((char*)hashRecords, sizeof(uint64_t) * header.fileCount);
-            } catch (bad_alloc &e) {
-                throw error(LIBBSA_ERROR_NO_MEM);
+            } catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             in.close(); //No longer need the file open.
@@ -93,7 +93,7 @@ namespace libbsa { namespace tes3 {
                 //Find position of null pointer.
                 char * nptr = strchr((char*)(filenameRecords + filenameOffsets[i]), '\0');
                 if (nptr == NULL)
-                    throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
+                    throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
 
                 fileData.path = trans.EncToUtf8(string((char*)(filenameRecords + filenameOffsets[i]), nptr - (char*)(filenameRecords + filenameOffsets[i])));
 
@@ -138,8 +138,8 @@ namespace libbsa { namespace tes3 {
             fileRecords = new tes3::FileRecord[header.fileCount];
             filenameOffsets = new uint32_t[header.fileCount];
             hashes = new uint64_t[header.fileCount];
-        } catch (bad_alloc &e) {
-            throw error(LIBBSA_ERROR_NO_MEM);
+        } catch (bad_alloc& e) {
+            throw error(LIBBSA_ERROR_NO_MEM, e.what());
         }
 
         //Need to update the file data offsets before populating the records. This requires the list to be sorted by path.
@@ -214,8 +214,8 @@ debug.close();
             uint8_t * fileData;
             try {
                 fileData = new uint8_t[it->size];  //Doesn't matter where we get size from.
-            } catch (bad_alloc &e) {
-                throw error(LIBBSA_ERROR_NO_MEM);
+            } catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             //Read data in.
@@ -243,25 +243,25 @@ debug.close();
             try {
                 fs::rename(path, fs::path(path).stem());
             } catch (fs::filesystem_error& e) {
-                throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, fs::path(path).stem().string());
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
             }
         }*/
     }
 
-    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath, const bool overwrite) {
+    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite) {
         //Create parent directories.
         fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
 
         if (!overwrite && fs::exists(outPath))
-            throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
 
         //Just need to use size and offset to write to binary file stream.
         uint8_t * buffer;
 
         try {
             buffer = new uint8_t[data.size];
-        } catch (bad_alloc &e) {
-            throw error(LIBBSA_ERROR_NO_MEM);
+        } catch (bad_alloc& e) {
+            throw error(LIBBSA_ERROR_NO_MEM, e.what());
         }
 
         in.seekg(data.offset, ios_base::beg);
@@ -275,13 +275,13 @@ debug.close();
 
             out.close();
         } catch (ios_base::failure& e) {
-            throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
         }
 
         delete [] buffer;
     }
 
-    uint64_t BSA::CalcHash(const std::string path) {
+    uint64_t BSA::CalcHash(const std::string& path) {
         size_t len = path.length();
         uint32_t hash1 = 0;
         uint32_t hash2 = 0;
@@ -306,7 +306,7 @@ debug.close();
         return ((uint64_t)hash1) + ((uint64_t)hash2 << 32);
     }
 
-    bool hash_comp(const BsaAsset first, const BsaAsset second) {
+    bool hash_comp(const BsaAsset& first, const BsaAsset& second) {
         //Data losses are intentional.
         uint32_t f1 = first.hash;
         uint32_t f2 = first.hash >> 32;
@@ -325,12 +325,12 @@ debug.close();
         return first.path < second.path;
     }
 
-    bool path_comp(const BsaAsset first, const BsaAsset second) {
+    bool path_comp(const BsaAsset& first, const BsaAsset& second) {
         return first.path < second.path;
     }
 
     //Check if a given file is a Tes3-type BSA.
-    bool IsBSA(std::string path) {
+    bool IsBSA(const std::string& path) {
         //Check if file exists.
         if (!fs::exists(path))
             return false;

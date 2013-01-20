@@ -2,318 +2,356 @@
 <meta charset="utf-8">
 <title>libbsa readme</title>
 <style>
-	body {font-family:Helvetica,sans-serif;font-size:10pt;}
-	h1 + p {text-align:center;}
-	li {margin-bottom:10px;}
-	li ul, li ol {margin-top:0.4em;}
-	q {font-style:italic;}
-	code {display:inline-block; padding:2px 5px; background:#eee;}
-	td, th {border:1px solid #ddd; padding: 5px; vertical-align:top;}
-	table {border-collapse:collapse; margin:1em;background:#FafaFf;}
-	thead {font-weight:bold;background:#99CCFF;}
-	code.box {line-height:20px; white-space:pre; margin:1em 0 0 3em; display:table; padding:5px 10px;}
-	ol li ol {list-style:lower-alpha;}
-	ol li ol li ol {list-style:lower-roman;}
- ol ol li {margin-bottom:0.2em;}
-	blockquote {background:#E6E6FA; display:table; padding:5px 30px 5px 10px;}
-	h1 {text-align:center;font-size:24pt;}
-	h2 {margin-top:3em;font-size:20pt;}
-	h3 {margin-top:2em;font-size:16pt;}
-	h4 {margin-top:2em;font-size:12pt;}
-	a:link {text-decoration:none;}
-	a:hover {text-decoration:underline;}
-	a[href^="http"]:after {padding-left:2px; content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);}
-	
-	ul.errorMessages > li {margin-bottom:1.4em;}
-	td.t {background:#90ff90;text-align:center;}
-	td.c {background:#ff9090;text-align:center;}
-	td.t:after {content: '\2713';}
-	td.c:after {content: '\2717';}
-	img {border:0;}
-	.slideshow img {opacity:0; 
-		position:absolute;
-		transition: opacity 1.5s;
-		-moz-transition: opacity 1.5s;
-		-webkit-transition: opacity 1.5s;
-		-o-transition: opacity 1.5s;}
-	.slideshow img:first-child {opacity:1;}
-	figcaption {font-style:italic; margin-bottom:2em;}
-	tr.inactive {color:#888;}
- tr.inactive td.c, tr.inactive td.t {background:#E3E3E3;}
-	code.box {margin-left:0em;}
-	span[title] {border-bottom: 1px dotted; font-family: sans-serif; cursor:help;}
-	dt {margin-bottom:0.5em; margin-top:1em; font-style:italic;}
-	dd {margin-bottom:0.8em;}
-	abbr {cursor:help;}
-	
-	ul {margin-bottom:2em;}
-	.unimplemented {background:#c00;color:#fff;padding:5px; display:table;}
+    body {
+        font:12pt/1.5 Helvetica,sans-serif;
+        text-rendering:optimizeLegibility;}
+    p, ul, li {margin:1.5em 0;}
+    h1,h3,h2 {font-weight:normal;}
+h1{
+    font-size:36pt;
+    line-height:0.5;
+    margin-top:1.125em;
+    margin-bottom:0.375em;}
+h2{
+    font-size:24pt;
+    line-height:0.75;
+    margin-top:3em;
+    margin-bottom:1.5em;}
+h3{
+    font-size:18pt;
+    line-height:1;
+    margin-top:3.5em;
+    margin-bottom:1em;}
+    ul, ol {margin-top:0.5em; margin-bottom:1em;}
+    li {margin:0.75em 0;}
+    a:link {text-decoration:none;}
+    a:hover {text-decoration:underline;}
+    ol ol {list-style:lower-alpha;}
+
+    code {display:inline-block; padding:0 3px; background:#eee;}
+    td, th {border:1px solid #ddd; padding: 5px; vertical-align:top;}
+    table {border-collapse:collapse; margin:1.5em; margin-bottom: 3em; background:#fafafa;}
+    thead {background:#99CCFF;}
+    code.box {border-radius:5px; border:1px solid #ccc; padding:0.75em; white-space:pre; overflow-x:auto; display:table; margin:1.5em;}
+
+    blockquote {border-radius:3px; border:1px solid #0c0; padding:5px; background:#7e7; display:table;margin:1.5em;}
+
+    a[href^="http"]:after {padding-left:2px; content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);}
+
+    span[title] {border-bottom: 1px dotted; font-family: sans-serif; cursor:help;}
+    abbr {cursor:help;}
+
+    #warning {background:#c00; padding:10px 5px;margin:-8px;}
+    var {color:#8B4513;}
+    .dfn {display:block; margin-bottom:4.5em; font-style:normal;}
 </style>
 
 <!-- libbsa
 
-	A library for reading and writing STRINGS, ILSTRINGS and DLSTRINGS files.
+    A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
-	This file is part of libbsa.
+    This file is part of libbsa.
 
-    libbsa is free software: you can redistribute 
-	it and/or modify it under the terms of the GNU General Public License 
-	as published by the Free Software Foundation, either version 3 of 
-	the License, or (at your option) any later version.
+    libbsa is free software: you can redistribute
+    it and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or (at your option) any later version.
 
-    libbsa is distributed in the hope that it will 
-	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    libbsa is distributed in the hope that it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libbsa.  If not, see 
-	<http://www.gnu.org/licenses/>.
+    along with libbsa.  If not, see
+    <http://www.gnu.org/licenses/>.
 -->
 
 <h1>libbsa</h1>
 <h2>Contents</h2>
 <ol>
-	<li><a href="#intro">Introduction</a>
-	<li><a href="#types">Variable Types</a>
-	<li><a href="#memory">Memory Management</a>
-	<li><a href="#codes">Return Codes</a>
-	<li><a href="#flags">Save Flags</a>
-	<li><a href="#functions">Functions</a>
-	<ol>
-		<li><a href="#functions-error">Error Handling Functions</a>
-		<li><a href="#functions-version">Version Functions</a>
-		<li><a href="#functions-lifecycle">Lifecycle Management Functions</a>
-		<li><a href="#functions-read">Content Reading Functions</a>
-		<li><a href="#functions-write">Content Writing Functions</a>
-		<li><a href="#functions-extract">Content Extraction Functions</a>
-	</ol>
-	<li><a href="#example">Example Usage</a>
-	<li><a href="#contact">Contact</a>
-	<li><a href="#contact">Credits</a>
-	<li><a href="#license">License</a>
+    <li><a href="#intro">Introduction</a>
+    <li><a href="#types">Variable Types</a>
+    <li><a href="#memory">Memory Management</a>
+    <li><a href="#codes">Return Codes</a>
+    <li><a href="#flags">Save Flags</a>
+    <li><a href="#functions">Functions</a>
+    <ol>
+        <li><a href="#functions-error">Error Handling Functions</a>
+        <li><a href="#functions-version">Version Functions</a>
+        <li><a href="#functions-lifecycle">Lifecycle Management Functions</a>
+        <li><a href="#functions-read">Content Reading Functions</a>
+        <li><a href="#functions-write">Content Writing Functions</a>
+        <li><a href="#functions-extract">Content Extraction Functions</a>
+    </ol>
+    <li><a href="#example">Example Usage</a>
+    <li><a href="#credits">Credits</a>
+    <li><a href="#license">License</a>
 </ol>
 
 <h2 id="intro">Introduction</h2>
-<p>libbsa is a free software library for reading and writing BSA files. Its main features are:
+<p>libbsa is a free software library for reading and (in future) writing BSA files. Its main features are:
 <ul>
-	<li>C frontend.
-	<li>Available as x86 and x64 static and dynamic libraries.
-	<li>Support for BSAs used by TES III: Morrowind, TES IV: Oblivion, TES V: Skyrim, Fallout 3 and Fallout: New Vegas.
-	<li>Check if individual files are present within a BSA.
-	<li>Extract individual files from a BSA.
-	<li>Add/Remove individual files to/from a BSA.
-	<li>Get lists of files in a BSA by regular expression path matching.
-	<li>Extract files in a BSA by regular expression path matching.
-	<li>Replace all the files in a BSA.
-	<li>Free and open source software licensed under the GNU General Public License v3.0.
+    <li>C frontend.
+    <li>Available as x86 and x64 static and dynamic libraries.
+    <li>Support for BSAs used by TES III: Morrowind, TES IV: Oblivion, TES V: Skyrim, Fallout 3 and Fallout: New Vegas.
+    <li>Check if individual files are present within a BSA.
+    <li>Extract individual files from a BSA.
+    <!--<li>Add/Remove individual files to/from a BSA.-->
+    <li>Get lists of files in a BSA by regular expression path matching.
+    <li>Extract files in a BSA by regular expression path matching.
+    <!--<li>Replace all the files in a BSA.-->
+    <li>Free and open source software licensed under the GNU General Public License v3.0.
 </ul>
-<p>libbsa is designed to free modding utility developers from the task of implementing their own code for the functionality it provides. It is one component of the <q>Community Mod Utility Libraries</q>, and can be found <a href="https://github.com/WrinklyNinja/libbsa">on GitHub</a>.
+<p>libbsa is designed to free modding utility developers from the task of implementing their own code for the functionality it provides.
 <p><strong>Note</strong>: libbsa is <strong>not</strong> thread safe. Thread safety is a goal, but one that has not yet been achieved. Bear this in mind if using it in a multi-threaded client.
 
 
 <h2 id="types">Variable Types</h2>
-<p>libstrings uses character strings and integers for data input/output. 
+<p>libstrings uses character strings and integers for data input/output.
 <ul>
-	<li>All strings are unsigned 8-bit character strings (uint8_t*) encoded in UTF-8 and are null-terminated.
-	<li>All codes are unsigned 32-bit integers (uint32_t).
-	<li>All array sizes and positions use the unsigned data type size_t.
-	<li>Paths to files not in BSAs are case-sensitive if and only if the underlying file system is case-sensitive.
-	<li>Paths to files inside BSAs are lowercase, use backslashes as directory separators, and are relative to the BSA's root directory, which is not specified. For example, <code>/meshes/shovel.nif</code> is incorrect: <code>meshes\shovel.nif</code> is correct. libbsa will automatically correct any incorrect paths to individual files, but will not correct incorrect regular expression paths.
-	<li>Regular expressions use the <a href="http://www.boost.org/doc/libs/1_51_0/libs/regex/doc/html/boost_regex/syntax/basic_extended.html">POSIX Extended</a> syntax.
+    <li>All strings are null-terminated byte character strings encoded in UTF-8.
+    <li>All codes are unsigned integers at least 16 bits in size.
+    <li>All array sizes are unsigned integers at least 16 bits in size.
+    <li>Paths to files not in BSAs are case-sensitive if and only if the underlying file system is case-sensitive.
+    <li>Paths to files inside BSAs are lowercase, use backslashes as directory separators, and are relative to the BSA's root directory, which is not specified. For example, <code>/meshes/shovel.nif</code> is incorrect: <code>meshes\shovel.nif</code> is correct. libbsa will automatically correct any incorrect paths to individual files, but will not correct incorrect regular expression paths.
+    <li>Regular expressions use the <a href="http://www.boost.org/doc/libs/1_51_0/libs/regex/doc/html/boost_regex/syntax/basic_extended.html">POSIX Extended</a> syntax.
 </ul>
 <p>libstrings also introduces two new structures:
-<code class="box" id="bsa_handle">typedef struct bsa_handle_int * bsa_handle;</code>
-<p>The bsa_handle structure abstracts the definition of libstrings' internal state while still providing type safety across the library's functions.
+<code class="box" id="bsa_handle">typedef struct _bsa_handle_int * bsa_handle;</code>
+<p>The <code>bsa_handle</code> structure abstracts the definition of libbsa's internal state while still providing type safety across the library's functions.
 <code class="box" id="bsa_asset">typedef struct {
-	uint8_t * sourcePath;
-	uint8_t * destPath;
+    char * sourcePath;
+    char * destPath;
 } bsa_asset;</code>
-<p>The <var>bsa_asset</var> structure is provided for clients to specify the source location of a file to be added to a BSA and its destination location within the BSA. The source path must be valid until the next call to <a href="#SaveBSA">SaveBSA</a>, after which it is no longer necessary.
+<p>The <code>bsa_asset</code> structure is provided for clients to specify the source location of a file to be added to a BSA and its destination location within the BSA. The source path must be valid until the next call to <a href="#bsa_save">bsa_save</a>, after which it is no longer necessary.
 
 
 <h2 id="memory">Memory Management</h2>
 <p>libstrings manages the memory of strings and arrays it returns internally, so such strings and arrays should not be deallocated by the client.
-<p>A string or array outputted by libstrings lasts until the next call to a function which outputs data of the same type, eg. a string will last until a function outputting a string is called. <a href="#CloseBSAFile">CloseBSAFile</a> will also destroy all outputted strings and arrays.
-<p>The one exception to the above is the string outputted by <a href="#GetLastErrorDetails">GetLastErrorDetails</a>. This string is allocated independently of all other strings, so lasts until the next call to <a href="#GetLastErrorDetails">GetLastErrorDetails</a> or until <a href="#CleanUpErrorDetails">CleanUpErrorDetails</a> is called. It is not destroyed by <a href="#CloseBSAFile">CloseBSAFile</a>.
-<p>While the source path given in a <a href="#bsa_asset">bsa_asset</a> object must be valid until the next call to <a href="#SaveBSA">SaveBSA</a>, the memory allocated by the client for the path string may be freed at any point after the object's use.
+<p>Data returned by a function lasts until a function is called which returns data of the same type (eg. a string is stored until the client calls another function which returns a string, an integer array lasts until another integer array is returned, etc.).
+<p>All allocated memory is freed when <a href="#bsa_close">bsa_close</a> is called, except the string allocated by <a href="#bsa_get_error_message">bsa_get_error_message</a>, which must be freed by calling <a href="#bsa_cleanup">bsa_cleanup</a>.
+<p>While the source path given in a <a href="#bsa_asset">bsa_asset</a> object must be valid until the next call to <a href="#bsa_save">bsa_save</a>, the memory allocated by the client for the path string may be freed at any point after the object's use.
 
 
 <h2 id="codes">Return Codes</h2>
-<p>libbsa functions use the following uint32_t return codes to signal how a function completes. When a function exits prematurely, a reversal of changes made during its prior execution is attempted.
+<p>The following codes are used to signal how a function completes. When a function exits prematurely, a reversal of changes made during its prior execution is attempted.
 <table>
-	<thead><tr><th>Return Code<th>Description
-	<tbody>
-		<tr><td>LIBBSA_OK								<td>The function completed successfully.
-		<tr><td>LIBBSA_ERROR_INVALID_ARGS				<td>Invalid arguments were given for the function.
-		<tr><td>LIBBSA_ERROR_NO_MEM					<td>The library was unable to allocate the required memory.
-		<tr><td>LIBBSA_ERROR_FILE_NOT_FOUND			<td>A file could not be found.
-		<tr><td>LIBBSA_ERROR_FILE_WRITE_FAIL			<td>A file could not be written to.
-		<tr><td>LIBBSA_ERROR_FILE_READ_FAIL			<td>A file could not be read.
-		<tr><td>LIBBSA_ERROR_BAD_STRING				<td>A UTF-8 string contains characters that do not have Windows-1251/1252 code points, or vice versa.
-		<tr><td>LIBBSA_ERROR_ZLIB_ERROR				<td>zlib reported an error during file compression or decompression.
-		<tr><td>LIBBSA_RETURN_MAX						<td>Matches the value of the highest-numbered return code. Provided in case clients wish to incorporate additional return codes in their implementation and desire some method of avoiding value conflicts.
+    <thead><tr><th>Return Code<th>Description
+    <tbody>
+        <tr><td>LIBBSA_OK                           <td>The function completed successfully.
+        <tr><td>LIBBSA_ERROR_INVALID_ARGS           <td>Invalid arguments were given for the function.
+        <tr><td>LIBBSA_ERROR_NO_MEM                 <td>The library was unable to allocate the required memory.
+        <tr><td>LIBBSA_ERROR_FILESYSTEM_ERROR       <td>There was an error encountered while performing a filesystem interaction (eg. reading, writing).
+        <tr><td>LIBBSA_ERROR_BAD_STRING             <td>A UTF-8 string contains characters that do not have Windows-1252 code points, or vice versa.
+        <tr><td>LIBBSA_ERROR_ZLIB_ERROR             <td>zlib reported an error during file compression or decompression.
+        <tr><td>LIBBSA_ERROR_PARSE_FAIL             <td>There was an error encountered while reading a BSA.
+        <tr><td>LIBBSA_RETURN_MAX                   <td>Matches the value of the highest-numbered return code. Provided in case clients wish to incorporate additional return codes in their implementation and desire some method of avoiding value conflicts.
 </table>
 
 
 <h2 id="flags">Save Flags</h2>
 <p>The following flags are used to specify options when saving a BSA file. Only one from each type of flag must be used.
 <table>
-	<thead><tr><th>Version Flag<th>Description
-	<tbody>
-		<tr><td>LIBBSA_VERSION_TES3								<td>Specifies that the BSA to be created is for use with TES III: Morrowind.
-		<tr><td>LIBBSA_VERSION_TES4				<td>Specifies that the BSA to be created is for use with TES IV: Oblivion.
-		<tr><td>LIBBSA_VERSION_TES5					<td>Specifies that the BSA to be created is for use with TES V: Skyrim, Fallout 3 or Fallout: New Vegas.
+    <thead><tr><th>Version Flag<th>Description
+    <tbody>
+        <tr><td>LIBBSA_VERSION_TES3                             <td>Specifies that the BSA to be created is for use with TES III: Morrowind.
+        <tr><td>LIBBSA_VERSION_TES4             <td>Specifies that the BSA to be created is for use with TES IV: Oblivion.
+        <tr><td>LIBBSA_VERSION_TES5                 <td>Specifies that the BSA to be created is for use with TES V: Skyrim, Fallout 3 or Fallout: New Vegas.
 </table>
 <table>
-	<thead><tr><th>Compression Flag<th>Description
-	<tbody>
-		<tr><td>LIBBSA_COMPRESS_LEVEL_0								<td>Specifies that the files in the BSA are to be stored uncompressed. Morrowind BSAs must use this flag, as they cannot be compressed.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_1				<td>Specifies that the files in the BSA are to be compressed using the lowest compression level. This flag gives the smallest reduction in BSA file size of all the compression flags besides <code>LIBBSA_COMPRESS_LEVEL_0</code>, but results in the second fastest saving time.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_2					<td>Specifies that the files in the BSA are to be compressed using the second-lowest compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_3					<td>Specifies that the files in the BSA are to be compressed using the third-lowest compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_4					<td>Specifies that the files in the BSA are to be compressed using the fourth-lowest compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_5					<td>Specifies that the files in the BSA are to be compressed using the mid-range compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_6					<td>Specifies that the files in the BSA are to be compressed using the fourth-highest compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_7					<td>Specifies that the files in the BSA are to be compressed using the third-highest compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_8					<td>Specifies that the files in the BSA are to be compressed using the second-highest compression level.
-		<tr><td>LIBBSA_COMPRESS_LEVEL_9					<td>Specifies that the files in the BSA are to be compressed using the highest compression level. This flag gives the largest reduction in BSA file size, but results in the longest saving time.
+    <thead><tr><th>Compression Flag<th>Description
+    <tbody>
+        <tr><td>LIBBSA_COMPRESS_LEVEL_0                             <td>Specifies that the files in the BSA are to be stored uncompressed. Morrowind BSAs must use this flag, as they cannot be compressed.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_1             <td>Specifies that the files in the BSA are to be compressed using the lowest compression level. This flag gives the smallest reduction in BSA file size of all the compression flags besides <code>LIBBSA_COMPRESS_LEVEL_0</code>, but results in the second fastest saving time.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_2                 <td>Specifies that the files in the BSA are to be compressed using the second-lowest compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_3                 <td>Specifies that the files in the BSA are to be compressed using the third-lowest compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_4                 <td>Specifies that the files in the BSA are to be compressed using the fourth-lowest compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_5                 <td>Specifies that the files in the BSA are to be compressed using the mid-range compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_6                 <td>Specifies that the files in the BSA are to be compressed using the fourth-highest compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_7                 <td>Specifies that the files in the BSA are to be compressed using the third-highest compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_8                 <td>Specifies that the files in the BSA are to be compressed using the second-highest compression level.
+        <tr><td>LIBBSA_COMPRESS_LEVEL_9                 <td>Specifies that the files in the BSA are to be compressed using the highest compression level. This flag gives the largest reduction in BSA file size, but results in the longest saving time.
 </table>
 
 
 
 <h2 id="functions">Functions</h2>
-<p>libbsa provides the functions listed below to clients. Where a function returns a uint32_t value, this is the function's return code.
+<p>libbsa provides the functions listed below to clients. Where a function returns an unsigned int value, this is the function's return code.
 
 <h3 id="functions-error">Error Handling Functions</h3>
-<dfn id="GetLastErrorDetails">GetLastErrorDetails</dfn> - Outputs a string giving the details of the last time an error or warning return code was returned by a function.
-<code class="box">uint32_t <a href="#GetLastErrorDetails">GetLastErrorDetails</a> (uint8_t ** details);</code>
+<div class="dfn" id="bsa_get_error_message">
+<code class="box">unsigned int bsa_get_error_message (const char ** const details);</code>
+<p>Outputs a string giving the details of the last time an error or warning return code was returned by a function.
 <ul>
-	<li><var>details</var> - A pointer to the error details string outputted by the function.
+    <li><var>details</var> - A pointer to the error details string outputted by the function.
 </ul>
+</div>
 
-<dfn id="CleanUpErrorDetails">CleanUpErrorDetails</dfn> - Frees the memory allocated to the last error details string.
-<code class="box">void <a href="#CleanUpErrorDetails">CleanUpErrorDetails</a> ();</code>
+<div class="dfn" id="bsa_cleanup">
+<code class="box">void bsa_cleanup ();</code>
+<p>Frees the memory allocated to the last error details string.
 <ul>
-	<li><var>details</var> - A pointer to the error details string outputted by the function.
+    <li><var>details</var> - A pointer to the error details string outputted by the function.
 </ul>
+</div>
 
 <h3 id="functions-version">Version Functions</h3>
-<dfn id="IsCompatibleVersion">IsCompatibleVersion</dfn> - Returns whether this version of libbsa is compatible with the given version of libbsa. Abstracts library stability policy away from clients.
-<code class="box">bool <a href="#IsCompatibleVersion">IsCompatibleVersion</a> (const uint32_t bossVersionMajor, const uint32_t bossVersionMinor, const uint32_t bossVersionPatch);</code>
+<div class="dfn" id="bsa_is_compatible">
+<code class="box">bool bsa_is_compatible (const unsigned int versionMajor,
+                        const unsigned int versionMinor,
+                        const unsigned int versionPatch);</code>
+<p>Returns whether this version of libbsa is compatible with the given version of libbsa. Abstracts library stability policy away from clients.
 <ul>
-	<li><var>versionMajor</var> - The major version number (<b>major</b>.minor.patch) of the library version the client's code was written for.
-	<li><var>versionMinor</var> - The minor version number (major.<b>minor</b>.patch) of the library version the client's code was written for.
-	<li><var>versionPatch</var> - The patch version number (major.minor.<b>patch</b>) of the library version the client's code was written for.
+    <li><var>versionMajor</var> - The major version number (<b>major</b>.minor.patch) of the library version the client's code was written for.
+    <li><var>versionMinor</var> - The minor version number (major.<b>minor</b>.patch) of the library version the client's code was written for.
+    <li><var>versionPatch</var> - The patch version number (major.minor.<b>patch</b>) of the library version the client's code was written for.
 </ul>
+</div>
 
-<dfn id="GetVersionNums">GetVersionNums</dfn> - Returns the version numbers for the loaded version of libbsa.
-<code class="box">uint32_t <a href="#GetVersionNums">GetVersionNums</a> (uint32_t * versionMajor, uint32_t * versionMinor, uint32_t * versionPatch);</code>
+<div class="dfn" id="bsa_get_version">
+<code class="box">unsigned int bsa_get_version (unsigned int * const versionMajor,
+                              unsigned int * const versionMinor,
+                              unsigned int * const versionPatch);</code>
+<p>Outputs the version numbers for the loaded version of libbsa.
 <ul>
-	<li><var>versionMajor</var> - The major version number (<b>major</b>.minor.patch) of the library.
-	<li><var>versionMinor</var> - The minor version number (major.<b>minor</b>.patch) of the library.
-	<li><var>versionPatch</var> - The patch version number (major.minor.<b>patch</b>) of the library.
+    <li><var>versionMajor</var> - The major version number (<b>major</b>.minor.patch) of the library.
+    <li><var>versionMinor</var> - The minor version number (major.<b>minor</b>.patch) of the library.
+    <li><var>versionPatch</var> - The patch version number (major.minor.<b>patch</b>) of the library.
 </ul>
+</div>
 
 <h3 id="functions-lifecycle">Lifecycle Management Functions</h3>
-<dfn id="OpenBSA">OpenBSA</dfn> - Opens a BSA file, outputting a handle for its contents. If the file doesn't exist then a handle for a new file will be created. You can create multiple handles, including for the same file, but remember that libbsa is not thread safe.
-<code class="box">uint32_t <a href="#OpenBSA">OpenBSA</a> (bsa_handle * bh, const uint8_t * path);</code>
+<div class="dfn" id="bsa_open">
+<code class="box">unsigned int bsa_open (bsa_handle * const bh,
+                       const char * const path);</code>
+<p>Opens a BSA file, outputting a handle for its contents. If the file doesn't exist then a handle for a new file will be created. You can create multiple handles.
 <ul>
-	<li><var>bh</var> - A pointer to the handle created by the function.
-	<li><var>path</var> - A string containing the relative or absolute path to the BSA file to be opened.
+    <li><var>bh</var> - A pointer to the handle created by the function.
+    <li><var>path</var> - A string containing the relative or absolute path to the BSA file to be opened.
 </ul>
+</div>
 
-<dfn id="SaveBSA">SaveBSA</dfn> - Saves the BSA contents associated with the given handle to the given path.
-<p class="unimplemented">This function has not yet been implemented.</p>
-<code class="box">uint32_t <a href="#SaveBSA">SaveBSA</a> (bsa_handle bh, const uint8_t * path, const uint32_t flags);</code>
+<div class="dfn" id="bsa_save">
+<code class="box">unsigned int bsa_save (bsa_handle bh,
+                       const char * const path,
+                       const unsigned int flags);</code>
+<p>Saves the BSA contents associated with the given handle to the given path. This function has not yet been implemented.
 <ul>
-	<li><var>bh</var> - The handle the function acts on.
-	<li><var>path</var> - A string containing the relative or absolute path to the BSA file to be saved to.
-	<li><var>flags</var> - A set of <a href="#flags">Save Flags</a> combined using bitwise OR operators.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>path</var> - A string containing the relative or absolute path to the BSA file to be saved to.
+    <li><var>flags</var> - A set of <a href="#flags">Save Flags</a> combined using bitwise OR operators.
 </ul>
+</div>
 
-<dfn id="CloseBSA">CloseBSA</dfn> - Closes the file associated with the given handle, freeing any memory allocated during its use.
-<code class="box">void <a href="#CloseBSA">CloseBSA</a> (game_handle bh);</code>
+<div class="dfn" id="bsa_close">
+<code class="box">void bsa_close (bsa_handle bh);</code>
+<p>Closes the file associated with the given handle, freeing any memory allocated during its use.
 <ul>
-	<li><var>bh</var> - The handle to be destroyed.
+    <li><var>bh</var> - The handle to be destroyed.
 </ul>
+</div>
 
 
 <h3 id="functions-read">Content Reading Functions</h3>
 
-<dfn id="GetAssets">GetAssets</dfn> - Outputs an array of all the assets with paths that match the given regular expression.
-<code class="box">uint32_t <a href="#GetAssets">GetAssets</a> (bsa_handle bh, const uint8_t * contentPath, uint8_t *** assetPaths, size_t * numAssets);</code>
+<div class="dfn" id="bsa_get_assets">
+<code class="box">unsigned int bsa_get_assets (bsa_handle bh,
+                             const char * const contentPath,
+                             char *** const assetPaths,
+                             size_t * const numAssets);</code>
+<p>Outputs an array of all the assets with paths that match the given regular expression.
 <ul>
-	<li><var>bh</var> - The handle the function acts on.
-	<li><var>contentPath</var> - The regular expression to match asset paths against.
-	<li><var>assetPaths</var> - The outputted array of asset paths. If <var>numAssets</var> is 0, this will be <code>NULL</code>.
-	<li><var>numAssets</var> - The size of the outputted <var>assetPaths</var> array.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>contentPath</var> - The regular expression to match asset paths against.
+    <li><var>assetPaths</var> - The outputted array of asset paths. If <var>numAssets</var> is 0, this will be <code>NULL</code>.
+    <li><var>numAssets</var> - The size of the outputted <var>assetPaths</var> array.
 </ul>
+</div>
 
-<dfn id="IsAssetInBSA">IsAssetInBSA</dfn> - Checks if a specific asset is in the BSA.
-<code class="box">uint32_t <a href="#IsAssetInBSA">IsAssetInBSA</a> (bsa_handle bh, const uint8_t * assetPath, bool * result);</code>
+<div class="dfn" id="bsa_contains_asset">
+<code class="box">unsigned int bsa_contains_asset (bsa_handle bh,
+                                 const char * const assetPath,
+                                 bool * const result);</code>
+<p>Checks if a specific asset is in the BSA.
 <ul>
-	<li><var>gh</var> - The handle the function acts on.
-	<li><var>assetPath</var> - The path of the asset inside the BSA to check for.
-	<li><var>result</var> - The outputted result: <code>true</code> if the asset is in the BSA, <code>false</code> otherwise.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>assetPath</var> - The path of the asset inside the BSA to check for.
+    <li><var>result</var> - The outputted result: <code>true</code> if the asset is in the BSA, <code>false</code> otherwise.
 </ul>
+</div>
 
 <h3 id="functions-write">Content Writing Functions</h3>
 
-<dfn id="SetAssets">SetAssets</dfn> - Replaces all assets currently associated with the given handle with the given assets.
-<p class="unimplemented">This function has not yet been implemented.</p>
-<code class="box">uint32_t <a href="#SetAssets">SetAssets</a> (bsa_handle bh, const bsa_asset * assets, const size_t numAssets);</code>
+<div class="dfn" id="bsa_set_assets">
+<code class="box">unsigned int bsa_set_assets (bsa_handle bh,
+                             const bsa_asset * const assets,
+                             const size_t numAssets);</code>
+<p>Replaces all assets currently associated with the given handle with the given assets. This function has not yet been implemented.
 <ul>
-	<li><var>bh</var> - The handle the function acts on.
-	<li><var>assets</var> - The inputted array of assets.
-	<li><var>numAssets</var> - The size of the <var>assets</var> array.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>assets</var> - The inputted array of assets.
+    <li><var>numAssets</var> - The size of the <var>assets</var> array.
 </ul>
+</div>
 
-<dfn id="AddAsset">AddAsset</dfn> - Adds the given asset to the BSA. If an asset with the same path already exists in the BSA, this function will return with an error code.
-<p class="unimplemented">This function has not yet been implemented.</p>
-<code class="box">uint32_t <a href="#AddAsset">AddAsset</a> (bsa_handle bh, const bsa_asset asset);</code>
+<div class="dfn" id="bsa_add_asset">
+<code class="box">unsigned int bsa_add_asset (bsa_handle bh,
+                            const bsa_asset asset);</code>
+<p>Adds the given asset to the BSA. If an asset with the same path already exists in the BSA, this function will return with an error code. This function has not yet been implemented.
 <ul>
-	<li><var>bh</var> - The handle the function acts on.
-	<li><var>asset</var> - The asset to be added.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>asset</var> - The asset to be added.
 </ul>
+</div>
 
-<dfn id="RemoveAsset">RemoveAsset</dfn> - Removes the given asset from the BSA.
-<p class="unimplemented">This function has not yet been implemented.</p>
-<code class="box">uint32_t <a href="#RemoveAsset">RemoveAsset</a> (bsa_handle bh, const uint8_t * assetPath);</code>
+<div class="dfn" id="bsa_remove_asset">
+<code class="box">unsigned int bsa_remove_asset (bsa_handle bh,
+                               const char * const assetPath);</code>
+<p>Removes the given asset from the BSA. This function has not yet been implemented.
 <ul>
-	<li><var>bh</var> - The handle the function acts on.
-	<li><var>assetPath</var> - The path of the asset to be removed.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>assetPath</var> - The path of the asset to be removed.
 </ul>
+</div>
 
 <h3 id="functions-extract">Content Extraction Functions</h3>
 
-<dfn id="ExtractAssets">ExtractAssets</dfn> - Extracts all the assets with paths that match the given regular expression to the given destination path, maintaining the directory structure they had inside the BSA. If a file already exists at the location an asset is to be extracted to, this function will return with an error code.
-<code class="box">uint32_t <a href="#ExtractAssets">ExtractAssets</a> (bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets);</code>
+<div class="dfn" id="bsa_extract_assets">
+<code class="box">unsigned int bsa_extract_assets (bsa_handle bh,
+                                 const char * const contentPath,
+                                 const char * const destPath,
+                                 char *** const assetPaths,
+                                 size_t * const numAssets,
+                                 const bool overwrite);</code>
+<p>Extracts all the assets with paths that match the given regular expression to the given destination path, maintaining the directory structure they had inside the BSA. If a file already exists at the location an asset is to be extracted to, this function will return with an error code.
 <ul>
-	<li><var>bh</var> - The handle the function acts on.
-	<li><var>contentPath</var> - The regular expression to match asset paths against.
-	<li><var>destPath</var> - The folder path to which assets should be extracted.
-	<li><var>assetPaths</var> - The outputted array of asset paths, relative to <var>destPath</var>. If <var>numAssets</var> is 0, this will be <code>NULL</code>.
-	<li><var>numAssets</var> - The size of the outputted <var>assetPaths</var> array.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>contentPath</var> - The regular expression to match asset paths against.
+    <li><var>destPath</var> - The folder path to which assets should be extracted.
+    <li><var>assetPaths</var> - The outputted array of asset paths, relative to <var>destPath</var>. If <var>numAssets</var> is 0, this will be <code>NULL</code>.
+    <li><var>numAssets</var> - The size of the outputted <var>assetPaths</var> array.
 </ul>
+</div>
 
-<dfn id="ExtractAsset">ExtractAsset</dfn> - Extracts the given asset to the given location. If a file already exists at the destination path, this function will return with an error code.
-<code class="box">uint32_t <a href="#ExtractAsset">ExtractAsset</a> (bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath);</code>
+<div class="dfn" id="bsa_extract_asset">
+<code class="box">unsigned int bsa_extract_asset (bsa_handle bh,
+                                const char * const assetPath,
+                                const char * const destPath,
+                                const bool overwrite);</code>
+<p>Extracts the given asset to the given location. If a file already exists at the destination path, this function will return with an error code.
 <ul>
-	<li><var>gh</var> - The handle the function acts on.
-	<li><var>assetPath</var> - The path of the asset inside the BSA.
-	<li><var>destPath</var> - The file path to which the asset should be extracted.
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>assetPath</var> - The path of the asset inside the BSA.
+    <li><var>destPath</var> - The file path to which the asset should be extracted.
 </ul>
+</div>
 
 
 <h2 id="example">Example Usage</h2>
 <p>The source code of the <code>libbsa-tester</code> application provides a very simple example of libbsa usage, using the library's C interface directly. The source code for <code>libbsa-tester</code> is hosted alongside the libbsa source code.
-<p>More complex usage examples are to follow.
-
-<h2 id="contact">Contact</h2>
-<p>libbsa is developed by <a href="https://github.com/terrible-with-names">Terrible With Names</a>. Team members may be available for contact on GitHub, or through Private Messages on Bethesda Softworks' <a href="http://forums.bethsoft.com">official forums</a>.
 
 <h2 id="credits">Credits</h2>
 <p>libbsa is written by WrinklyNinja. libbsa is written in C/C++ and makes use of the <a href="http://utfcpp.sourceforge.net/">UTF8-CPP</a> library, <a href="http://zlib.net">zlib</a> and some of the <a href="http://www.boost.org/">Boost</a> libraries.

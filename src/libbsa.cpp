@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -26,7 +26,7 @@
 #include "genericbsa.h"
 #include "tes3bsa.h"
 #include "tes4bsa.h"
-#include "exception.h"
+#include "error.h"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/filesystem.hpp>
 #include <locale>
@@ -40,46 +40,49 @@ using namespace libbsa;
    Global variables
 ------------------------------*/
 
-const uint32_t LIBBSA_VERSION_MAJOR = 1;
-const uint32_t LIBBSA_VERSION_MINOR = 0;
-const uint32_t LIBBSA_VERSION_PATCH = 0;
+const unsigned int LIBBSA_VERSION_MAJOR = 2;
+const unsigned int LIBBSA_VERSION_MINOR = 0;
+const unsigned int LIBBSA_VERSION_PATCH = 0;
 
-uint8_t * extErrorString = NULL;
+const char * extErrorString = NULL;
 
 
 /*------------------------------
    Constants
 ------------------------------*/
 
-/* Return codes */
-const uint32_t LIBBSA_OK                        = 0;
-const uint32_t LIBBSA_ERROR_INVALID_ARGS        = 1;
-const uint32_t LIBBSA_ERROR_NO_MEM              = 2;
-const uint32_t LIBBSA_ERROR_FILE_NOT_FOUND      = 3;
-const uint32_t LIBBSA_ERROR_FILE_WRITE_FAIL     = 4;
-const uint32_t LIBBSA_ERROR_FILE_READ_FAIL      = 5;
-const uint32_t LIBBSA_ERROR_BAD_STRING          = 6;
-const uint32_t LIBBSA_ERROR_ZLIB_ERROR          = 7;
-const uint32_t LIBBSA_RETURN_MAX                = LIBBSA_ERROR_ZLIB_ERROR;
-/* No doubt there will be more... */
+// Return codes
+const unsigned int LIBBSA_OK                        = 0;
+const unsigned int LIBBSA_ERROR_INVALID_ARGS        = 1;
+const unsigned int LIBBSA_ERROR_NO_MEM              = 2;
+const unsigned int LIBBSA_ERROR_FILESYSTEM_ERROR    = 3;
+const unsigned int LIBBSA_ERROR_BAD_STRING          = 4;
+const unsigned int LIBBSA_ERROR_ZLIB_ERROR          = 5;
+const unsigned int LIBBSA_ERROR_PARSE_FAIL          = 6;
+const unsigned int LIBBSA_RETURN_MAX                = LIBBSA_ERROR_PARSE_FAIL;
 
 /* BSA save flags */
 /* Use only one version flag. */
-const uint32_t LIBBSA_VERSION_TES3              = 0x00000001;
-const uint32_t LIBBSA_VERSION_TES4              = 0x00000002;
-const uint32_t LIBBSA_VERSION_TES5              = 0x00000004;
+const unsigned int LIBBSA_VERSION_TES3              = 0x00000001;
+const unsigned int LIBBSA_VERSION_TES4              = 0x00000002;
+const unsigned int LIBBSA_VERSION_TES5              = 0x00000004;
 /* Use only one compression flag. */
-const uint32_t LIBBSA_COMPRESS_LEVEL_0          = 0x00000010;
-const uint32_t LIBBSA_COMPRESS_LEVEL_1          = 0x00000020;
-const uint32_t LIBBSA_COMPRESS_LEVEL_2          = 0x00000040;
-const uint32_t LIBBSA_COMPRESS_LEVEL_3          = 0x00000080;
-const uint32_t LIBBSA_COMPRESS_LEVEL_4          = 0x00000100;
-const uint32_t LIBBSA_COMPRESS_LEVEL_5          = 0x00000200;
-const uint32_t LIBBSA_COMPRESS_LEVEL_6          = 0x00000400;
-const uint32_t LIBBSA_COMPRESS_LEVEL_7          = 0x00000800;
-const uint32_t LIBBSA_COMPRESS_LEVEL_8          = 0x00001000;
-const uint32_t LIBBSA_COMPRESS_LEVEL_9          = 0x00002000;
-const uint32_t LIBBSA_COMPRESS_LEVEL_NOCHANGE   = 0x00004000;
+const unsigned int LIBBSA_COMPRESS_LEVEL_0          = 0x00000010;
+const unsigned int LIBBSA_COMPRESS_LEVEL_1          = 0x00000020;
+const unsigned int LIBBSA_COMPRESS_LEVEL_2          = 0x00000040;
+const unsigned int LIBBSA_COMPRESS_LEVEL_3          = 0x00000080;
+const unsigned int LIBBSA_COMPRESS_LEVEL_4          = 0x00000100;
+const unsigned int LIBBSA_COMPRESS_LEVEL_5          = 0x00000200;
+const unsigned int LIBBSA_COMPRESS_LEVEL_6          = 0x00000400;
+const unsigned int LIBBSA_COMPRESS_LEVEL_7          = 0x00000800;
+const unsigned int LIBBSA_COMPRESS_LEVEL_8          = 0x00001000;
+const unsigned int LIBBSA_COMPRESS_LEVEL_9          = 0x00002000;
+const unsigned int LIBBSA_COMPRESS_LEVEL_NOCHANGE   = 0x00004000;
+
+unsigned int c_error(unsigned int code, const char * what) {
+    extErrorString = what;
+    return code;
+}
 
 
 /*------------------------------
@@ -88,14 +91,14 @@ const uint32_t LIBBSA_COMPRESS_LEVEL_NOCHANGE   = 0x00004000;
 
 /* Returns whether this version of libbsa is compatible with the given
    version of libbsa. */
-LIBBSA bool IsCompatibleVersion(const uint32_t versionMajor, const uint32_t versionMinor, const uint32_t versionPatch) {
-    if (versionMajor == 1 && versionMinor == 0 && versionPatch == 0)
+LIBBSA bool bsa_is_compatible (const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch) {
+    if (versionMajor == 2 && versionMinor == 0 && versionPatch == 0)
         return true;
     else
         return false;
 }
 
-LIBBSA void GetVersionNums(uint32_t * versionMajor, uint32_t * versionMinor, uint32_t * versionPatch) {
+LIBBSA void bsa_get_version (unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch) {
     *versionMajor = LIBBSA_VERSION_MAJOR;
     *versionMinor = LIBBSA_VERSION_MINOR;
     *versionPatch = LIBBSA_VERSION_PATCH;
@@ -109,27 +112,17 @@ LIBBSA void GetVersionNums(uint32_t * versionMajor, uint32_t * versionMinor, uin
 /* Outputs a string giving the a message containing the details of the
    last error or warning encountered by a function called for the given
    game handle. */
-LIBBSA uint32_t GetLastErrorDetails(uint8_t ** details) {
+LIBBSA unsigned int bsa_get_error_message (const char ** const details) {
     if (details == NULL)
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
-
-    //Free memory if in use.
-    delete [] extErrorString;
-    extErrorString = NULL;
-
-    try {
-        extErrorString = ToUint8_tString(lastException.what());
-    } catch (bad_alloc /*&e*/) {
-        return error(LIBBSA_ERROR_NO_MEM).code();
-    }
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     *details = extErrorString;
+
     return LIBBSA_OK;
 }
 
-LIBBSA void CleanUpErrorDetails() {
+LIBBSA void bsa_cleanup () {
     delete [] extErrorString;
-    extErrorString = NULL;
 }
 
 
@@ -137,12 +130,10 @@ LIBBSA void CleanUpErrorDetails() {
    Lifecycle Management Functions
 ----------------------------------*/
 
-/* Opens a STRINGS, ILSTRINGS or DLSTRINGS file at path, returning a handle
-   sh. If the strings file doesn't exist then it will be created. The file
-   extension is used to determine the string data format used. */
-LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path) {
-    if (bh == NULL || path == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+/* Opens a BSA file at path, returning a handle.  */
+LIBBSA unsigned int bsa_open (bsa_handle * const bh, const char * const path) {
+    if (bh == NULL || path == NULL)  //Check for valid args.
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Set the locale to get encoding conversions working correctly.
     setlocale(LC_CTYPE, "");
@@ -152,15 +143,16 @@ LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path) {
 
     //Create handle for the appropriate BSA type.
     try {
-        string pathStr = string(reinterpret_cast<const char *>(path));
-        if (tes3::IsBSA(pathStr))
-            *bh = new tes3::BSA(pathStr);
-        else if (tes4::IsBSA(pathStr))
-            *bh = new tes4::BSA(pathStr);
+        if (tes3::IsBSA(path))
+            *bh = new tes3::BSA(path);
+        else if (tes4::IsBSA(path))
+            *bh = new tes4::BSA(path);
         else
-            *bh = new tes4::BSA(pathStr);  //Arbitrary choice of BSA type.
+            *bh = new tes4::BSA(path);  //Arbitrary choice of BSA type.
     } catch (error& e) {
-        return e.code();
+        return c_error(e.code(), e.what());
+    } catch (ios_base::failure& e) {
+        return c_error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 
     return LIBBSA_OK;
@@ -169,16 +161,16 @@ LIBBSA uint32_t OpenBSA(bsa_handle * bh, const uint8_t * path) {
 /* Create a BSA at the specified path. The 'flags' argument consists of a set
    of bitwise OR'd constants defining the version of the BSA and the
    compression level used (and whether the compression is forced). */
-LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flags) {
-    if (bh == NULL || path == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+LIBBSA unsigned int bsa_save (bsa_handle bh, const char * const path, const unsigned int flags) {
+    if (bh == NULL || path == NULL)  //Check for valid args.
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Check that flags are valid.
-    uint32_t version = 0, compression = 0;
+    unsigned int version = 0, compression = 0;
 
         //First we need to see what flags are set.
     if (flags & LIBBSA_VERSION_TES3 && !(flags & LIBBSA_COMPRESS_LEVEL_0))
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Morrowind BSAs cannot be compressed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Morrowind BSAs cannot be compressed.");
 
 
     //Check for version flag duplication.
@@ -186,38 +178,26 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
         version = LIBBSA_VERSION_TES3;
     if (flags & LIBBSA_VERSION_TES4) {
         if (version > 0)
-            return error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.").code();
+            return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.");
         version = LIBBSA_VERSION_TES4;
     }
     if (flags & LIBBSA_VERSION_TES5) {
         if (version > 0)
-            return error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.").code();
+            return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.");
         version = LIBBSA_VERSION_TES5;
     }
 
     //Now remove version flag from flags and check for compression flag duplication.
     compression = flags ^ version;
-    if (!(
-        (compression & LIBBSA_COMPRESS_LEVEL_0 && !(compression & ~LIBBSA_COMPRESS_LEVEL_0))
-        || (compression & LIBBSA_COMPRESS_LEVEL_1 && !(compression & ~LIBBSA_COMPRESS_LEVEL_1))
-        || (compression & LIBBSA_COMPRESS_LEVEL_2 && !(compression & ~LIBBSA_COMPRESS_LEVEL_2))
-        || (compression & LIBBSA_COMPRESS_LEVEL_3 && !(compression & ~LIBBSA_COMPRESS_LEVEL_3))
-        || (compression & LIBBSA_COMPRESS_LEVEL_4 && !(compression & ~LIBBSA_COMPRESS_LEVEL_4))
-        || (compression & LIBBSA_COMPRESS_LEVEL_5 && !(compression & ~LIBBSA_COMPRESS_LEVEL_5))
-        || (compression & LIBBSA_COMPRESS_LEVEL_6 && !(compression & ~LIBBSA_COMPRESS_LEVEL_6))
-        || (compression & LIBBSA_COMPRESS_LEVEL_7 && !(compression & ~LIBBSA_COMPRESS_LEVEL_7))
-        || (compression & LIBBSA_COMPRESS_LEVEL_8 && !(compression & ~LIBBSA_COMPRESS_LEVEL_8))
-        || (compression & LIBBSA_COMPRESS_LEVEL_9 && !(compression & ~LIBBSA_COMPRESS_LEVEL_9))
-        || (compression & LIBBSA_COMPRESS_LEVEL_NOCHANGE && !(compression & ~LIBBSA_COMPRESS_LEVEL_NOCHANGE))
-        ))
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.").code();
+    if(!(compression & (compression-1)))
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.");
 
     try {
-        bh->Save(string(reinterpret_cast<const char *>(path)), version, compression);
+        bh->Save(path, version, compression);
     } catch (error& e) {
-        return e.code();
+        return c_error(e.code(), e.what());
     } catch (ios_base::failure& e) {
-        return error(LIBBSA_ERROR_FILE_WRITE_FAIL, string(reinterpret_cast<const char *>(path))).code();
+        return c_error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 
     return LIBBSA_OK;
@@ -225,7 +205,7 @@ LIBBSA uint32_t SaveBSA(bsa_handle bh, const uint8_t * path, const uint32_t flag
 
 /* Closes the BSA associated with the given handle, freeing any memory
    allocated during its use. */
-LIBBSA void CloseBSA(bsa_handle bh) {
+LIBBSA void bsa_close (bsa_handle bh) {
     delete bh;
 }
 
@@ -237,9 +217,9 @@ LIBBSA void CloseBSA(bsa_handle bh) {
 /* Gets an array of all the assets in the given BSA that match the contentPath
    given. contentPath is a POSIX Extended regular expression that all asset
    paths within the BSA will be compared to. */
-LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t *** assetPaths, size_t * numAssets) {
+LIBBSA unsigned int bsa_get_assets (bsa_handle bh, const char * const contentPath, char *** const assetPaths, size_t * const numAssets) {
     if (bh == NULL || contentPath == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
     if (bh->extAssets != NULL) {
@@ -257,9 +237,9 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
     //Build regex expression. Also check that it is valid.
     boost::regex regex;
     try {
-        regex = boost::regex(string(reinterpret_cast<const char*>(contentPath)), boost::regex::extended|boost::regex::icase);
-    } catch (boost::regex_error e) {
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid regular expression passed.").code();
+        regex = boost::regex(contentPath, boost::regex::extended|boost::regex::icase);
+    } catch (boost::regex_error& e) {
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
     }
 
     //We don't know how many matches there will be, so put all matches into a temporary buffer first.
@@ -272,16 +252,16 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
     //Fill external array.
     try {
         bh->extAssetsNum = temp.size();
-        bh->extAssets = new uint8_t*[bh->extAssetsNum];
+        bh->extAssets = new char*[bh->extAssetsNum];
         size_t i = 0;
         for (list<BsaAsset>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
-            bh->extAssets[i] = ToUint8_tString(it->path);
+            bh->extAssets[i] = ToNewCString(it->path);
             i++;
         }
-    } catch (bad_alloc& /*e*/) {
-        return error(LIBBSA_ERROR_NO_MEM).code();
+    } catch (bad_alloc& e) {
+        return c_error(LIBBSA_ERROR_NO_MEM, e.what());
     } catch (error& e) {
-        return e.code();
+        return c_error(e.code(), e.what());
     }
 
     *assetPaths = bh->extAssets;
@@ -291,9 +271,9 @@ LIBBSA uint32_t GetAssets(bsa_handle bh, const uint8_t * contentPath, uint8_t **
 }
 
 /* Checks if a specific asset, found within the BSA at assetPath, is in the given BSA. */
-LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * result) {
+LIBBSA unsigned int bsa_contains_asset (bsa_handle bh, const char * const assetPath, bool * const result) {
     if (bh == NULL || assetPath == NULL || result == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     string assetStr = FixPath(assetPath);
 
@@ -308,25 +288,25 @@ LIBBSA uint32_t IsAssetInBSA(bsa_handle bh, const uint8_t * assetPath, bool * re
 ------------------------------*/
 
 /* Replaces all the assets in the given BSA with the given assets. */
-LIBBSA uint32_t SetAssets(bsa_handle bh, const bsa_asset * assets, const size_t numAssets) {
+LIBBSA unsigned int bsa_set_assets (bsa_handle bh, const bsa_asset * const assets, const size_t numAssets) {
     if (bh == NULL || assets == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     return LIBBSA_OK;
 }
 
 /* Adds a specific asset to a BSA. */
-LIBBSA uint32_t AddAsset(bsa_handle bh, const bsa_asset asset) {
+LIBBSA unsigned int bsa_add_asset (bsa_handle bh, const bsa_asset asset) {
     if (bh == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     return LIBBSA_OK;
 }
 
 /* Removes a specific asset, found at assetPath, from a BSA. */
-LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath) {
+LIBBSA unsigned int bsa_remove_asset (bsa_handle bh, const char * const assetPath) {
     if (bh == NULL || assetPath == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     return LIBBSA_OK;
 }
@@ -340,9 +320,9 @@ LIBBSA uint32_t RemoveAsset(bsa_handle bh, const uint8_t * assetPath) {
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const uint8_t * destPath, uint8_t *** assetPaths, size_t * numAssets, const bool overwrite) {
+LIBBSA unsigned int bsa_extract_assets (bsa_handle bh, const char * const contentPath, const char * destPath, char *** const assetPaths, size_t * const numAssets, const bool overwrite) {
     if (bh == NULL || contentPath == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
     if (bh->extAssets != NULL) {
@@ -361,8 +341,8 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
     boost::regex regex;
     try {
         regex = boost::regex(string(reinterpret_cast<const char*>(contentPath)), boost::regex::extended|boost::regex::icase);
-    } catch (boost::regex_error e) {
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Invalid regular expression passed.").code();
+    } catch (boost::regex_error& e) {
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
     }
 
     //We don't know how many matches there will be, so put all matches into a temporary buffer first.
@@ -376,22 +356,22 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
     try {
         bh->Extract(temp, string(reinterpret_cast<const char*>(destPath)), overwrite);
     } catch (error& e) {
-        return e.code();
+        return c_error(e.code(), e.what());
     }
 
     //Now iterate through temp hashmap, outputting filenames.
     try {
         bh->extAssetsNum = temp.size();
-        bh->extAssets = new uint8_t*[bh->extAssetsNum];
+        bh->extAssets = new char*[bh->extAssetsNum];
         size_t i = 0;
         for (list<BsaAsset>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
-            bh->extAssets[i] = ToUint8_tString(it->path);
+            bh->extAssets[i] = ToNewCString(it->path);
             i++;
         }
-    } catch (bad_alloc& /*e*/) {
-        return error(LIBBSA_ERROR_NO_MEM).code();
+    } catch (bad_alloc& e) {
+        return c_error(LIBBSA_ERROR_NO_MEM, e.what());
     } catch (error& e) {
-        return e.code();
+        return c_error(e.code(), e.what());
     }
 
     *assetPaths = bh->extAssets;
@@ -401,16 +381,16 @@ LIBBSA uint32_t ExtractAssets(bsa_handle bh, const uint8_t * contentPath, const 
 }
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
-LIBBSA uint32_t ExtractAsset(bsa_handle bh, const uint8_t * assetPath, const uint8_t * destPath, const bool overwrite) {
+LIBBSA unsigned int bsa_extract_asset (bsa_handle bh, const char * const assetPath, const char * const destPath, const bool overwrite) {
     if (bh == NULL || assetPath == NULL || destPath == NULL) //Check for valid args.
-        return error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.").code();
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     string assetStr = FixPath(assetPath);
 
     try {
         bh->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
     } catch (error& e) {
-        return e.code();
+        return c_error(e.code(), e.what());
     }
 
     return LIBBSA_OK;

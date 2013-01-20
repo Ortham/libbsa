@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -22,7 +22,7 @@
 */
 
 #include "tes4bsa.h"
-#include "exception.h"
+#include "error.h"
 #include "libbsa.h"
 #include <fstream>
 #include <vector>
@@ -36,8 +36,8 @@ using namespace std;
 
 namespace libbsa { namespace tes4 {
 
-    BSA::BSA(const std::string path)
-        : bsa_handle_int(path),
+    BSA::BSA(const std::string& path)
+        : _bsa_handle_int(path),
         archiveFlags(0),
         fileFlags(0) {
 
@@ -55,7 +55,7 @@ namespace libbsa { namespace tes4 {
             in.read((char*)&header, sizeof(Header));
 
             if ((header.version != BSA_VERSION_TES4 && header.version != BSA_VERSION_TES5) || header.offset != BSA_FOLDER_RECORD_OFFSET)
-                throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
+                throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
 
             //Now we get to the real meat of the file.
             //Folder records are followed by file records in blocks by folder name, followed by file names.
@@ -76,8 +76,8 @@ namespace libbsa { namespace tes4 {
 
                 fileNames = new uint8_t[header.totalFileNameLength];
                 in.read((char*)fileNames, sizeof(uint8_t) * header.totalFileNameLength);
-            } catch (bad_alloc &e) {
-                throw error(LIBBSA_ERROR_NO_MEM);
+            } catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             in.close(); //No longer need the file open.
@@ -112,7 +112,7 @@ namespace libbsa { namespace tes4 {
                     //Find position of null pointer.
                     char * nptr = strchr(filenameStart, '\0');
                     if (nptr == NULL)
-                        throw error(LIBBSA_ERROR_FILE_READ_FAIL, path);
+                        throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
 
                     fileData.path += trans.EncToUtf8(string(filenameStart, nptr - filenameStart));
                     fileNameListPos += fileData.path.length() + 1;
@@ -228,8 +228,8 @@ namespace libbsa { namespace tes4 {
             folderRecords = new FolderRecord[header.folderCount];
             fileRecordBlocks = new uint8_t[fileRecordBlocksSize];
             fileNames = new uint8_t[header.totalFileNameLength];
-        } catch (bad_alloc &e) {
-            throw error(LIBBSA_ERROR_NO_MEM);
+        } catch (bad_alloc& e) {
+            throw error(LIBBSA_ERROR_NO_MEM, e.what());
         }
 
         uint32_t startOfFileRecordBlock = sizeof(Header) + header.folderCount * sizeof(FolderRecord) + header.totalFileNameLength;  //For some reason offsets include this.
@@ -306,8 +306,8 @@ namespace libbsa { namespace tes4 {
             uint8_t * fileData;
             try {
                 fileData = new uint8_t[size];
-            } catch (bad_alloc &e) {
-                throw error(LIBBSA_ERROR_NO_MEM);
+            } catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             //Get the old BSA's file data offset.
@@ -318,7 +318,7 @@ namespace libbsa { namespace tes4 {
             }
 
             if (itr == endItr)
-                throw error(LIBBSA_ERROR_FILE_NOT_FOUND, it->path);
+                throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
 
             //Read data in.
             in.seekg(itr->offset, ios_base::beg);  //This is the offset in the old BSA.
@@ -347,17 +347,17 @@ namespace libbsa { namespace tes4 {
             try {
                 fs::rename(path, fs::path(path).stem());
             } catch (fs::filesystem_error& e) {
-                throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, fs::path(path).stem().string());
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
             }
         }*/
     }
 
-    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath, const bool overwrite) {
+    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite) {
         //Create parent directories.
         fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
 
         if (!overwrite && fs::exists(outPath))
-            throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
 
         uint32_t size = data.size;
         //Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
@@ -372,8 +372,8 @@ namespace libbsa { namespace tes4 {
 
             try {
                 buffer = new uint8_t[size];
-            } catch (bad_alloc &e) {
-                throw error(LIBBSA_ERROR_NO_MEM);
+            } catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             in.seekg(data.offset, ios_base::beg);
@@ -387,7 +387,7 @@ namespace libbsa { namespace tes4 {
 
                 out.close();
             } catch (ios_base::failure& e) {
-                throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
             }
 
             delete [] buffer;
@@ -409,8 +409,8 @@ namespace libbsa { namespace tes4 {
             try {
                 compressedFile = new uint8_t[size];
                 uncompressedFile = new uint8_t[uncompressedSize];
-            } catch (bad_alloc &e) {
-                throw error(LIBBSA_ERROR_NO_MEM);
+            } catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             in.read((char*)compressedFile, size);
@@ -418,7 +418,7 @@ namespace libbsa { namespace tes4 {
             //We can use a pre-made utility function instead of having to mess around with zlib proper.
             int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, size);
             if (ret != Z_OK)
-                throw error(LIBBSA_ERROR_ZLIB_ERROR);
+                throw error(LIBBSA_ERROR_ZLIB_ERROR, "Uncompressing of \"" + outPath + "\" failed.");
 
             try {
                 //Now output to file.
@@ -428,7 +428,7 @@ namespace libbsa { namespace tes4 {
                 out.write((char*)uncompressedFile, uncompressedSize);
                 out.close();
             } catch (ios_base::failure& e) {
-                throw error(LIBBSA_ERROR_FILE_WRITE_FAIL, outPath);
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
             }
 
             //Free memory.
@@ -437,7 +437,7 @@ namespace libbsa { namespace tes4 {
         }
     }
 
-    uint32_t BSA::HashString(std::string str) {
+    uint32_t BSA::HashString(const std::string& str) {
         uint32_t hash = 0;
         for (size_t i=0, len=str.length(); i < len; i++) {
             hash = 0x1003F * hash + (uint8_t)str[i];
@@ -445,7 +445,7 @@ namespace libbsa { namespace tes4 {
         return hash;
     }
 
-    uint64_t BSA::CalcHash(std::string path, std::string ext) {
+    uint64_t BSA::CalcHash(const std::string& path, const std::string& ext) {
         uint64_t hash1 = 0;
         uint32_t hash2 = 0;
         uint32_t hash3 = 0;
@@ -482,12 +482,12 @@ namespace libbsa { namespace tes4 {
         return ((uint64_t)hash2 << 32) + hash1;
     }
 
-    bool hash_comp(const BsaAsset first, const BsaAsset second) {
+    bool hash_comp(const BsaAsset& first, const BsaAsset& second) {
         return first.hash < second.hash;
     }
 
     //Check if a given file is a Tes4-type BSA.
-    bool IsBSA(std::string path) {
+    bool IsBSA(const std::string& path) {
         //Check if file exists.
         if (!fs::exists(path))
             return false;

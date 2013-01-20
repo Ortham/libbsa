@@ -2,7 +2,7 @@
 
     A library for reading and writing BSA files.
 
-    Copyright (C) 2012    WrinklyNinja
+    Copyright (C) 2012-2013    WrinklyNinja
 
     This file is part of libbsa.
 
@@ -21,8 +21,8 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LIBBSA_GENERICBSA_H
-#define LIBBSA_GENERICBSA_H
+#ifndef __LIBBSA_GENERICBSA_H__
+#define __LIBBSA_GENERICBSA_H__
 
 #include "helpers.h"
 #include <stdint.h>
@@ -57,24 +57,24 @@ namespace libbsa {
 }
 
 //Class for generic BSA data manipulation functions.
-struct bsa_handle_int {
+struct _bsa_handle_int {
 public:
-    bsa_handle_int(const std::string path);
-    ~bsa_handle_int();
+    _bsa_handle_int(const std::string& path);
+    ~_bsa_handle_int();
     virtual void Save(std::string path, const uint32_t version, const uint32_t compression) = 0;
 
-    bool HasAsset(const std::string assetPath);
-    libbsa::BsaAsset GetAsset(const std::string assetPath);
-    void GetMatchingAssets(const boost::regex regex, std::list<libbsa::BsaAsset> &matchingAssets);
+    bool HasAsset(const std::string& assetPath);
+    libbsa::BsaAsset GetAsset(const std::string& assetPath);
+    void GetMatchingAssets(const boost::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
 
-    void Extract(const std::string assetPath, const std::string destPath, const bool overwrite);
-    void Extract(const std::list<libbsa::BsaAsset> &assetsToExtract, const std::string destPath, const bool overwrite);
+    void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
+    void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
 
     //External data array pointers and sizes.
-    uint8_t ** extAssets;
+    char ** extAssets;
     size_t extAssetsNum;
 protected:
-    virtual void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset data, const std::string outPath, const bool overwrite) = 0;
+    virtual void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite) = 0;
 
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
