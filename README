@@ -34,13 +34,6 @@ Requirements:
   * A native build system of your choice.
     - Tested with GNU Make on Ubuntu Linux 12.10.
 
-
-Preparing UTF8-CPP:
-  1. Create a 'utf8' folder beside your libbsa folder.
-  2. Place the folders inside the UTF8-CPP archive you downloaded (should be
-     'source', 'doc') into the 'utf8' folder.
-
-
 Preparing Boost:
   1. Create a 'boost' folder beside your libbsa folder.
   2. Extract the downloaded Boost archive to your 'boost' folder, so that
