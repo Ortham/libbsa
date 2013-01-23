@@ -37,9 +37,6 @@ namespace libbsa { namespace tes3 {
         : _bsa_handle_int(path),
         hashOffset(0) {
 
-        //Set transcoding up.
-        trans.SetEncoding(1252);
-
         //Check if file exists.
         if (fs::exists(path)) {
 
@@ -95,7 +92,7 @@ namespace libbsa { namespace tes3 {
                 if (nptr == NULL)
                     throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
 
-                fileData.path = trans.EncToUtf8(string((char*)(filenameRecords + filenameOffsets[i]), nptr - (char*)(filenameRecords + filenameOffsets[i])));
+                fileData.path = ToUTF8(string((char*)(filenameRecords + filenameOffsets[i]), nptr - (char*)(filenameRecords + filenameOffsets[i])));
 
                 //Finally, add fileData to list.
                 assets.push_back(fileData);
@@ -177,7 +174,7 @@ debug.close();
             filenameOffsets[i] = filenameOffset;
 
             //Transcode.
-            string filename = trans.Utf8ToEnc(it->path) + '\0';
+            string filename = FromUTF8(it->path) + '\0';
             filenameRecords += filename;
             filenameOffset += filename.length();
 

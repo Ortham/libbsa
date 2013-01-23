@@ -79,7 +79,7 @@ const unsigned int LIBBSA_COMPRESS_LEVEL_8          = 0x00001000;
 const unsigned int LIBBSA_COMPRESS_LEVEL_9          = 0x00002000;
 const unsigned int LIBBSA_COMPRESS_LEVEL_NOCHANGE   = 0x00004000;
 
-unsigned int c_error(unsigned int code, const char * what) {
+unsigned int c_error(const unsigned int code, const char * what) {
     extErrorString = what;
     return code;
 }

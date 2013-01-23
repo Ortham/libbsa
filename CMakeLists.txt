@@ -16,7 +16,7 @@ set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/genericbsa.cpp" "${CMAKE_SOURCE_DIR}/s
 # Include source and library directories.
 include_directories ("${PROJECT_LIBS_DIR}/boost" "${PROJECT_LIBS_DIR}/utf8" "${PROJECT_LIBS_DIR}/zlib" "${CMAKE_SOURCE_DIR}/src")
 
-link_directories ("${PROJECT_LIBS_DIR}/zlib")
+link_directories ("${PROJECT_LIBS_DIR}/zlib" )
 
 ##############################
 # Platform-Specific Settings
@@ -33,7 +33,7 @@ ENDIF ()
 
 # Settings when compiling on Windows.
 IF (CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-    set (PROJECT_LIBS libboost_filesystem-vc110-mt-1_52 libboost_system-vc110-mt-1_52 libboost_regex-vc110-mt-1_52 zlibstatic)
+    set (PROJECT_LIBS libboost_locale-vc110-mt-1_52 libboost_filesystem-vc110-mt-1_52 libboost_system-vc110-mt-1_52 libboost_regex-vc110-mt-1_52 zlibstatic)
     set (CMAKE_CXX_FLAGS "/EHsc")
 ENDIF ()
 
@@ -54,7 +54,7 @@ IF (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
         link_directories ("${PROJECT_LIBS_DIR}/boost/stage-mingw-${PROJECT_ARCH}/lib")
     ENDIF ()
 
-    set (PROJECT_LIBS boost_filesystem boost_regex boost_system zlibstatic)
+    set (PROJECT_LIBS boost_locale boost_filesystem boost_regex boost_system zlibstatic)
 ENDIF ()
 
 ##############################

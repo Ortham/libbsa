@@ -27,10 +27,6 @@ Requirements:
     - <http://sourceforge.net/projects/boost/files/boost/>
     - Download the latest 7-zipped source code.
     - Tested with v1.51.0.
-  * UTF8-CPP
-    - <http://sourceforge.net/projects/utfcpp/>
-    - Download the latest zipped v2.x source code.
-    - Tested with v2.3.2.
   * zlib
     - <http://zlib.net>
     - Download the latest source code.

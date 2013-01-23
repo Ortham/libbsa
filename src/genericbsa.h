@@ -79,8 +79,6 @@ protected:
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
     std::list<libbsa::PendingBsaAsset> pendingAssets;  //Holds the internal->external path mapping for files not yet written to the BSA.
-
-    libbsa::Transcoder trans;  //For Windows-1252 <-> UTF-8 encoding conversion.
 };
 
 

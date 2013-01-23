@@ -41,9 +41,6 @@ namespace libbsa { namespace tes4 {
         archiveFlags(0),
         fileFlags(0) {
 
-        //Set transcoding up.
-        trans.SetEncoding(1252);
-
         //Check if file exists.
         if (fs::exists(path)) {
 
@@ -96,7 +93,7 @@ namespace libbsa { namespace tes4 {
 
                 //Need to get folder name to add before file name in internal data store.
                 uint8_t folderNameLength = *(fileRecords + folderRecords[i].offset) - 1;
-                string folderName = trans.EncToUtf8(string((char*)(fileRecords + folderRecords[i].offset + 1), folderNameLength));
+                string folderName = ToUTF8(string((char*)(fileRecords + folderRecords[i].offset + 1), folderNameLength));
 
                 //Now loop through file records for this folder record.
                 uint32_t startOfFolderFileRecords = folderRecords[i].offset + folderNameLength + 2;
@@ -114,7 +111,7 @@ namespace libbsa { namespace tes4 {
                     if (nptr == NULL)
                         throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
 
-                    fileData.path += trans.EncToUtf8(string(filenameStart, nptr - filenameStart));
+                    fileData.path += ToUTF8(string(filenameStart, nptr - filenameStart));
                     fileNameListPos += fileData.path.length() + 1;
 
                     if (!folderName.empty())
@@ -178,8 +175,8 @@ namespace libbsa { namespace tes4 {
             BsaAsset fileAsset;
 
             //Transcode paths.
-            folderAsset.path = trans.Utf8ToEnc(fs::path(it->path).parent_path().string());
-            fileAsset.path = trans.Utf8ToEnc(it->path); /*fs::path(it->path).filename().string();*/
+            folderAsset.path = FromUTF8(fs::path(it->path).parent_path().string());
+            fileAsset.path = FromUTF8(it->path); /*fs::path(it->path).filename().string();*/
 
             folderAsset.hash = CalcHash(folderAsset.path, "");
             fileAsset.hash = it->hash;

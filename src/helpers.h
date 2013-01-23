@@ -36,23 +36,9 @@ namespace libbsa {
 
     uint32_t GetCrc32(const std::string& filename);
 
-    // converts between encodings.
-    class Transcoder {
-    private:
-        //0x81, 0x8D, 0x8F, 0x90, 0x9D in 1252 are undefined in UTF-8.
-        boost::unordered_map<char, uint32_t> commonMap;  //1251/1252, UTF-8. 0-127, plus some more.
-        boost::unordered_map<char, uint32_t> map1252toUtf8; //1252, UTF-8. 128-255, minus a few common characters.
-        boost::unordered_map<uint32_t, char> utf8toEnc;
-        boost::unordered_map<char, uint32_t> encToUtf8;
-        unsigned int currentEncoding;
-    public:
-        Transcoder();
-        void SetEncoding(const unsigned int inEncoding);
-        unsigned int GetEncoding();
-
-        std::string Utf8ToEnc(const std::string& inString);
-        std::string EncToUtf8(const std::string& inString);
-    };
+    //Only ever need to convert between Windows-1252 and UTF-8.
+    std::string ToUTF8(const std::string& str);
+    std::string FromUTF8(const std::string& str);
 }
 
 #endif
