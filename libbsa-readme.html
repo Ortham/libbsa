@@ -85,6 +85,7 @@ h3{
         <li><a href="#functions-read">Content Reading Functions</a>
         <li><a href="#functions-write">Content Writing Functions</a>
         <li><a href="#functions-extract">Content Extraction Functions</a>
+        <li><a href="#functions-misc">Miscellaneous Functions</a>
     </ol>
     <li><a href="#example">Example Usage</a>
     <li><a href="#credits">Credits</a>
@@ -348,6 +349,21 @@ h3{
     <li><var>destPath</var> - The file path to which the asset should be extracted.
 </ul>
 </div>
+
+
+<h2 id="functions-misc">Miscellaneous Functions</h2>
+<div class="dfn" id="bsa_calc_checksum">
+<code class="box">unsigned int bsa_calc_checksum (bsa_handle bh,
+                                const char * const assetPath,
+                                uint32_t * const checksum);</code>
+<p>Calculates the 32-bit CRC of the given asset without extracting it. The CRC parameters are those used by the Boost CRC library's <code>crc_32_type</code> type.
+<ul>
+    <li><var>bh</var> - The handle the function acts on.
+    <li><var>assetPath</var> - The path of the asset inside the BSA to check for.
+    <li><var>checksum</var> - The calculated checksum.
+</ul>
+</div>
+
 
 
 <h2 id="example">Example Usage</h2>
