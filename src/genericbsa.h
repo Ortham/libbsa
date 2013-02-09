@@ -70,11 +70,14 @@ public:
     void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
     void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
 
+    uint32_t CalcChecksum(const std::string& assetPath);
+
     //External data array pointers and sizes.
     char ** extAssets;
     size_t extAssetsNum;
 protected:
-    virtual void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite) = 0;
+    //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
+    virtual std::pair<uint8_t*,size_t> ReadData(std::ifstream& in, const libbsa::BsaAsset& data) = 0;
 
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.

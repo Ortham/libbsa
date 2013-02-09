@@ -349,49 +349,28 @@ namespace libbsa { namespace tes4 {
         }*/
     }
 
-    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite) {
-        //Create parent directories.
-        fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
-
-        if (!overwrite && fs::exists(outPath))
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
-
-        uint32_t size = data.size;
+    std::pair<uint8_t*,size_t> BSA::ReadData(std::ifstream& in, const libbsa::BsaAsset& data) {
+        uint8_t * outBuffer = NULL;
+        uint32_t outSize = data.size;
         //Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
         /* BSA-TYPE-SPECIFIC CHECK */
-        if ((archiveFlags & BSA_COMPRESSED && size & FILE_INVERT_COMPRESSED) || (!(archiveFlags & BSA_COMPRESSED) && !(size & FILE_INVERT_COMPRESSED))) {
-            //Just need to use size and offset to write to binary file stream.
-            uint8_t * buffer;
-
+        if ((archiveFlags & BSA_COMPRESSED && outSize & FILE_INVERT_COMPRESSED) || (!(archiveFlags & BSA_COMPRESSED) && !(outSize & FILE_INVERT_COMPRESSED))) {
             /* BSA-TYPE-SPECIFIC CHECK */
-            if (size & FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual size.
-                size ^= FILE_INVERT_COMPRESSED;
+            if (outSize & FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual size.
+                outSize ^= FILE_INVERT_COMPRESSED;
 
             try {
-                buffer = new uint8_t[size];
+                outBuffer = new uint8_t[outSize];
             } catch (bad_alloc& e) {
                 throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
             in.seekg(data.offset, ios_base::beg);
-            in.read((char*)buffer, size);
-
-            try {
-                ofstream out(outPath.c_str(), ios::binary | ios::trunc);
-                out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-                out.write((char*)buffer, size);
-
-                out.close();
-            } catch (ios_base::failure& e) {
-                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
-            }
-
-            delete [] buffer;
+            in.read((char*)outBuffer, outSize);
         } else {
             //Use zlib.
-            if (size & FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual compressed size.
-                size ^= FILE_INVERT_COMPRESSED;
+            if (outSize & FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual compressed size.
+                outSize ^= FILE_INVERT_COMPRESSED;
 
             //Get the uncompressed size.
             uint32_t uncompressedSize;
@@ -402,36 +381,29 @@ namespace libbsa { namespace tes4 {
             //Allocate memory for the compressed file and the uncompressed file.
             uint8_t * compressedFile;
             uint8_t * uncompressedFile;
-            size -= sizeof(uint32_t);  //First uint32_t of data is the size of the uncompressed data.
+            outSize -= sizeof(uint32_t);  //First uint32_t of data is the size of the uncompressed data.
             try {
-                compressedFile = new uint8_t[size];
+                compressedFile = new uint8_t[outSize];
                 uncompressedFile = new uint8_t[uncompressedSize];
             } catch (bad_alloc& e) {
                 throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
-            in.read((char*)compressedFile, size);
+            in.read((char*)compressedFile, outSize);
 
             //We can use a pre-made utility function instead of having to mess around with zlib proper.
-            int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, size);
+            int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, outSize);
             if (ret != Z_OK)
-                throw error(LIBBSA_ERROR_ZLIB_ERROR, "Uncompressing of \"" + outPath + "\" failed.");
+                throw error(LIBBSA_ERROR_ZLIB_ERROR, "Uncompressing of \"" + data.path + "\" failed.");
 
-            try {
-                //Now output to file.
-                ofstream out(outPath.c_str(), ios::binary | ios::trunc);
-                out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-                out.write((char*)uncompressedFile, uncompressedSize);
-                out.close();
-            } catch (ios_base::failure& e) {
-                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
-            }
+            outBuffer = uncompressedFile;
+            outSize = uncompressedSize;
 
             //Free memory.
             delete [] compressedFile;
-            delete [] uncompressedFile;
         }
+
+        return pair<uint8_t*,size_t>(outBuffer, outSize);
     }
 
     uint32_t BSA::HashString(const std::string& str) {

@@ -25,6 +25,7 @@
 #define __LIBBSA_H__
 
 #include <stddef.h>
+#include <stdint.h>
 
 #if defined(_MSC_VER)
 //MSVC doesn't support C99, so do the stdbool.h definitions ourselves.
@@ -187,6 +188,13 @@ LIBBSA unsigned int bsa_extract_assets (bsa_handle bh, const char * const conten
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
 LIBBSA unsigned int bsa_extract_asset (bsa_handle bh, const char * const assetPath, const char * const destPath, const bool overwrite);
+
+
+/*--------------------------------
+   Misc. Functions
+--------------------------------*/
+
+LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh, const char * const assetPath, uint32_t * const checksum);
 
 #ifdef __cplusplus
 }

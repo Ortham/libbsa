@@ -32,6 +32,7 @@
 #include <locale>
 #include <boost/regex.hpp>
 #include <boost/unordered_set.hpp>
+#include <boost/crc.hpp>
 
 using namespace std;
 using namespace libbsa;
@@ -389,6 +390,23 @@ LIBBSA unsigned int bsa_extract_asset (bsa_handle bh, const char * const assetPa
 
     try {
         bh->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
+    } catch (error& e) {
+        return c_error(e.code(), e.what());
+    }
+
+    return LIBBSA_OK;
+}
+
+/*--------------------------------
+   Misc. Functions
+--------------------------------*/
+
+LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh, const char * const assetPath, uint32_t * const checksum) {
+    if (bh == NULL || assetPath == NULL || checksum == NULL) //Check for valid args.
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
+
+    try {
+        *checksum = bh->CalcChecksum(FixPath(assetPath));
     } catch (error& e) {
         return c_error(e.code(), e.what());
     }

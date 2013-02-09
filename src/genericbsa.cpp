@@ -25,6 +25,10 @@
 #include "libbsa.h"
 #include "error.h"
 #include <fstream>
+#include <boost/filesystem.hpp>
+#include <boost/crc.hpp>
+
+namespace fs = boost::filesystem;
 
 using namespace std;
 using namespace libbsa;
@@ -80,20 +84,42 @@ void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& o
     if (data.path.empty())
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
+    std::pair<uint8_t*,size_t> dataPair;
+    std::string outFilePath = outPath + '/' + data.path;
     try {
-        //Open input stream.
+        //Create parent directories.
+        fs::create_directories(fs::path(outFilePath).parent_path());  //This creates any directories in the path that don't already exist.
+
+        if (!overwrite && fs::exists(outFilePath))
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath + "\" already exists.");
+
+        //Read file data.
         ifstream in(filePath.c_str(), ios::binary);
         in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        ExtractFromStream(in, data, outPath + '/' + data.path, overwrite);
+        dataPair = ReadData(in, data);
 
         in.close();
+
+        //Write new file.
+        ofstream out(outFilePath.c_str(), ios::binary | ios::trunc);
+        out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+        out.write((char*)dataPair.first, dataPair.second);
+
+        out.close();
+
+        //Free data in memory.
+        delete [] dataPair.first;
+
     } catch (ios_base::failure& e) {
+        delete [] dataPair.first;
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }
 
 void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
+    std::pair<uint8_t*,size_t> dataPair;
     try {
         //Open the source BSA.
         ifstream in(filePath.c_str(), ios::binary);
@@ -101,11 +127,61 @@ void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::
 
         //Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
         for (list<BsaAsset>::const_iterator it = assetsToExtract.begin(), endIt = assetsToExtract.end(); it != endIt; ++it) {
-            ExtractFromStream(in, *it, outPath + '/' + it->path, overwrite);
+            std::string outFilePath = outPath + '/' + it->path;
+
+            //Create parent directories.
+            fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
+
+            if (!overwrite && fs::exists(outPath))
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
+
+            //Get file data.
+            dataPair = ReadData(in, *it);
+
+            //Write new file.
+            ofstream out((outPath + '/' + it->path).c_str(), ios::binary | ios::trunc);
+            out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+            out.write((char*)dataPair.first, dataPair.second);
+
+            out.close();
+
+            //Free data in memory.
+            delete [] dataPair.first;
         }
 
         in.close();
     } catch (ios_base::failure& e) {
+        delete [] dataPair.first;
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+    }
+}
+
+uint32_t _bsa_handle_int::CalcChecksum(const std::string& assetPath) {
+    //Get asset data.
+    BsaAsset data = GetAsset(assetPath);
+    if (data.path.empty())
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+
+    std::pair<uint8_t*,size_t> dataPair;
+    try {
+        //Open input stream.
+        ifstream in(filePath.c_str(), ios::binary);
+        in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+        dataPair = ReadData(in, data);
+
+        in.close();
+
+        //Calculate the checksum now.
+        boost::crc_32_type result;
+        result.process_bytes(dataPair.first, dataPair.second);
+
+        delete [] dataPair.first;
+
+        return result.checksum();
+    } catch (ios_base::failure& e) {
+        delete [] dataPair.first;
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }

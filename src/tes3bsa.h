@@ -54,9 +54,8 @@ namespace libbsa { namespace tes3 {
     public:
         BSA(const std::string& path);
         void Save(std::string path, const uint32_t version, const uint32_t compression);
-
     private:
-        void ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite);
+        std::pair<uint8_t*,size_t> ReadData(std::ifstream& in, const libbsa::BsaAsset& data);
 
         uint64_t CalcHash(const std::string& path);
 

@@ -245,13 +245,7 @@ debug.close();
         }*/
     }
 
-    void BSA::ExtractFromStream(std::ifstream& in, const libbsa::BsaAsset& data, const std::string& outPath, const bool overwrite) {
-        //Create parent directories.
-        fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
-
-        if (!overwrite && fs::exists(outPath))
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
-
+    std::pair<uint8_t*,size_t> BSA::ReadData(std::ifstream& in, const libbsa::BsaAsset& data) {
         //Just need to use size and offset to write to binary file stream.
         uint8_t * buffer;
 
@@ -264,18 +258,7 @@ debug.close();
         in.seekg(data.offset, ios_base::beg);
         in.read((char*)buffer, data.size);
 
-        try {
-            ofstream out(outPath.c_str(), ios::binary | ios::trunc);
-            out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-            out.write((char*)buffer, data.size);
-
-            out.close();
-        } catch (ios_base::failure& e) {
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
-        }
-
-        delete [] buffer;
+        return pair<uint8_t*,size_t>(buffer, data.size);
     }
 
     uint64_t BSA::CalcHash(const std::string& path) {
