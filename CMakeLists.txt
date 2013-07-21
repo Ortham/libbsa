@@ -62,9 +62,9 @@ ENDIF ()
 ##############################
 
 # Build libbsa library.
-add_library           (bsa ${PROJECT_LINK} ${PROJECT_SRC})
-target_link_libraries (bsa ${PROJECT_LIBS})
+add_library           (bsa${PROJECT_ARCH} ${PROJECT_LINK} ${PROJECT_SRC})
+target_link_libraries (bsa${PROJECT_ARCH} ${PROJECT_LIBS})
 
 # Build libbsa tester.
 add_executable        (libbsa-tester "${CMAKE_SOURCE_DIR}/src/tester.cpp")
-target_link_libraries (libbsa-tester bsa ${PROJECT_LIBS})
+target_link_libraries (libbsa-tester bsa${PROJECT_ARCH} ${PROJECT_LIBS})
