@@ -22,9 +22,9 @@
 */
 
 #include "libbsa.h"
+#include "streams.h"
 #include <iostream>
 #include <stdint.h>
-#include <fstream>
 
 using std::endl;
 
@@ -77,7 +77,7 @@ int main() {
     char ** assetPaths;
     bool result;
 
-    std::ofstream out("libbsa-tester.txt");
+    libbsa::ofstream out("libbsa-tester.txt");
     if (!out.good()){
         std::cout << "File could not be opened for reading.";
         return 1;
