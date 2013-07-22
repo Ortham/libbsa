@@ -24,7 +24,7 @@
 #include "tes3bsa.h"
 #include "error.h"
 #include "libbsa.h"
-#include <fstream>
+#include "streams.h"
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
@@ -40,8 +40,8 @@ namespace libbsa { namespace tes3 {
         //Check if file exists.
         if (fs::exists(path)) {
 
-            ifstream in(path.c_str(), ios::binary);
-            in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+            libbsa::ifstream in(path.c_str(), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             Header header;
             in.seekg(0, ios_base::beg);
@@ -113,11 +113,11 @@ namespace libbsa { namespace tes3 {
         if (path == filePath)
             path += ".new";  //Avoid read/write collisions.
 
-        ifstream in(filePath.c_str(), ios::binary);
-        in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        ofstream out(path.c_str(), ios::binary | ios::trunc);
-        out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+        libbsa::ofstream out(path.c_str(), ios::binary | ios::trunc);
+        out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         //Build file header.
         Header header;
@@ -144,7 +144,7 @@ namespace libbsa { namespace tes3 {
         assets.sort(path_comp);
         uint32_t fileDataOffset = 0;
         vector<uint32_t> oldOffsets;
-ofstream debug("debug.txt");
+libbsa::ofstream debug("debug.txt");
         for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
 
 
@@ -245,7 +245,7 @@ debug.close();
         }*/
     }
 
-    std::pair<uint8_t*,size_t> BSA::ReadData(std::ifstream& in, const libbsa::BsaAsset& data) {
+    std::pair<uint8_t*,size_t> BSA::ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) {
         //Just need to use size and offset to write to binary file stream.
         uint8_t * buffer;
 
@@ -316,8 +316,8 @@ debug.close();
             return false;
         else {
             uint32_t magic;
-            ifstream in(path.c_str(), ios::binary);
-            in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+            libbsa::ifstream in(path.c_str(), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             in.read((char*)&magic, sizeof(uint32_t));
             in.close();
