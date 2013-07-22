@@ -25,6 +25,7 @@
 #define __LIBBSA_GENERICBSA_H__
 
 #include "helpers.h"
+#include "streams.h"
 #include <stdint.h>
 #include <string>
 #include <list>
@@ -77,7 +78,7 @@ public:
     size_t extAssetsNum;
 protected:
     //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
-    virtual std::pair<uint8_t*,size_t> ReadData(std::ifstream& in, const libbsa::BsaAsset& data) = 0;
+    virtual std::pair<uint8_t*,size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) = 0;
 
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
