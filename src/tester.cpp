@@ -23,8 +23,10 @@
 
 #include "libbsa.h"
 #include "streams.h"
-#include <iostream>
+
 #include <stdint.h>
+
+#include <boost/filesystem.hpp>
 
 using std::endl;
 
@@ -77,7 +79,7 @@ int main() {
     char ** assetPaths;
     bool result;
 
-    libbsa::ofstream out("libbsa-tester.txt");
+    libbsa::ofstream out(boost::filesystem::path("libbsa-tester.txt"));
     if (!out.good()){
         std::cout << "File could not be opened for reading.";
         return 1;

@@ -40,7 +40,7 @@ namespace libbsa { namespace tes3 {
         //Check if file exists.
         if (fs::exists(path)) {
 
-            libbsa::ifstream in(path.c_str(), ios::binary);
+            libbsa::ifstream in(fs::path(path), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             Header header;
@@ -113,10 +113,10 @@ namespace libbsa { namespace tes3 {
         if (path == filePath)
             path += ".new";  //Avoid read/write collisions.
 
-        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        libbsa::ifstream in(fs::path(filePath), ios::binary);
         in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        libbsa::ofstream out(path.c_str(), ios::binary | ios::trunc);
+        libbsa::ofstream out(fs::path(path), ios::binary | ios::trunc);
         out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         //Build file header.
@@ -144,7 +144,7 @@ namespace libbsa { namespace tes3 {
         assets.sort(path_comp);
         uint32_t fileDataOffset = 0;
         vector<uint32_t> oldOffsets;
-libbsa::ofstream debug("debug.txt");
+libbsa::ofstream debug(fs::path("debug.txt"));
         for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
 
 
@@ -316,7 +316,7 @@ debug.close();
             return false;
         else {
             uint32_t magic;
-            libbsa::ifstream in(path.c_str(), ios::binary);
+            libbsa::ifstream in(fs::path(path), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             in.read((char*)&magic, sizeof(uint32_t));

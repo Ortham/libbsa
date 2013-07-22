@@ -13,6 +13,8 @@ project (libbsa)
 
 set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/genericbsa.cpp" "${CMAKE_SOURCE_DIR}/src/helpers.cpp" "${CMAKE_SOURCE_DIR}/src/libbsa.cpp" "${CMAKE_SOURCE_DIR}/src/tes3bsa.cpp" "${CMAKE_SOURCE_DIR}/src/tes4bsa.cpp")
 
+set (PROJECT_SRC ${PROJECT_SRC} "${PROJECT_LIBS_DIR}/boost/libs/iostreams/src/file_descriptor.cpp")
+
 # Include source and library directories.
 include_directories ("${PROJECT_LIBS_DIR}/boost" "${PROJECT_LIBS_DIR}/utf8" "${PROJECT_LIBS_DIR}/zlib" "${CMAKE_SOURCE_DIR}/src")
 
@@ -66,5 +68,5 @@ add_library           (bsa${PROJECT_ARCH} ${PROJECT_LINK} ${PROJECT_SRC})
 target_link_libraries (bsa${PROJECT_ARCH} ${PROJECT_LIBS})
 
 # Build libbsa tester.
-add_executable        (libbsa-tester "${CMAKE_SOURCE_DIR}/src/tester.cpp")
+add_executable        (libbsa-tester "${CMAKE_SOURCE_DIR}/src/tester.cpp" "${PROJECT_LIBS_DIR}/boost/libs/iostreams/src/file_descriptor.cpp")
 target_link_libraries (libbsa-tester bsa${PROJECT_ARCH} ${PROJECT_LIBS})

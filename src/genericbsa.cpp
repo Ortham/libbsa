@@ -94,7 +94,7 @@ void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& o
             throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath + "\" already exists.");
 
         //Read file data.
-        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        libbsa::ifstream in(fs::path(filePath), ios::binary);
         in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         dataPair = ReadData(in, data);
@@ -102,7 +102,7 @@ void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& o
         in.close();
 
         //Write new file.
-        libbsa::ofstream out(outFilePath.c_str(), ios::binary | ios::trunc);
+        libbsa::ofstream out(fs::path(outFilePath), ios::binary | ios::trunc);
         out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         out.write((char*)dataPair.first, dataPair.second);
@@ -122,7 +122,7 @@ void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::
     std::pair<uint8_t*,size_t> dataPair;
     try {
         //Open the source BSA.
-        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        libbsa::ifstream in(fs::path(filePath), ios::binary);
         in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         //Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
@@ -139,7 +139,7 @@ void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::
             dataPair = ReadData(in, *it);
 
             //Write new file.
-            libbsa::ofstream out((outPath + '/' + it->path).c_str(), ios::binary | ios::trunc);
+            libbsa::ofstream out(fs::path(outPath) / it->path, ios::binary | ios::trunc);
             out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             out.write((char*)dataPair.first, dataPair.second);
@@ -166,7 +166,7 @@ uint32_t _bsa_handle_int::CalcChecksum(const std::string& assetPath) {
     std::pair<uint8_t*,size_t> dataPair;
     try {
         //Open input stream.
-        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        libbsa::ifstream in(fs::path(filePath), ios::binary);
         in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         dataPair = ReadData(in, data);

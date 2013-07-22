@@ -44,7 +44,7 @@ namespace libbsa { namespace tes4 {
         //Check if file exists.
         if (fs::exists(path)) {
 
-            libbsa::ifstream in(path.c_str(), ios::binary);
+            libbsa::ifstream in(fs::path(path), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             Header header;
@@ -138,10 +138,10 @@ namespace libbsa { namespace tes4 {
         if (path == filePath)
             path += ".new";  //Avoid read/write collisions.
 
-        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        libbsa::ifstream in(fs::path(filePath), ios::binary);
         in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        libbsa::ofstream out(path.c_str(), ios::binary | ios::trunc);
+        libbsa::ofstream out(fs::path(path), ios::binary | ios::trunc);
         out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         ///////////////////////////////
@@ -462,7 +462,7 @@ namespace libbsa { namespace tes4 {
             return false;
         else {
             uint32_t magic;
-            libbsa::ifstream in(path.c_str(), ios::binary);
+            libbsa::ifstream in(fs::path(path), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             in.read((char*)&magic, sizeof(uint32_t));
