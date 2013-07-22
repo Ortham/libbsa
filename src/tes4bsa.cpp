@@ -24,7 +24,7 @@
 #include "tes4bsa.h"
 #include "error.h"
 #include "libbsa.h"
-#include <fstream>
+#include "streams.h"
 #include <vector>
 #include <cstring>
 #include <boost/filesystem.hpp>
@@ -44,8 +44,8 @@ namespace libbsa { namespace tes4 {
         //Check if file exists.
         if (fs::exists(path)) {
 
-            ifstream in(path.c_str(), ios::binary);
-            in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+            libbsa::ifstream in(path.c_str(), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             Header header;
             in.seekg(0, ios_base::beg);
@@ -138,11 +138,11 @@ namespace libbsa { namespace tes4 {
         if (path == filePath)
             path += ".new";  //Avoid read/write collisions.
 
-        ifstream in(filePath.c_str(), ios::binary);
-        in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+        libbsa::ifstream in(filePath.c_str(), ios::binary);
+        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        ofstream out(path.c_str(), ios::binary | ios::trunc);
-        out.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+        libbsa::ofstream out(path.c_str(), ios::binary | ios::trunc);
+        out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
         ///////////////////////////////
         // Set header up
@@ -349,7 +349,7 @@ namespace libbsa { namespace tes4 {
         }*/
     }
 
-    std::pair<uint8_t*,size_t> BSA::ReadData(std::ifstream& in, const libbsa::BsaAsset& data) {
+    std::pair<uint8_t*,size_t> BSA::ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) {
         uint8_t * outBuffer = NULL;
         uint32_t outSize = data.size;
         //Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
@@ -462,8 +462,8 @@ namespace libbsa { namespace tes4 {
             return false;
         else {
             uint32_t magic;
-            ifstream in(path.c_str(), ios::binary);
-            in.exceptions(ifstream::failbit | ifstream::badbit | ifstream::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+            libbsa::ifstream in(path.c_str(), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             in.read((char*)&magic, sizeof(uint32_t));
             in.close();
