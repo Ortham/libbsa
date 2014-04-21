@@ -345,6 +345,8 @@ LIBBSA unsigned int bsa_extract_assets (bsa_handle bh, const char * const conten
 */
 LIBBSA unsigned int bsa_extract_asset (bsa_handle bh, const char * const assetPath, const char * const destPath, const bool overwrite);
 
+LIBBSA unsigned int bsa_extract_asset_to_memory (bsa_handle bh, const char * const assetPath, uint8_t** _data, size_t* _size);
+
 ///@}
 
 

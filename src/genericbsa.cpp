@@ -78,6 +78,31 @@ void _bsa_handle_int::GetMatchingAssets(const boost::regex& regex, std::list<Bsa
     }
 }
 
+void _bsa_handle_int::Extract(const std::string& assetPath, uint8_t** _data, size_t* _size) {
+    //Get asset data.
+    BsaAsset data = GetAsset(assetPath);
+    if (data.path.empty())
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+
+	std::pair<uint8_t*,size_t> dataPair;
+    try {
+        //Read file data.
+        libbsa::ifstream in(fs::path(filePath), ios::binary);
+        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+        dataPair = ReadData(in, data);
+
+		*_data = dataPair.first;
+		*_size = dataPair.second;
+
+        in.close();
+    } catch (ios_base::failure& e) {
+        delete [] dataPair.first;
+        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+    }
+
+}
+
 void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
     //Get asset data.
     BsaAsset data = GetAsset(assetPath);

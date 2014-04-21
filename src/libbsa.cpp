@@ -397,6 +397,22 @@ LIBBSA unsigned int bsa_extract_asset (bsa_handle bh, const char * const assetPa
     return LIBBSA_OK;
 }
 
+/* Extracts a specific asset, found at assetPath, from a given BSA, to memory. */
+LIBBSA unsigned int bsa_extract_asset_to_memory (bsa_handle bh, const char * const assetPath, uint8_t** _data, size_t* _size) {
+    if (bh == NULL || assetPath == NULL || _data == NULL || _size == NULL) //Check for valid args.
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
+
+    string assetStr = FixPath(assetPath);
+
+    try {
+        bh->Extract(assetStr, _data, _size);
+    } catch (error& e) {
+        return c_error(e.code(), e.what());
+    }
+
+    return LIBBSA_OK;
+}
+
 /*--------------------------------
    Misc. Functions
 --------------------------------*/
