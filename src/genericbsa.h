@@ -68,6 +68,7 @@ public:
     libbsa::BsaAsset GetAsset(const std::string& assetPath);
     void GetMatchingAssets(const boost::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
 
+	void Extract(const std::string& assetPath, uint8_t** _data, size_t* _size);
     void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
     void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
 
