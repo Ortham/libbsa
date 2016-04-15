@@ -32,7 +32,6 @@
 #include <locale>
 #include <regex>
 #include <unordered_set>
-#include <boost/crc.hpp>
 
 using namespace std;
 using namespace libbsa;

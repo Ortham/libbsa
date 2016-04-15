@@ -28,7 +28,6 @@
 #include <stdint.h>
 #include <string>
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 
 /* File format infos:
     <http://www.uesp.net/wiki/Tes4Mod:BSA_File_Format>
