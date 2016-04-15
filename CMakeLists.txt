@@ -36,6 +36,15 @@ set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/genericbsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/tes3bsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/tes4bsa.cpp")
 
+set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/src/error.h"
+                     "${CMAKE_SOURCE_DIR}/src/genericbsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/helpers.h"
+                     "${CMAKE_SOURCE_DIR}/src/libbsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/tes3bsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/tes4bsa.h")
+
+source_group("Header Files" FILES ${PROJECT_HEADERS})
+
 set (TEST_SRC "${CMAKE_SOURCE_DIR}/src/tester.cpp")
 
 include_directories("${CMAKE_SOURCE_DIR}/src"
@@ -78,7 +87,7 @@ ENDIF ()
 ##############################
 
 # Build libbsa library.
-add_library           (bsa ${PROJECT_SRC})
+add_library           (bsa ${PROJECT_SRC} ${PROJECT_HEADERS})
 add_dependencies      (bsa zlib)
 target_link_libraries (bsa ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
