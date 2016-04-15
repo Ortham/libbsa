@@ -90,10 +90,7 @@ unsigned int c_error(const unsigned int code, const char * what) {
 /* Returns whether this version of libbsa is compatible with the given
    version of libbsa. */
 LIBBSA bool bsa_is_compatible(const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch) {
-    if (versionMajor == 2 && versionMinor == 0 && versionPatch == 0)
-        return true;
-    else
-        return false;
+    return versionMajor == LIBBSA_VERSION_MAJOR;
 }
 
 LIBBSA void bsa_get_version(unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch) {
