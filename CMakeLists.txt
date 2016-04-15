@@ -22,7 +22,15 @@ ExternalProject_Add(zlib
 ExternalProject_Get_Property(zlib SOURCE_DIR BINARY_DIR)
 set (ZLIB_INCLUDE_DIRS ${SOURCE_DIR} ${BINARY_DIR})
 set (ZLIB_LIBRARIES optimized "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}"
-debug "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                    debug "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+ExternalProject_Add(GTest
+                    PREFIX "external"
+                    URL "https://github.com/google/googletest/archive/release-1.7.0.tar.gz"
+                    INSTALL_COMMAND "")
+ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
+set (GTEST_INCLUDE_DIRS "${SOURCE_DIR}/include")
+set (GTEST_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
 set (Boost_USE_STATIC_LIBS ${PROJECT_STATIC_RUNTIME})
 set (Boost_USE_MULTITHREADED ON)
@@ -49,6 +57,7 @@ set (TEST_SRC "${CMAKE_SOURCE_DIR}/src/tester.cpp")
 
 include_directories("${CMAKE_SOURCE_DIR}/src"
                     ${Boost_INCLUDE_DIRS}
+                    ${GTEST_INCLUDE_DIRS}
                     ${ZLIB_INCLUDE_DIRS})
 
 ##############################
@@ -94,8 +103,9 @@ add_dependencies      (bsa zlib)
 target_link_libraries (bsa ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 # Build libbsa tester.
-add_executable        (tester ${TEST_SRC})
-target_link_libraries (tester bsa)
+add_executable        (tests ${TEST_SRC})
+add_dependencies      (tests GTest)
+target_link_libraries (tests bsa ${GTEST_LIBRARIES})
 
 
 ##############################
@@ -107,6 +117,6 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
         set_target_properties (bsa PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LIBBSA_EXPORT")
     ELSE ()
         set_target_properties (bsa PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LIBBSA_STATIC")
-        set_target_properties (tester PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LIBBSA_STATIC")
+        set_target_properties (tests PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LIBBSA_STATIC")
     ENDIF ()
 ENDIF ()

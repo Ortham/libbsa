@@ -9,9 +9,10 @@ Libbsa uses [CMake](http://cmake.org) to generate build files. Instructions for 
 ### Requirements
 
 * [Boost](http://www.boost.org) v1.55+ Filesystem, Iostreams and Locale libraries
+* [Google Test](https://github.com/google/googletest): Required to build libloadorder's tests, but not the library itself. Tested with v1.7.0.
 * [zlib](http://zlib.net) v1.2.8
 
-The zlib dependency is automatically managed by CMake, but Boost must be obtained separately.
+The Google Test and zlib dependencies are automatically managed by CMake, but Boost must be obtained separately.
 
 ### Windows
 
