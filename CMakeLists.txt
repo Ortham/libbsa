@@ -38,24 +38,25 @@ set (Boost_USE_STATIC_RUNTIME ${PROJECT_STATIC_RUNTIME})
 
 find_package(Boost REQUIRED COMPONENTS iostreams filesystem locale)
 
-set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/genericbsa.cpp"
-                 "${CMAKE_SOURCE_DIR}/src/helpers.cpp"
-                 "${CMAKE_SOURCE_DIR}/src/libbsa.cpp"
-                 "${CMAKE_SOURCE_DIR}/src/tes3bsa.cpp"
-                 "${CMAKE_SOURCE_DIR}/src/tes4bsa.cpp")
+set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/api/genericbsa.cpp"
+                 "${CMAKE_SOURCE_DIR}/src/api/helpers.cpp"
+                 "${CMAKE_SOURCE_DIR}/src/api/libbsa.cpp"
+                 "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.cpp"
+                 "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.cpp")
 
-set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/src/error.h"
-                     "${CMAKE_SOURCE_DIR}/src/genericbsa.h"
-                     "${CMAKE_SOURCE_DIR}/src/helpers.h"
-                     "${CMAKE_SOURCE_DIR}/src/libbsa.h"
-                     "${CMAKE_SOURCE_DIR}/src/tes3bsa.h"
-                     "${CMAKE_SOURCE_DIR}/src/tes4bsa.h")
+set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/libbsa/libbsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/api/error.h"
+                     "${CMAKE_SOURCE_DIR}/src/api/genericbsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/api/helpers.h"
+                     "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.h")
 
 source_group("Header Files" FILES ${PROJECT_HEADERS})
 
-set (TEST_SRC "${CMAKE_SOURCE_DIR}/src/tester.cpp")
+set (TEST_SRC "${CMAKE_SOURCE_DIR}/src/test/main.cpp")
 
 include_directories("${CMAKE_SOURCE_DIR}/src"
+                    "${CMAKE_SOURCE_DIR}/include"
                     ${Boost_INCLUDE_DIRS}
                     ${GTEST_INCLUDE_DIRS}
                     ${ZLIB_INCLUDE_DIRS})
