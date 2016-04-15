@@ -2,46 +2,40 @@
 
 Libbsa is a free software library for reading and writing BSA files.
 
-
 ## Build Instructions
 
-Libbsa uses [CMake](http://cmake.org) v2.8.9 or later for cross-platform building support, though development takes place on Linux, and the instructions below reflect this. Building on Windows should be straightforward using analogous commands though.
-
-Libbsa expects all libraries' folders to be present alongside the libbsa repository folder that contains this readme, or otherwise installed such that the compiler and linker used can find them without suppling additional paths. All paths below are relative to the folder(s) containing the libraries and libbsa.
-
+Libbsa uses [CMake](http://cmake.org) to generate build files. Instructions for Windows are given below.
 
 ### Requirements
 
-  * [CMake](http://cmake.org/) v2.8.9.
-  * [Boost](http://www.boost.org) v1.51.0.
-  * [zlib](http://zlib.net) v1.2.7.
+* [Boost](http://www.boost.org) v1.55+ Filesystem, Iostreams and Locale libraries
+* [zlib](http://zlib.net) v1.2.8
 
-### Boost
+The zlib dependency is automatically managed by CMake, but Boost must be obtained separately.
 
-```
-./bootstrap.sh
-echo "using gcc : 4.6.3 : i686-w64-mingw32-g++ : <rc>i686-w64-mingw32-windres <archiver>i686-w64-mingw32-ar <ranlib>i686-w64-mingw32-ranlib ;" > tools/build/v2/user-config.jam
-./b2 toolset=gcc-4.6.3 target-os=windows link=static variant=release address-model=32 cxxflags=-fPIC --with-filesystem --with-locale --with-regex --with-system --stagedir=stage-mingw-32
-```
+### Windows
 
-### zlib
+#### Boost
 
 ```
-cmake . -DCMAKE_C_FLAGS=-m32 -DPROJECT_ARCH=32 -DCMAKE_TOOLCHAIN_FILE=../libbsa/mingw-toolchain.cmake
-make
+bootstrap.bat
+b2 toolset=msvc threadapi=win32 link=static runtime-link=static variant=release address-model=32 --with-iostreams --with-filesystem --with-locale --with-system
 ```
 
-### Libbsa
+`link`, `runtime-link` and `address-model` can all be modified if shared linking or 64 bit builds are desired. Libloadorder uses statically-linked Boost libraries by default: to change this, edit [CMakeLists.txt](CMakeLists.txt).
 
-```
-mkdir build
-cd build
-cmake .. -DPROJECT_LIBS_DIR=.. -DPROJECT_ARCH=32 -DPROJECT_LINK=STATIC -DCMAKE_TOOLCHAIN_FILE=mingw-toolchain.cmake
-make
-```
+#### Libbsa
 
-If natively compiling, all the ```-DCMAKE_TOOLCHAIN_FILE``` arguments can be omitted, as can the ```echo``` line when building Boost.
+Libbsa uses the following CMake variables to set build parameters:
 
-To build a shared library, swap ```-DPROJECT_LINK=STATIC``` with ```-DPROJECT_LINK=SHARED```.
+Parameter | Values | Description
+----------|--------|------------
+`BUILD_SHARED_LIBS` | `ON`, `OFF` | Whether or not to build a shared libbsa. Defaults to `ON`.
+`PROJECT_STATIC_RUNTIME` | `ON`, `OFF` | Whether to link the C++ runtime statically or not. This also affects the Boost libraries used. Defaults to `ON`.
 
-To build a 64 bit library, swap all instances of ```i686``` with ```x86_64``` and ```32``` with ```64```.
+You may also need to define `BOOST_ROOT` if CMake can't find Boost.
+
+1. Set CMake up so that it builds the binaries in the `build` subdirectory of the libbsa folder.
+2. Define any necessary parameters.
+3. Configure CMake, then generate a build system for Visual Studio.
+4. Open the generated solution file, and build it.
