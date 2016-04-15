@@ -25,6 +25,7 @@
 #include "streams.h"
 
 #include <stdint.h>
+#include <iostream>
 
 #include <boost/filesystem.hpp>
 
