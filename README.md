@@ -1,5 +1,7 @@
 # Libbsa
 
+[![Build Status](https://travis-ci.org/WrinklyNinja/libbsa.svg?branch=master)](https://travis-ci.org/WrinklyNinja/libbsa)
+
 Libbsa is a free software library for reading and writing BSA files.
 
 ## Build Instructions
