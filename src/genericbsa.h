@@ -37,7 +37,6 @@
 */
 
 namespace libbsa {
-
     //Class for generic BSA data.
     //Files that have not yet been written have 0 hash, size and offset.
     struct BsaAsset {
@@ -68,7 +67,7 @@ public:
     libbsa::BsaAsset GetAsset(const std::string& assetPath);
     void GetMatchingAssets(const boost::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
 
-	void Extract(const std::string& assetPath, uint8_t** _data, size_t* _size);
+    void Extract(const std::string& assetPath, uint8_t** _data, size_t* _size);
     void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
     void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
 
@@ -79,12 +78,11 @@ public:
     size_t extAssetsNum;
 protected:
     //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
-    virtual std::pair<uint8_t*,size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) = 0;
+    virtual std::pair<uint8_t*, size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) = 0;
 
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
     std::list<libbsa::PendingBsaAsset> pendingAssets;  //Holds the internal->external path mapping for files not yet written to the BSA.
 };
-
 
 #endif

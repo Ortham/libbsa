@@ -80,7 +80,7 @@ int main() {
     bool result;
 
     libbsa::ofstream out(boost::filesystem::path("libbsa-tester.txt"));
-    if (!out.good()){
+    if (!out.good()) {
         std::cout << "File could not be opened for reading.";
         return 1;
     }
@@ -100,7 +100,7 @@ int main() {
             out << '\t' << "bsa_get_assets(...) failed! Return code: " << ret << endl;
         else {
             out << '\t' << "bsa_get_assets(...) successful! Number of paths: " << numAssets << endl;
-            for (size_t i=0; i < numAssets; i++) {
+            for (size_t i = 0; i < numAssets; i++) {
                 out << '\t' << assetPaths[i] << endl;
             }
         }
@@ -125,7 +125,7 @@ int main() {
             out << '\t' << "bsa_extract_assets(...) failed! Return code: " << ret << endl;
         else {
             out << '\t' << "bsa_extract_assets(...) successful! Number of paths: " << numAssets << endl;
-            for (size_t i=0; i < numAssets; i++) {
+            for (size_t i = 0; i < numAssets; i++) {
                 out << '\t' << assetPaths[i] << endl;
             }
         }

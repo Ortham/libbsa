@@ -28,7 +28,6 @@
 #include <string>
 
 namespace libbsa {
-
     class error : public std::exception {
     public:
         error(const unsigned int code, const std::string& what) : _code(code), _what(what) {}

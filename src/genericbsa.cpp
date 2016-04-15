@@ -48,9 +48,9 @@ namespace libbsa {
 _bsa_handle_int::_bsa_handle_int(const std::string& path) : filePath(path), extAssets(NULL), extAssetsNum(0) {}
 
 _bsa_handle_int::~_bsa_handle_int() {
-    for (size_t i=0; i < extAssetsNum; i++)
-        delete [] extAssets[i];
-    delete [] extAssets;
+    for (size_t i = 0; i < extAssetsNum; i++)
+        delete[] extAssets[i];
+    delete[] extAssets;
 }
 
 bool _bsa_handle_int::HasAsset(const std::string& assetPath) {
@@ -84,7 +84,7 @@ void _bsa_handle_int::Extract(const std::string& assetPath, uint8_t** _data, siz
     if (data.path.empty())
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
-	std::pair<uint8_t*,size_t> dataPair;
+    std::pair<uint8_t*, size_t> dataPair;
     try {
         //Read file data.
         libbsa::ifstream in(fs::path(filePath), ios::binary);
@@ -92,15 +92,15 @@ void _bsa_handle_int::Extract(const std::string& assetPath, uint8_t** _data, siz
 
         dataPair = ReadData(in, data);
 
-		*_data = dataPair.first;
-		*_size = dataPair.second;
+        *_data = dataPair.first;
+        *_size = dataPair.second;
 
         in.close();
-    } catch (ios_base::failure& e) {
-        delete [] dataPair.first;
+    }
+    catch (ios_base::failure& e) {
+        delete[] dataPair.first;
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
-
 }
 
 void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
@@ -109,7 +109,7 @@ void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& o
     if (data.path.empty())
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
-    std::pair<uint8_t*,size_t> dataPair;
+    std::pair<uint8_t*, size_t> dataPair;
     std::string outFilePath = outPath + '/' + data.path;
     try {
         //Create parent directories.
@@ -135,16 +135,16 @@ void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& o
         out.close();
 
         //Free data in memory.
-        delete [] dataPair.first;
-
-    } catch (ios_base::failure& e) {
-        delete [] dataPair.first;
+        delete[] dataPair.first;
+    }
+    catch (ios_base::failure& e) {
+        delete[] dataPair.first;
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }
 
 void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
-    std::pair<uint8_t*,size_t> dataPair;
+    std::pair<uint8_t*, size_t> dataPair;
     try {
         //Open the source BSA.
         libbsa::ifstream in(fs::path(filePath), ios::binary);
@@ -172,12 +172,13 @@ void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::
             out.close();
 
             //Free data in memory.
-            delete [] dataPair.first;
+            delete[] dataPair.first;
         }
 
         in.close();
-    } catch (ios_base::failure& e) {
-        delete [] dataPair.first;
+    }
+    catch (ios_base::failure& e) {
+        delete[] dataPair.first;
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }
@@ -188,7 +189,7 @@ uint32_t _bsa_handle_int::CalcChecksum(const std::string& assetPath) {
     if (data.path.empty())
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
-    std::pair<uint8_t*,size_t> dataPair;
+    std::pair<uint8_t*, size_t> dataPair;
     try {
         //Open input stream.
         libbsa::ifstream in(fs::path(filePath), ios::binary);
@@ -202,11 +203,12 @@ uint32_t _bsa_handle_int::CalcChecksum(const std::string& assetPath) {
         boost::crc_32_type result;
         result.process_bytes(dataPair.first, dataPair.second);
 
-        delete [] dataPair.first;
+        delete[] dataPair.first;
 
         return result.checksum();
-    } catch (ios_base::failure& e) {
-        delete [] dataPair.first;
+    }
+    catch (ios_base::failure& e) {
+        delete[] dataPair.first;
         throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
     }
 }

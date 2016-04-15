@@ -36,7 +36,6 @@ using namespace std;
 namespace fs = boost::filesystem;
 
 namespace libbsa {
-
     // std::string to null-terminated char string converter.
     char * ToNewCString(const std::string& str) {
         char * p = new char[str.length() + 1];
@@ -76,7 +75,8 @@ namespace libbsa {
     std::string ToUTF8(const std::string& str) {
         try {
             return boost::locale::conv::to_utf<char>(str, "Windows-1252", boost::locale::conv::stop);
-        } catch (boost::locale::conv::conversion_error& e) {
+        }
+        catch (boost::locale::conv::conversion_error& e) {
             throw error(LIBBSA_ERROR_BAD_STRING, "\"" + str + "\" cannot be encoded in Windows-1252.");
         }
     }
@@ -84,7 +84,8 @@ namespace libbsa {
     std::string FromUTF8(const std::string& str) {
         try {
             return boost::locale::conv::from_utf<char>(str, "Windows-1252", boost::locale::conv::stop);
-        } catch (boost::locale::conv::conversion_error& e) {
+        }
+        catch (boost::locale::conv::conversion_error& e) {
             throw error(LIBBSA_ERROR_BAD_STRING, "\"" + str + "\" cannot be encoded in Windows-1252.");
         }
     }

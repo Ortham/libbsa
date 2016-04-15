@@ -36,39 +36,40 @@
     to the Tes3-type BSA, which is used by Morrowind.
 */
 
-namespace libbsa { namespace tes3 {
+namespace libbsa {
+    namespace tes3 {
+        const uint32_t BSA_VERSION_TES3 = 0x100;
 
-    const uint32_t BSA_VERSION_TES3 = 0x100;
+        struct Header {
+            uint32_t version;
+            uint32_t hashOffset;
+            uint32_t fileCount;
+        };
 
-    struct Header {
-        uint32_t version;
-        uint32_t hashOffset;
-        uint32_t fileCount;
-    };
+        struct FileRecord {
+            uint32_t size;
+            uint32_t offset;
+        };
 
-    struct FileRecord {
-        uint32_t size;
-        uint32_t offset;
-    };
+        class BSA : public _bsa_handle_int {
+        public:
+            BSA(const std::string& path);
+            void Save(std::string path, const uint32_t version, const uint32_t compression);
+        private:
+            std::pair<uint8_t*, size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data);
 
-    class BSA : public _bsa_handle_int {
-    public:
-        BSA(const std::string& path);
-        void Save(std::string path, const uint32_t version, const uint32_t compression);
-    private:
-        std::pair<uint8_t*,size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data);
+            uint64_t CalcHash(const std::string& path);
 
-        uint64_t CalcHash(const std::string& path);
+            uint32_t hashOffset;
+        };
 
-        uint32_t hashOffset;
-    };
+        bool hash_comp(const BsaAsset& first, const BsaAsset& second);
 
-    bool hash_comp(const BsaAsset& first, const BsaAsset& second);
+        bool path_comp(const BsaAsset& first, const BsaAsset& second);
 
-    bool path_comp(const BsaAsset& first, const BsaAsset& second);
-
-    //Check if a given file is a Tes3-type BSA.
-    bool IsBSA(const std::string& path);
-} }
+        //Check if a given file is a Tes3-type BSA.
+        bool IsBSA(const std::string& path);
+    }
+}
 
 #endif
