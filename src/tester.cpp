@@ -22,7 +22,6 @@
 */
 
 #include "libbsa.h"
-#include "streams.h"
 
 #include <stdint.h>
 #include <iostream>
