@@ -30,7 +30,7 @@
 #include <list>
 #include <regex>
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 /* This header declares the generic structures that libbsa uses to handle BSA
    manipulation.

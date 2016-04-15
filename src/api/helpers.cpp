@@ -28,11 +28,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>
 #include <boost/locale.hpp>
-#include <boost/filesystem.hpp>
 
 using namespace std;
-
-namespace fs = boost::filesystem;
 
 namespace libbsa {
     // std::string to null-terminated char string converter.
@@ -52,23 +49,6 @@ namespace libbsa {
             out = out.substr(1);
 
         return out;
-    }
-
-    //Calculate the CRC of the given file for comparison purposes.
-    uint32_t GetCrc32(const string& filename) {
-        uint32_t chksum = 0;
-        static const size_t buffer_size = 8192;
-        char buffer[buffer_size];
-        boost::filesystem::ifstream ifile(fs::path(filename), ios::binary);
-        boost::crc_32_type result;
-        if (ifile.good()) {
-            do {
-                ifile.read(buffer, buffer_size);
-                result.process_bytes(buffer, ifile.gcount());
-            } while (ifile);
-            chksum = result.checksum();
-        }
-        return chksum;
     }
 
     std::string ToUTF8(const std::string& str) {

@@ -21,8 +21,12 @@ ExternalProject_Add(zlib
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(zlib SOURCE_DIR BINARY_DIR)
 set (ZLIB_INCLUDE_DIRS ${SOURCE_DIR} ${BINARY_DIR})
-set (ZLIB_LIBRARIES optimized "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}"
+IF (MSVC)
+    set (ZLIB_LIBRARIES optimized "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}"
                     debug "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+ELSE ()
+    set (ZLIB_LIBRARIES "${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+ENDIF ()
 
 ExternalProject_Add(GTest
                     PREFIX "external"
@@ -36,7 +40,7 @@ set (Boost_USE_STATIC_LIBS ${PROJECT_STATIC_RUNTIME})
 set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME ${PROJECT_STATIC_RUNTIME})
 
-find_package(Boost REQUIRED COMPONENTS iostreams filesystem locale)
+find_package(Boost REQUIRED COMPONENTS iostreams filesystem system locale)
 
 set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/api/genericbsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/helpers.cpp"
@@ -67,13 +71,15 @@ include_directories("${CMAKE_SOURCE_DIR}/src"
 
 # Settings when compiling and cross-compiling on Linux.
 IF (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=c++11")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=c++11 -fPIC")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11 -fPIC")
     IF (PROJECT_STATIC_RUNTIME)
         set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
         set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
         set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
     ENDIF ()
+
+    set(PROJECT_LIBRARIES "pthread")
 ENDIF ()
 
 # Settings when compiling with MSVC.
@@ -106,7 +112,7 @@ target_link_libraries (bsa ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 # Build libbsa tester.
 add_executable        (tests ${TEST_SRC})
 add_dependencies      (tests GTest)
-target_link_libraries (tests bsa ${GTEST_LIBRARIES})
+target_link_libraries (tests bsa ${GTEST_LIBRARIES} ${PROJECT_LIBRARIES})
 
 
 ##############################

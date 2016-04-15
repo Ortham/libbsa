@@ -34,8 +34,6 @@ namespace libbsa {
     //Replaces all forwardslashes with backslashes, and lowercases letters.
     std::string FixPath(const char * path);
 
-    uint32_t GetCrc32(const std::string& filename);
-
     //Only ever need to convert between Windows-1252 and UTF-8.
     std::string ToUTF8(const std::string& str);
     std::string FromUTF8(const std::string& str);
