@@ -28,7 +28,7 @@ set (Boost_USE_STATIC_LIBS ${PROJECT_STATIC_RUNTIME})
 set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME ${PROJECT_STATIC_RUNTIME})
 
-find_package(Boost REQUIRED COMPONENTS iostreams filesystem locale regex)
+find_package(Boost REQUIRED COMPONENTS iostreams filesystem locale)
 
 set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/genericbsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/helpers.cpp"
@@ -57,6 +57,8 @@ include_directories("${CMAKE_SOURCE_DIR}/src"
 
 # Settings when compiling and cross-compiling on Linux.
 IF (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=c++11")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11")
     IF (PROJECT_STATIC_RUNTIME)
         set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc")
         set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++ -static-libgcc")

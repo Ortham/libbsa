@@ -24,7 +24,6 @@
 #include "helpers.h"
 #include "libbsa.h"
 #include "error.h"
-#include "streams.h"
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>
@@ -60,7 +59,7 @@ namespace libbsa {
         uint32_t chksum = 0;
         static const size_t buffer_size = 8192;
         char buffer[buffer_size];
-        libbsa::ifstream ifile(fs::path(filename), ios::binary);
+        boost::filesystem::ifstream ifile(fs::path(filename), ios::binary);
         boost::crc_32_type result;
         if (ifile.good()) {
             do {

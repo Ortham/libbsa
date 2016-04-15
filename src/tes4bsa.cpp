@@ -24,7 +24,6 @@
 #include "tes4bsa.h"
 #include "error.h"
 #include "libbsa.h"
-#include "streams.h"
 #include <vector>
 #include <cstring>
 #include <boost/filesystem.hpp>
@@ -42,7 +41,7 @@ namespace libbsa {
             fileFlags(0) {
             //Check if file exists.
             if (fs::exists(path)) {
-                libbsa::ifstream in(fs::path(path), ios::binary);
+                boost::filesystem::ifstream in(fs::path(path), ios::binary);
                 in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
                 Header header;
@@ -137,10 +136,10 @@ namespace libbsa {
             if (path == filePath)
                 path += ".new";  //Avoid read/write collisions.
 
-            libbsa::ifstream in(fs::path(filePath), ios::binary);
+            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-            libbsa::ofstream out(fs::path(path), ios::binary | ios::trunc);
+            boost::filesystem::ofstream out(fs::path(path), ios::binary | ios::trunc);
             out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             ///////////////////////////////
@@ -350,7 +349,7 @@ namespace libbsa {
             }*/
         }
 
-        std::pair<uint8_t*, size_t> BSA::ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) {
+        std::pair<uint8_t*, size_t> BSA::ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) {
             uint8_t * outBuffer = NULL;
             uint32_t outSize = data.size;
             //Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
@@ -466,7 +465,7 @@ namespace libbsa {
                 return false;
             else {
                 uint32_t magic;
-                libbsa::ifstream in(fs::path(path), ios::binary);
+                boost::filesystem::ifstream in(fs::path(path), ios::binary);
                 in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
                 in.read((char*)&magic, sizeof(uint32_t));

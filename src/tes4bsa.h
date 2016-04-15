@@ -83,7 +83,7 @@ namespace libbsa {
             BSA(const std::string& path);
             void Save(std::string path, const uint32_t version, const uint32_t compression);
         private:
-            std::pair<uint8_t*, size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data);
+            std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data);
 
             uint32_t HashString(const std::string& str);
             uint64_t CalcHash(const std::string& path, const std::string& ext);

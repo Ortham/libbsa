@@ -25,7 +25,7 @@
 #define __LIBBSA_HELPERS_H__
 
 #include <string>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 namespace libbsa {
     // std::string to null-terminated uint8_t string converter.

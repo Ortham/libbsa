@@ -25,11 +25,12 @@
 #define __LIBBSA_GENERICBSA_H__
 
 #include "helpers.h"
-#include "streams.h"
 #include <stdint.h>
 #include <string>
 #include <list>
-#include <boost/regex.hpp>
+#include <regex>
+
+#include <boost/filesystem.hpp>
 
 /* This header declares the generic structures that libbsa uses to handle BSA
    manipulation.
@@ -65,7 +66,7 @@ public:
 
     bool HasAsset(const std::string& assetPath);
     libbsa::BsaAsset GetAsset(const std::string& assetPath);
-    void GetMatchingAssets(const boost::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
+    void GetMatchingAssets(const std::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
 
     void Extract(const std::string& assetPath, uint8_t** _data, size_t* _size);
     void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
@@ -78,7 +79,7 @@ public:
     size_t extAssetsNum;
 protected:
     //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
-    virtual std::pair<uint8_t*, size_t> ReadData(libbsa::ifstream& in, const libbsa::BsaAsset& data) = 0;
+    virtual std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) = 0;
 
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.

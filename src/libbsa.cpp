@@ -27,11 +27,11 @@
 #include "tes3bsa.h"
 #include "tes4bsa.h"
 #include "error.h"
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
+#include <codecvt>
 #include <boost/filesystem.hpp>
 #include <locale>
-#include <boost/regex.hpp>
-#include <boost/unordered_set.hpp>
+#include <regex>
+#include <unordered_set>
 #include <boost/crc.hpp>
 
 using namespace std;
@@ -133,10 +133,8 @@ LIBBSA unsigned int bsa_open(bsa_handle * const bh, const char * const path) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Set the locale to get encoding conversions working correctly.
-    setlocale(LC_CTYPE, "");
-    locale global_loc = locale();
-    locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet());
-    boost::filesystem::path::imbue(loc);
+    std::locale::global(std::locale(std::locale(), new std::codecvt_utf8_utf16<wchar_t>));
+    boost::filesystem::path::imbue(std::locale());
 
     //Create handle for the appropriate BSA type.
     try {
@@ -234,11 +232,11 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath
     *numAssets = 0;
 
     //Build regex expression. Also check that it is valid.
-    boost::regex regex;
+    regex regex;
     try {
-        regex = boost::regex(contentPath, boost::regex::extended | boost::regex::icase);
+        regex = std::regex(contentPath, regex::extended | regex::icase);
     }
-    catch (boost::regex_error& e) {
+    catch (regex_error& e) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
     }
 
@@ -338,11 +336,11 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const content
     *numAssets = 0;
 
     //Build regex expression. Also check that it is valid.
-    boost::regex regex;
+    regex regex;
     try {
-        regex = boost::regex(string(reinterpret_cast<const char*>(contentPath)), boost::regex::extended | boost::regex::icase);
+        regex = std::regex(string(reinterpret_cast<const char*>(contentPath)), regex::extended | regex::icase);
     }
-    catch (boost::regex_error& e) {
+    catch (regex_error& e) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
     }
 
