@@ -55,6 +55,10 @@ namespace libbsa {
 
         std::string filePath;
         std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
+
+        //Only ever need to convert between Windows-1252 and UTF-8.
+        static std::string ToUTF8(const std::string& str);
+        static std::string FromUTF8(const std::string& str);
     };
 }
 

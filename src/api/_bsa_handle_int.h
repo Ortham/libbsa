@@ -40,12 +40,18 @@ public:
 
     void setExtAssets(const std::list<libbsa::BsaAsset>& assets);
     void freeExtAssets();
+
+    //Replaces all forwardslashes with backslashes, and lowercases letters.
+    static std::string FixPath(const char * path);
 private:
     libbsa::GenericBsa * bsa;
 
     //External data array pointers and sizes.
     char ** extAssets;
     size_t extAssetsNum;
+
+    // std::string to null-terminated uint8_t string converter.
+    static char * ToNewCString(const std::string& str);
 };
 
 #endif

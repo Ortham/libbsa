@@ -23,130 +23,93 @@
 
 #include "genericbsa.h"
 #include "error.h"
-#include "helpers.h"
 #include "libbsa/libbsa.h"
 #include <boost/filesystem.hpp>
 #include <boost/crc.hpp>
+#include <boost/locale.hpp>
 
 namespace fs = boost::filesystem;
 
 using namespace std;
-using namespace libbsa;
 
-GenericBsa::GenericBsa(const std::string& path) : filePath(path) {}
+namespace libbsa {
+    GenericBsa::GenericBsa(const std::string& path) : filePath(path) {}
 
-bool GenericBsa::HasAsset(const std::string& assetPath) {
-    for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-        if (it->path == assetPath)
-            return true;
+    bool GenericBsa::HasAsset(const std::string& assetPath) {
+        for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+            if (it->path == assetPath)
+                return true;
+        }
+        return false;
     }
-    return false;
-}
 
-BsaAsset GenericBsa::GetAsset(const std::string& assetPath) {
-    for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-        if (it->path == assetPath)
-            return *it;
+    BsaAsset GenericBsa::GetAsset(const std::string& assetPath) {
+        for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+            if (it->path == assetPath)
+                return *it;
+        }
+        BsaAsset ba;
+        return ba;
     }
-    BsaAsset ba;
-    return ba;
-}
 
-void GenericBsa::GetMatchingAssets(const regex& regex, std::list<BsaAsset>& matchingAssets) {
-    matchingAssets.clear();
-    for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
-        if (regex_match(it->path, regex))
-            matchingAssets.push_back(*it);
+    void GenericBsa::GetMatchingAssets(const regex& regex, std::list<BsaAsset>& matchingAssets) {
+        matchingAssets.clear();
+        for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+            if (regex_match(it->path, regex))
+                matchingAssets.push_back(*it);
+        }
     }
-}
 
-void GenericBsa::Extract(const std::string& assetPath, uint8_t** _data, size_t* _size) {
-    //Get asset data.
-    BsaAsset data = GetAsset(assetPath);
-    if (data.path.empty())
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+    void GenericBsa::Extract(const std::string& assetPath, uint8_t** _data, size_t* _size) {
+        //Get asset data.
+        BsaAsset data = GetAsset(assetPath);
+        if (data.path.empty())
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
-    std::pair<uint8_t*, size_t> dataPair;
-    try {
-        //Read file data.
-        boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
-        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+        std::pair<uint8_t*, size_t> dataPair;
+        try {
+            //Read file data.
+            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        dataPair = ReadData(in, data);
+            dataPair = ReadData(in, data);
 
-        *_data = dataPair.first;
-        *_size = dataPair.second;
+            *_data = dataPair.first;
+            *_size = dataPair.second;
 
-        in.close();
+            in.close();
+        }
+        catch (ios_base::failure& e) {
+            delete[] dataPair.first;
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+        }
     }
-    catch (ios_base::failure& e) {
-        delete[] dataPair.first;
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
-    }
-}
 
-void GenericBsa::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
-    //Get asset data.
-    BsaAsset data = GetAsset(assetPath);
-    if (data.path.empty())
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+    void GenericBsa::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
+        //Get asset data.
+        BsaAsset data = GetAsset(assetPath);
+        if (data.path.empty())
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
-    std::pair<uint8_t*, size_t> dataPair;
-    std::string outFilePath = outPath + '/' + data.path;
-    try {
-        //Create parent directories.
-        fs::create_directories(fs::path(outFilePath).parent_path());  //This creates any directories in the path that don't already exist.
-
-        if (!overwrite && fs::exists(outFilePath))
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath + "\" already exists.");
-
-        //Read file data.
-        boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
-        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-        dataPair = ReadData(in, data);
-
-        in.close();
-
-        //Write new file.
-        boost::filesystem::ofstream out(fs::path(outFilePath), ios::binary | ios::trunc);
-        out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-        out.write((char*)dataPair.first, dataPair.second);
-
-        out.close();
-
-        //Free data in memory.
-        delete[] dataPair.first;
-    }
-    catch (ios_base::failure& e) {
-        delete[] dataPair.first;
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
-    }
-}
-
-void GenericBsa::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
-    std::pair<uint8_t*, size_t> dataPair;
-    try {
-        //Open the source BSA.
-        boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
-        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
-
-        //Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
-        for (list<BsaAsset>::const_iterator it = assetsToExtract.begin(), endIt = assetsToExtract.end(); it != endIt; ++it) {
-            std::string outFilePath = outPath + '/' + it->path;
-
+        std::pair<uint8_t*, size_t> dataPair;
+        std::string outFilePath = outPath + '/' + data.path;
+        try {
             //Create parent directories.
-            fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
+            fs::create_directories(fs::path(outFilePath).parent_path());  //This creates any directories in the path that don't already exist.
 
-            if (!overwrite && fs::exists(outPath))
-                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
+            if (!overwrite && fs::exists(outFilePath))
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath + "\" already exists.");
 
-            //Get file data.
-            dataPair = ReadData(in, *it);
+            //Read file data.
+            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+            dataPair = ReadData(in, data);
+
+            in.close();
 
             //Write new file.
-            boost::filesystem::ofstream out(fs::path(outPath) / it->path, ios::binary | ios::trunc);
+            boost::filesystem::ofstream out(fs::path(outFilePath), ios::binary | ios::trunc);
             out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             out.write((char*)dataPair.first, dataPair.second);
@@ -156,41 +119,97 @@ void GenericBsa::Extract(const list<BsaAsset>& assetsToExtract, const std::strin
             //Free data in memory.
             delete[] dataPair.first;
         }
-
-        in.close();
+        catch (ios_base::failure& e) {
+            delete[] dataPair.first;
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+        }
     }
-    catch (ios_base::failure& e) {
-        delete[] dataPair.first;
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+
+    void GenericBsa::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
+        std::pair<uint8_t*, size_t> dataPair;
+        try {
+            //Open the source BSA.
+            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+            //Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
+            for (list<BsaAsset>::const_iterator it = assetsToExtract.begin(), endIt = assetsToExtract.end(); it != endIt; ++it) {
+                std::string outFilePath = outPath + '/' + it->path;
+
+                //Create parent directories.
+                fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
+
+                if (!overwrite && fs::exists(outPath))
+                    throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
+
+                //Get file data.
+                dataPair = ReadData(in, *it);
+
+                //Write new file.
+                boost::filesystem::ofstream out(fs::path(outPath) / it->path, ios::binary | ios::trunc);
+                out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+
+                out.write((char*)dataPair.first, dataPair.second);
+
+                out.close();
+
+                //Free data in memory.
+                delete[] dataPair.first;
+            }
+
+            in.close();
+        }
+        catch (ios_base::failure& e) {
+            delete[] dataPair.first;
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+        }
     }
-}
 
-uint32_t GenericBsa::CalcChecksum(const std::string& assetPath) {
-    //Get asset data.
-    BsaAsset data = GetAsset(assetPath);
-    if (data.path.empty())
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+    uint32_t GenericBsa::CalcChecksum(const std::string& assetPath) {
+        //Get asset data.
+        BsaAsset data = GetAsset(assetPath);
+        if (data.path.empty())
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
-    std::pair<uint8_t*, size_t> dataPair;
-    try {
-        //Open input stream.
-        boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
-        in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+        std::pair<uint8_t*, size_t> dataPair;
+        try {
+            //Open input stream.
+            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-        dataPair = ReadData(in, data);
+            dataPair = ReadData(in, data);
 
-        in.close();
+            in.close();
 
-        //Calculate the checksum now.
-        boost::crc_32_type result;
-        result.process_bytes(dataPair.first, dataPair.second);
+            //Calculate the checksum now.
+            boost::crc_32_type result;
+            result.process_bytes(dataPair.first, dataPair.second);
 
-        delete[] dataPair.first;
+            delete[] dataPair.first;
 
-        return result.checksum();
+            return result.checksum();
+        }
+        catch (ios_base::failure& e) {
+            delete[] dataPair.first;
+            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+        }
     }
-    catch (ios_base::failure& e) {
-        delete[] dataPair.first;
-        throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, e.what());
+
+    std::string GenericBsa::ToUTF8(const std::string& str) {
+        try {
+            return boost::locale::conv::to_utf<char>(str, "Windows-1252", boost::locale::conv::stop);
+        }
+        catch (boost::locale::conv::conversion_error& e) {
+            throw error(LIBBSA_ERROR_BAD_STRING, "\"" + str + "\" cannot be encoded in Windows-1252.");
+        }
+    }
+
+    std::string GenericBsa::FromUTF8(const std::string& str) {
+        try {
+            return boost::locale::conv::from_utf<char>(str, "Windows-1252", boost::locale::conv::stop);
+        }
+        catch (boost::locale::conv::conversion_error& e) {
+            throw error(LIBBSA_ERROR_BAD_STRING, "\"" + str + "\" cannot be encoded in Windows-1252.");
+        }
     }
 }

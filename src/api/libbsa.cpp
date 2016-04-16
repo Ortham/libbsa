@@ -23,7 +23,6 @@
 
 #include "libbsa/libbsa.h"
 #include "_bsa_handle_int.h"
-#include "helpers.h"
 #include "genericbsa.h"
 #include "tes3bsa.h"
 #include "tes4bsa.h"
@@ -254,7 +253,7 @@ LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPa
     if (bh == NULL || assetPath == NULL || result == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    string assetStr = FixPath(assetPath);
+    string assetStr = _bsa_handle_int::FixPath(assetPath);
 
     *result = bh->getBsa()->HasAsset(assetStr);
 
@@ -326,7 +325,7 @@ LIBBSA unsigned int bsa_extract_asset(bsa_handle bh, const char * const assetPat
     if (bh == NULL || assetPath == NULL || destPath == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    string assetStr = FixPath(assetPath);
+    string assetStr = _bsa_handle_int::FixPath(assetPath);
 
     try {
         bh->getBsa()->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
@@ -343,7 +342,7 @@ LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh, const char * cons
     if (bh == NULL || assetPath == NULL || _data == NULL || _size == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    string assetStr = FixPath(assetPath);
+    string assetStr = _bsa_handle_int::FixPath(assetPath);
 
     try {
         bh->getBsa()->Extract(assetStr, _data, _size);
@@ -364,7 +363,7 @@ LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh, const char * const assetPat
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     try {
-        *checksum = bh->getBsa()->CalcChecksum(FixPath(assetPath));
+        *checksum = bh->getBsa()->CalcChecksum(_bsa_handle_int::FixPath(assetPath));
     }
     catch (error& e) {
         return c_error(e.code(), e.what());

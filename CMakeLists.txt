@@ -44,7 +44,6 @@ find_package(Boost REQUIRED COMPONENTS iostreams filesystem system locale)
 
 set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/api/_bsa_handle_int.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/genericbsa.cpp"
-                 "${CMAKE_SOURCE_DIR}/src/api/helpers.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/libbsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.cpp")
@@ -54,7 +53,6 @@ set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/libbsa/libbsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/bsa_asset.h"
                      "${CMAKE_SOURCE_DIR}/src/api/error.h"
                      "${CMAKE_SOURCE_DIR}/src/api/genericbsa.h"
-                     "${CMAKE_SOURCE_DIR}/src/api/helpers.h"
                      "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.h")
 

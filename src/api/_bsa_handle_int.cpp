@@ -25,6 +25,8 @@
 #include "tes3bsa.h"
 #include "tes4bsa.h"
 
+#include <boost/algorithm/string.hpp>
+
 using namespace libbsa;
 
 _bsa_handle_int::_bsa_handle_int(const std::string& path) :
@@ -73,4 +75,23 @@ void _bsa_handle_int::freeExtAssets() {
         extAssets = NULL;
         extAssetsNum = 0;
     }
+}
+
+//Replaces all forwardslashes with backslashes, and lowercases letters.
+std::string _bsa_handle_int::FixPath(const char * path) {
+    std::string out(path);
+    boost::to_lower(out);
+
+    boost::replace_all(out, "/", "\\");
+
+    if (out[0] == '\\')
+        out = out.substr(1);
+
+    return out;
+}
+
+// std::string to null-terminated char string converter.
+char * _bsa_handle_int::ToNewCString(const std::string& str) {
+    char * p = new char[str.length() + 1];
+    return strcpy(p, str.c_str());
 }

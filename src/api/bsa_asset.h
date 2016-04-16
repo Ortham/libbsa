@@ -24,8 +24,6 @@ along with libbsa.  If not, see
 #ifndef LIBBSA_BSA_ASSET_H
 #define LIBBSA_BSA_ASSET_H
 
-#include "helpers.h"
-
 #include <cstdint>
 #include <string>
 
