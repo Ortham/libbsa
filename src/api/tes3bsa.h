@@ -39,37 +39,36 @@
 
 namespace libbsa {
     namespace tes3 {
-        const uint32_t BSA_VERSION_TES3 = 0x100;
-
-        struct Header {
-            uint32_t version;
-            uint32_t hashOffset;
-            uint32_t fileCount;
-        };
-
-        struct FileRecord {
-            uint32_t size;
-            uint32_t offset;
-        };
-
         class BSA : public GenericBsa {
         public:
+            static const uint32_t VERSION = 0x100;
+
             BSA(const std::string& path);
             void Save(std::string path, const uint32_t version, const uint32_t compression);
+
+            //Check if a given file is a Tes3-type BSA.
+            static bool IsBSA(const std::string& path);
         private:
             std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data);
 
             uint64_t CalcHash(const std::string& path);
 
             uint32_t hashOffset;
+
+            static bool hash_comp(const BsaAsset& first, const BsaAsset& second);
+            static bool path_comp(const BsaAsset& first, const BsaAsset& second);
+
+            struct Header {
+                uint32_t version;
+                uint32_t hashOffset;
+                uint32_t fileCount;
+            };
+
+            struct FileRecord {
+                uint32_t size;
+                uint32_t offset;
+            };
         };
-
-        bool hash_comp(const BsaAsset& first, const BsaAsset& second);
-
-        bool path_comp(const BsaAsset& first, const BsaAsset& second);
-
-        //Check if a given file is a Tes3-type BSA.
-        bool IsBSA(const std::string& path);
     }
 }
 

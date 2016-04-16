@@ -119,18 +119,18 @@ namespace libbsa {
 
             //Build file header.
             Header header;
-            header.version = tes3::BSA_VERSION_TES3;
+            header.version = VERSION;
             header.fileCount = assets.size();
             //Can't set hashOffset until the size of the names array is known.
 
             //Allocate memory for info blocks.
-            tes3::FileRecord * fileRecords;
+            FileRecord * fileRecords;
             uint32_t * filenameOffsets;
             uint64_t * hashes;
             //Can't allocate memory for filenames, because we don't know how long they are to be. Use a string buffer instead.
             string filenameRecords;
             try {
-                fileRecords = new tes3::FileRecord[header.fileCount];
+                fileRecords = new FileRecord[header.fileCount];
                 filenameOffsets = new uint32_t[header.fileCount];
                 hashes = new uint64_t[header.fileCount];
             }
@@ -283,7 +283,7 @@ namespace libbsa {
             return ((uint64_t)hash1) + ((uint64_t)hash2 << 32);
         }
 
-        bool hash_comp(const BsaAsset& first, const BsaAsset& second) {
+        bool BSA::hash_comp(const BsaAsset& first, const BsaAsset& second) {
             //Data losses are intentional.
             uint32_t f1 = first.hash;
             uint32_t f2 = first.hash >> 32;
@@ -302,12 +302,12 @@ namespace libbsa {
             return first.path < second.path;
         }
 
-        bool path_comp(const BsaAsset& first, const BsaAsset& second) {
+        bool BSA::path_comp(const BsaAsset& first, const BsaAsset& second) {
             return first.path < second.path;
         }
 
         //Check if a given file is a Tes3-type BSA.
-        bool IsBSA(const std::string& path) {
+        bool BSA::IsBSA(const std::string& path) {
             //Check if file exists.
             if (!fs::exists(path))
                 return false;
@@ -319,7 +319,7 @@ namespace libbsa {
                 in.read((char*)&magic, sizeof(uint32_t));
                 in.close();
 
-                return magic == BSA_VERSION_TES3;  //Magic is actually tes3 bsa version.
+                return magic == VERSION;  //Magic is actually tes3 bsa version.
             }
         }
     }

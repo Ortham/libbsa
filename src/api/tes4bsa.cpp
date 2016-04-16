@@ -185,9 +185,8 @@ namespace libbsa {
                 folderHashset.push_back(folderAsset);  //Size and offset are zero for now.
                 fileHashset.push_back(fileAsset);
             }
-            path_comp is_same_file;
-            folderHashset.unique(is_same_file);
-            fileHashset.unique(is_same_file);
+            folderHashset.unique(path_comp);
+            fileHashset.unique(path_comp);
             header.folderCount = folderHashset.size();
 
             header.fileCount = assets.size();
@@ -454,12 +453,16 @@ namespace libbsa {
             return ((uint64_t)hash2 << 32) + hash1;
         }
 
-        bool hash_comp(const BsaAsset& first, const BsaAsset& second) {
+        bool BSA::hash_comp(const BsaAsset& first, const BsaAsset& second) {
             return first.hash < second.hash;
         }
 
+        bool BSA::path_comp(const BsaAsset& first, const BsaAsset& second) {
+            return first.path == second.path;
+        }
+
         //Check if a given file is a Tes4-type BSA.
-        bool IsBSA(const std::string& path) {
+        bool BSA::IsBSA(const std::string& path) {
             //Check if file exists.
             if (!fs::exists(path))
                 return false;

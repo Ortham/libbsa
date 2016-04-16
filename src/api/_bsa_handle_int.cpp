@@ -30,7 +30,7 @@ using namespace libbsa;
 _bsa_handle_int::_bsa_handle_int(const std::string& path) :
     extAssets(NULL),
     extAssetsNum(0) {
-    if (tes3::IsBSA(path))
+    if (tes3::BSA::IsBSA(path))
         bsa = new tes3::BSA(path);
     else
         bsa = new tes4::BSA(path);
