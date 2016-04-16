@@ -127,3 +127,16 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
         set_target_properties (tests PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS} LIBBSA_STATIC")
     ENDIF ()
 ENDIF ()
+
+
+##############################
+# Post-Build Steps
+##############################
+
+IF (NOT DEFINED ENV{TRAVIS})
+    # Run Doxygen and LaTeX to generate readme
+    add_custom_command(TARGET bsa POST_BUILD
+        COMMAND doxygen Doxyfile
+        COMMAND "${CMAKE_SOURCE_DIR}/docs/latex/make.bat"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs")
+ENDIF ()
