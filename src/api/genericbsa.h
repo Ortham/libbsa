@@ -50,11 +50,6 @@ namespace libbsa {
         uint32_t offset;                //This offset is from the beginning of the file - Tes3 BSAs use from the beginning of the data section,
                                         //so will have to adjust them. Files that have not yet been written to the BSA have a 0 offset.
     };
-
-    struct PendingBsaAsset {
-        std::string extPath;  //Path of file in filesystem.
-        std::string intPath;  //Path of file in BSA.
-    };
 }
 
 //Class for generic BSA data manipulation functions.
@@ -83,7 +78,6 @@ protected:
 
     std::string filePath;
     std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
-    std::list<libbsa::PendingBsaAsset> pendingAssets;  //Holds the internal->external path mapping for files not yet written to the BSA.
 };
 
 #endif
