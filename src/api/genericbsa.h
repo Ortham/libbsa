@@ -32,33 +32,30 @@
 
 #include <boost/filesystem/fstream.hpp>
 
-/* This header declares the generic structures that libbsa uses to handle BSA
-   manipulation.
-   All strings are encoded in UTF-8.
-*/
+namespace libbsa {
+    //Class for generic BSA data manipulation functions.
+    struct GenericBsa {
+    public:
+        GenericBsa(const std::string& path);
 
-//Class for generic BSA data manipulation functions.
-struct GenericBsa {
-public:
-    GenericBsa(const std::string& path);
+        virtual void Save(std::string path, const uint32_t version, const uint32_t compression) = 0;
 
-    virtual void Save(std::string path, const uint32_t version, const uint32_t compression) = 0;
+        bool HasAsset(const std::string& assetPath);
+        libbsa::BsaAsset GetAsset(const std::string& assetPath);
+        void GetMatchingAssets(const std::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
 
-    bool HasAsset(const std::string& assetPath);
-    libbsa::BsaAsset GetAsset(const std::string& assetPath);
-    void GetMatchingAssets(const std::regex& regex, std::list<libbsa::BsaAsset>& matchingAssets);
+        void Extract(const std::string& assetPath, uint8_t** _data, size_t* _size);
+        void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
+        void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
 
-    void Extract(const std::string& assetPath, uint8_t** _data, size_t* _size);
-    void Extract(const std::string& assetPath, const std::string& destPath, const bool overwrite);
-    void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
+        uint32_t CalcChecksum(const std::string& assetPath);
+    protected:
+        //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
+        virtual std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) = 0;
 
-    uint32_t CalcChecksum(const std::string& assetPath);
-protected:
-    //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
-    virtual std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) = 0;
-
-    std::string filePath;
-    std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
-};
+        std::string filePath;
+        std::list<libbsa::BsaAsset> assets;         //Files not yet written to the BSA are in this and pendingAssets.
+    };
+}
 
 #endif

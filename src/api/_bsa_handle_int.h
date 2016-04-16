@@ -34,14 +34,14 @@ public:
     _bsa_handle_int(const std::string& path);
     ~_bsa_handle_int();
 
-    GenericBsa * getBsa() const;
+    libbsa::GenericBsa * getBsa() const;
     char ** getExtAssets() const;
     size_t getExtAssetsNum() const;
 
     void setExtAssets(const std::list<libbsa::BsaAsset>& assets);
     void freeExtAssets();
 private:
-    GenericBsa * bsa;
+    libbsa::GenericBsa * bsa;
 
     //External data array pointers and sizes.
     char ** extAssets;
