@@ -24,6 +24,7 @@
 #ifndef __LIBBSA_GENERICBSA_H__
 #define __LIBBSA_GENERICBSA_H__
 
+#include "bsa_asset.h"
 #include "helpers.h"
 #include <stdint.h>
 #include <string>
@@ -36,21 +37,6 @@
    manipulation.
    All strings are encoded in UTF-8.
 */
-
-namespace libbsa {
-    //Class for generic BSA data.
-    //Files that have not yet been written have 0 hash, size and offset.
-    struct BsaAsset {
-        BsaAsset();
-
-        //Asset data obtained from BSA.
-        std::string path;
-        uint64_t hash;
-        uint32_t size;                  //Files that have not yet been written to the BSA file have a size of 0.
-        uint32_t offset;                //This offset is from the beginning of the file - Tes3 BSAs use from the beginning of the data section,
-                                        //so will have to adjust them. Files that have not yet been written to the BSA have a 0 offset.
-    };
-}
 
 //Class for generic BSA data manipulation functions.
 struct _bsa_handle_int {
