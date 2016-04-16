@@ -33,18 +33,18 @@ namespace libbsa {
     // Class for generic BSA data.
     // Files that have not yet been written have 0 hash, size and offset.
     struct BsaAsset {
-        BsaAsset();
+        inline BsaAsset() : hash(0), size(0), offset(0) {}
 
         // Asset data obtained from BSA.
         std::string path;
         uint64_t hash;
 
-        uint32_t size;             
+        uint32_t size;
 
-        // This offset is from the beginning of the file - Tes3 BSAs use from 
-        // the beginning of the data section, so will have to adjust them. 
+        // This offset is from the beginning of the file - Tes3 BSAs use from
+        // the beginning of the data section, so will have to adjust them.
         // Files that have not yet been written to the BSA have a 0 offset.
-        uint32_t offset;               
+        uint32_t offset;
     };
 }
 

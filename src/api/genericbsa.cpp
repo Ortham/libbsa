@@ -32,17 +32,6 @@ namespace fs = boost::filesystem;
 using namespace std;
 using namespace libbsa;
 
-namespace libbsa {
-    //////////////////////////////////////////////
-    // BsaAsset Constructor
-    //////////////////////////////////////////////
-
-    BsaAsset::BsaAsset() : hash(0), size(0), offset(0) {}
-}
-
-//////////////////////////////////////////////
-// BSA Class Methods
-//////////////////////////////////////////////
 
 _bsa_handle_int::_bsa_handle_int(const std::string& path) : filePath(path), extAssets(NULL), extAssetsNum(0) {}
 
