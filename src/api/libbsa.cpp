@@ -210,13 +210,7 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
-    if (bh->extAssets != NULL) {
-        for (size_t i = 0; i < bh->extAssetsNum; i++)
-            delete[] bh->extAssets[i];
-        delete[] bh->extAssets;
-        bh->extAssets = NULL;
-        bh->extAssetsNum = 0;
-    }
+    bh->freeExtAssets();
 
     //Init values.
     *assetPaths = NULL;
@@ -240,13 +234,7 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath
 
     //Fill external array.
     try {
-        bh->extAssetsNum = temp.size();
-        bh->extAssets = new char*[bh->extAssetsNum];
-        size_t i = 0;
-        for (list<BsaAsset>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
-            bh->extAssets[i] = ToNewCString(it->path);
-            i++;
-        }
+        bh->setExtAssets(temp);
     }
     catch (bad_alloc& e) {
         return c_error(LIBBSA_ERROR_NO_MEM, e.what());
@@ -255,8 +243,8 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath
         return c_error(e.code(), e.what());
     }
 
-    *assetPaths = bh->extAssets;
-    *numAssets = bh->extAssetsNum;
+    *assetPaths = bh->getExtAssets();
+    *numAssets = bh->getExtAssetsNum();
 
     return LIBBSA_OK;
 }
@@ -286,13 +274,7 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const content
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
-    if (bh->extAssets != NULL) {
-        for (size_t i = 0; i < bh->extAssetsNum; i++)
-            delete[] bh->extAssets[i];
-        delete[] bh->extAssets;
-        bh->extAssets = NULL;
-        bh->extAssetsNum = 0;
-    }
+    bh->freeExtAssets();
 
     //Init values.
     *assetPaths = NULL;
@@ -324,13 +306,7 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const content
 
     //Now iterate through temp hashmap, outputting filenames.
     try {
-        bh->extAssetsNum = temp.size();
-        bh->extAssets = new char*[bh->extAssetsNum];
-        size_t i = 0;
-        for (list<BsaAsset>::iterator it = temp.begin(), endIt = temp.end(); it != endIt; ++it) {
-            bh->extAssets[i] = ToNewCString(it->path);
-            i++;
-        }
+        bh->setExtAssets(temp);
     }
     catch (bad_alloc& e) {
         return c_error(LIBBSA_ERROR_NO_MEM, e.what());
@@ -339,8 +315,8 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const content
         return c_error(e.code(), e.what());
     }
 
-    *assetPaths = bh->extAssets;
-    *numAssets = bh->extAssetsNum;
+    *assetPaths = bh->getExtAssets();
+    *numAssets = bh->getExtAssetsNum();
 
     return LIBBSA_OK;
 }

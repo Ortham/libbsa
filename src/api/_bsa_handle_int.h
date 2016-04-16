@@ -24,6 +24,7 @@ along with libbsa.  If not, see
 #ifndef LIBBSA_BSA_HANDLE_INT_H
 #define LIBBSA_BSA_HANDLE_INT_H
 
+#include "bsa_asset.h"
 #include "genericbsa.h"
 #include <string>
 
@@ -34,12 +35,17 @@ public:
     ~_bsa_handle_int();
 
     GenericBsa * getBsa() const;
+    char ** getExtAssets() const;
+    size_t getExtAssetsNum() const;
+
+    void setExtAssets(const std::list<libbsa::BsaAsset>& assets);
+    void freeExtAssets();
+private:
+    GenericBsa * bsa;
 
     //External data array pointers and sizes.
     char ** extAssets;
     size_t extAssetsNum;
-private:
-    GenericBsa * bsa;
 };
 
 #endif

@@ -45,3 +45,32 @@ _bsa_handle_int::~_bsa_handle_int() {
 GenericBsa * _bsa_handle_int::getBsa() const {
     return bsa;
 }
+
+char ** _bsa_handle_int::getExtAssets() const {
+    return extAssets;
+}
+
+size_t _bsa_handle_int::getExtAssetsNum() const {
+    return extAssetsNum;
+}
+
+void _bsa_handle_int::setExtAssets(const std::list<BsaAsset>& assets) {
+    extAssetsNum = assets.size();
+    extAssets = new char*[extAssetsNum];
+
+    size_t i = 0;
+    for (const auto& asset : assets) {
+        extAssets[i] = ToNewCString(asset.path);
+        i++;
+    }
+}
+
+void _bsa_handle_int::freeExtAssets() {
+    if (extAssets != NULL) {
+        for (size_t i = 0; i < extAssetsNum; i++)
+            delete[] extAssets[i];
+        delete[] extAssets;
+        extAssets = NULL;
+        extAssetsNum = 0;
+    }
+}
