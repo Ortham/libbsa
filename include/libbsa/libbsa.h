@@ -99,9 +99,6 @@ extern "C"
 */
     typedef struct _bsa_handle_int * bsa_handle;
 
-    /* Holds the source and destination paths for an asset to be added to a BSA.
-       These paths must be valid until the BSA is saved, as they are not actually
-       written until then. */
     /**
         @struct bsa_asset
         @brief A structure that holds data about a file in a BSA.
