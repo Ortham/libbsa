@@ -36,7 +36,7 @@ using namespace std;
 namespace libbsa {
     namespace tes4 {
         BSA::BSA(const std::string& path)
-            : _bsa_handle_int(path),
+            : GenericBsa(path),
             archiveFlags(0),
             fileFlags(0) {
             //Check if file exists.

@@ -23,6 +23,7 @@
 
 #include "genericbsa.h"
 #include "error.h"
+#include "helpers.h"
 #include "libbsa/libbsa.h"
 #include <boost/filesystem.hpp>
 #include <boost/crc.hpp>
@@ -32,16 +33,9 @@ namespace fs = boost::filesystem;
 using namespace std;
 using namespace libbsa;
 
+GenericBsa::GenericBsa(const std::string& path) : filePath(path) {}
 
-_bsa_handle_int::_bsa_handle_int(const std::string& path) : filePath(path), extAssets(NULL), extAssetsNum(0) {}
-
-_bsa_handle_int::~_bsa_handle_int() {
-    for (size_t i = 0; i < extAssetsNum; i++)
-        delete[] extAssets[i];
-    delete[] extAssets;
-}
-
-bool _bsa_handle_int::HasAsset(const std::string& assetPath) {
+bool GenericBsa::HasAsset(const std::string& assetPath) {
     for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
         if (it->path == assetPath)
             return true;
@@ -49,7 +43,7 @@ bool _bsa_handle_int::HasAsset(const std::string& assetPath) {
     return false;
 }
 
-BsaAsset _bsa_handle_int::GetAsset(const std::string& assetPath) {
+BsaAsset GenericBsa::GetAsset(const std::string& assetPath) {
     for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
         if (it->path == assetPath)
             return *it;
@@ -58,7 +52,7 @@ BsaAsset _bsa_handle_int::GetAsset(const std::string& assetPath) {
     return ba;
 }
 
-void _bsa_handle_int::GetMatchingAssets(const regex& regex, std::list<BsaAsset>& matchingAssets) {
+void GenericBsa::GetMatchingAssets(const regex& regex, std::list<BsaAsset>& matchingAssets) {
     matchingAssets.clear();
     for (std::list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
         if (regex_match(it->path, regex))
@@ -66,7 +60,7 @@ void _bsa_handle_int::GetMatchingAssets(const regex& regex, std::list<BsaAsset>&
     }
 }
 
-void _bsa_handle_int::Extract(const std::string& assetPath, uint8_t** _data, size_t* _size) {
+void GenericBsa::Extract(const std::string& assetPath, uint8_t** _data, size_t* _size) {
     //Get asset data.
     BsaAsset data = GetAsset(assetPath);
     if (data.path.empty())
@@ -91,7 +85,7 @@ void _bsa_handle_int::Extract(const std::string& assetPath, uint8_t** _data, siz
     }
 }
 
-void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
+void GenericBsa::Extract(const std::string& assetPath, const std::string& outPath, const bool overwrite) {
     //Get asset data.
     BsaAsset data = GetAsset(assetPath);
     if (data.path.empty())
@@ -131,7 +125,7 @@ void _bsa_handle_int::Extract(const std::string& assetPath, const std::string& o
     }
 }
 
-void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
+void GenericBsa::Extract(const list<BsaAsset>& assetsToExtract, const std::string& outPath, const bool overwrite) {
     std::pair<uint8_t*, size_t> dataPair;
     try {
         //Open the source BSA.
@@ -171,7 +165,7 @@ void _bsa_handle_int::Extract(const list<BsaAsset>& assetsToExtract, const std::
     }
 }
 
-uint32_t _bsa_handle_int::CalcChecksum(const std::string& assetPath) {
+uint32_t GenericBsa::CalcChecksum(const std::string& assetPath) {
     //Get asset data.
     BsaAsset data = GetAsset(assetPath);
     if (data.path.empty())

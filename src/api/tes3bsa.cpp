@@ -33,7 +33,7 @@ using namespace std;
 namespace libbsa {
     namespace tes3 {
         BSA::BSA(const std::string& path)
-            : _bsa_handle_int(path),
+            : GenericBsa(path),
             hashOffset(0) {
             //Check if file exists.
             if (fs::exists(path)) {

@@ -25,7 +25,6 @@
 #define __LIBBSA_GENERICBSA_H__
 
 #include "bsa_asset.h"
-#include "helpers.h"
 #include <stdint.h>
 #include <string>
 #include <list>
@@ -39,10 +38,10 @@
 */
 
 //Class for generic BSA data manipulation functions.
-struct _bsa_handle_int {
+struct GenericBsa {
 public:
-    _bsa_handle_int(const std::string& path);
-    ~_bsa_handle_int();
+    GenericBsa(const std::string& path);
+
     virtual void Save(std::string path, const uint32_t version, const uint32_t compression) = 0;
 
     bool HasAsset(const std::string& assetPath);
@@ -54,10 +53,6 @@ public:
     void Extract(const std::list<libbsa::BsaAsset>& assetsToExtract, const std::string& destPath, const bool overwrite);
 
     uint32_t CalcChecksum(const std::string& assetPath);
-
-    //External data array pointers and sizes.
-    char ** extAssets;
-    size_t extAssetsNum;
 protected:
     //Reads the asset data into memory, at .first, with size .second. Remember to free the memory once used.
     virtual std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) = 0;

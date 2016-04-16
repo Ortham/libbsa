@@ -22,6 +22,7 @@
 */
 
 #include "libbsa/libbsa.h"
+#include "_bsa_handle_int.h"
 #include "helpers.h"
 #include "genericbsa.h"
 #include "tes3bsa.h"
@@ -133,12 +134,7 @@ LIBBSA unsigned int bsa_open(bsa_handle * const bh, const char * const path) {
 
     //Create handle for the appropriate BSA type.
     try {
-        if (tes3::IsBSA(path))
-            *bh = new tes3::BSA(path);
-        else if (tes4::IsBSA(path))
-            *bh = new tes4::BSA(path);
-        else
-            *bh = new tes4::BSA(path);  //Arbitrary choice of BSA type.
+        *bh = new _bsa_handle_int(path);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -184,7 +180,7 @@ LIBBSA unsigned int bsa_save(bsa_handle bh, const char * const path, const unsig
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.");
 
     try {
-        bh->Save(path, version, compression);
+        bh->getBsa()->Save(path, version, compression);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -237,7 +233,7 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath
 
     //We don't know how many matches there will be, so put all matches into a temporary buffer first.
     list<BsaAsset> temp;
-    bh->GetMatchingAssets(regex, temp);
+    bh->getBsa()->GetMatchingAssets(regex, temp);
 
     if (temp.empty())
         return LIBBSA_OK;
@@ -272,7 +268,7 @@ LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPa
 
     string assetStr = FixPath(assetPath);
 
-    *result = bh->HasAsset(assetStr);
+    *result = bh->getBsa()->HasAsset(assetStr);
 
     return LIBBSA_OK;
 }
@@ -313,14 +309,14 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const content
 
     //We don't know how many matches there will be, so put all matches into a temporary buffer first.
     list<BsaAsset> temp;
-    bh->GetMatchingAssets(regex, temp);
+    bh->getBsa()->GetMatchingAssets(regex, temp);
 
     if (temp.empty())
         return LIBBSA_OK;
 
     //Extract files.
     try {
-        bh->Extract(temp, string(reinterpret_cast<const char*>(destPath)), overwrite);
+        bh->getBsa()->Extract(temp, string(reinterpret_cast<const char*>(destPath)), overwrite);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -357,7 +353,7 @@ LIBBSA unsigned int bsa_extract_asset(bsa_handle bh, const char * const assetPat
     string assetStr = FixPath(assetPath);
 
     try {
-        bh->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
+        bh->getBsa()->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -374,7 +370,7 @@ LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh, const char * cons
     string assetStr = FixPath(assetPath);
 
     try {
-        bh->Extract(assetStr, _data, _size);
+        bh->getBsa()->Extract(assetStr, _data, _size);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -392,7 +388,7 @@ LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh, const char * const assetPat
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     try {
-        *checksum = bh->CalcChecksum(FixPath(assetPath));
+        *checksum = bh->getBsa()->CalcChecksum(FixPath(assetPath));
     }
     catch (error& e) {
         return c_error(e.code(), e.what());

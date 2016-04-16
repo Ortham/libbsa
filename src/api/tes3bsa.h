@@ -52,7 +52,7 @@ namespace libbsa {
             uint32_t offset;
         };
 
-        class BSA : public _bsa_handle_int {
+        class BSA : public GenericBsa {
         public:
             BSA(const std::string& path);
             void Save(std::string path, const uint32_t version, const uint32_t compression);
