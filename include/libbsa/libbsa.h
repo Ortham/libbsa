@@ -99,18 +99,6 @@ extern "C"
 */
     typedef struct _bsa_handle_int * bsa_handle;
 
-    /**
-        @struct bsa_asset
-        @brief A structure that holds data about a file in a BSA.
-        @details Maps the external filesystem path of an asset to a path internal to the BSA. Used when adding a file to a BSA. The external path must be remain valid after adding the asset until bsa_save() is next called, after which it is no longer necessary.
-        @var bsa_asset::sourcePath The external filesystem path to the asset.
-        @var bsa_asset::destPath The path of the asset within the BSA.
-    */
-    typedef struct {
-        char * sourcePath;  //The path of the asset in the external filesystem.
-        char * destPath;    //The path of the asset when it is in the BSA.
-    } bsa_asset;
-
     /*********************//**
         @name Return Codes
         @brief Error codes signify an issue that caused a function to exit prematurely. If a function exits prematurely, a reversal of any changes made during its execution is attempted before it exits.
@@ -255,40 +243,6 @@ extern "C"
         @returns A return code.
     */
     LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPath, bool * const result);
-
-    ///@}
-
-    /***************************************//**
-        @name Content Writing Functions
-        @brief These functions are not yet implemented.
-    *******************************************/
-    ///@{
-    /**
-        @brief Replaces all the assets in a BSA handle. Not yet implemented.
-        @details Replaces the index in a BSA handle with a new index containing the given assets.
-        @param bh The handle the function acts on.
-        @param assets The inputted array of assets.
-        @param numAssets The size of the inputted array.
-        @returns A return code.
-    */
-    LIBBSA unsigned int bsa_set_assets(bsa_handle bh, const bsa_asset * const assets, const size_t numAssets);
-
-    /**
-        @brief Adds an asset to a BSA handle. Not yet implemented.
-        @details If an asset with the same path already exists in the BSA handle, this function will return with an error code.
-        @param bh The handle the function acts on.
-        @param asset The asset to be added.
-        @returns A return code.
-    */
-    LIBBSA unsigned int bsa_add_asset(bsa_handle bh, const bsa_asset asset);
-
-    /**
-        @brief Removes an asset from a BSA handle. Not yet implemented.
-        @param bh The handle the function acts on.
-        @param assetPath The asset to be removed.
-        @returns A return code.
-    */
-    LIBBSA unsigned int bsa_remove_asset(bsa_handle bh, const char * const assetPath);
 
     ///@}
 

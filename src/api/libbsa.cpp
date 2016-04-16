@@ -277,34 +277,6 @@ LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPa
     return LIBBSA_OK;
 }
 
-/*------------------------------
-   Content Writing Functions
-------------------------------*/
-
-/* Replaces all the assets in the given BSA with the given assets. */
-LIBBSA unsigned int bsa_set_assets(bsa_handle bh, const bsa_asset * const assets, const size_t numAssets) {
-    if (bh == NULL || assets == NULL) //Check for valid args.
-        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
-
-    return LIBBSA_OK;
-}
-
-/* Adds a specific asset to a BSA. */
-LIBBSA unsigned int bsa_add_asset(bsa_handle bh, const bsa_asset asset) {
-    if (bh == NULL) //Check for valid args.
-        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
-
-    return LIBBSA_OK;
-}
-
-/* Removes a specific asset, found at assetPath, from a BSA. */
-LIBBSA unsigned int bsa_remove_asset(bsa_handle bh, const char * const assetPath) {
-    if (bh == NULL || assetPath == NULL) //Check for valid args.
-        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
-
-    return LIBBSA_OK;
-}
-
 /*--------------------------------
    Content Extraction Functions
 --------------------------------*/
