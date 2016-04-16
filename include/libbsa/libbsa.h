@@ -207,9 +207,9 @@ extern "C"
         @param versionMinor A pointer to the minor version number.
         @param versionPatch A pointer to the patch version number.
     */
-    LIBBSA void bsa_get_version(unsigned int * const versionMajor,
-                                unsigned int * const versionMinor,
-                                unsigned int * const versionPatch);
+    LIBBSA unsigned int bsa_get_version(unsigned int * const versionMajor,
+                                        unsigned int * const versionMinor,
+                                        unsigned int * const versionPatch);
 
     /**@}*/
 

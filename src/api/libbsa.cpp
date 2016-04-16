@@ -93,10 +93,15 @@ LIBBSA bool bsa_is_compatible(const unsigned int versionMajor, const unsigned in
     return versionMajor == LIBBSA_VERSION_MAJOR;
 }
 
-LIBBSA void bsa_get_version(unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch) {
+LIBBSA unsigned int bsa_get_version(unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch) {
+    if (versionMajor == nullptr || versionMinor == nullptr || versionPatch == nullptr)
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
+
     *versionMajor = LIBBSA_VERSION_MAJOR;
     *versionMinor = LIBBSA_VERSION_MINOR;
     *versionPatch = LIBBSA_VERSION_PATCH;
+
+    return LIBBSA_OK;
 }
 
 /*------------------------------
