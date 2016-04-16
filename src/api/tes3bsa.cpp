@@ -23,7 +23,7 @@
 
 #include "tes3bsa.h"
 #include "error.h"
-#include "libbsa.h"
+#include "libbsa/libbsa.h"
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;

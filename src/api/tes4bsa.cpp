@@ -23,7 +23,7 @@
 
 #include "tes4bsa.h"
 #include "error.h"
-#include "libbsa.h"
+#include "libbsa/libbsa.h"
 #include <vector>
 #include <cstring>
 #include <boost/filesystem.hpp>

@@ -22,8 +22,8 @@
 */
 
 #include "genericbsa.h"
-#include "libbsa.h"
 #include "error.h"
+#include "libbsa/libbsa.h"
 #include <boost/filesystem.hpp>
 #include <boost/crc.hpp>
 

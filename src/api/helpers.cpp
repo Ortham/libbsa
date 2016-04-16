@@ -22,8 +22,8 @@
 */
 
 #include "helpers.h"
-#include "libbsa.h"
 #include "error.h"
+#include "libbsa/libbsa.h"
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>

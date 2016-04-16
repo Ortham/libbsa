@@ -21,7 +21,7 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#include "libbsa.h"
+#include "libbsa/libbsa.h"
 #include "helpers.h"
 #include "genericbsa.h"
 #include "tes3bsa.h"
