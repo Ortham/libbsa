@@ -25,27 +25,47 @@
     @file libbsa.h
     @brief This file contains the API frontend.
 
-    @note libbsa is *not* thread safe. Thread safety is a goal, but one that has not yet been achieved. Bear this in mind if using it in a multi-threaded client.
+    @note libbsa is *not* thread safe. Thread safety is a goal, but one that
+          has not yet been achieved. Bear this in mind if using it in a
+          multi-threaded client.
 
     @section var_sec Variable Types
 
     libbsa uses character strings and integers for information input/output.
-      - All strings are null-terminated byte character strings encoded in UTF-8.
-      - All return codes and version and compression flags are unsigned integers at least 16 bits in size.
+      - All strings are null-terminated byte character strings encoded in
+        UTF-8.
+      - All return codes and version and compression flags are unsigned
+        integers at least 16 bits in size.
       - All array sizes are unsigned integers at least 16 bits in size.
-      - File paths are case-sensitive if and only if the underlying file system is case-sensitive.
-      - Paths to files inside BSAs are lowercase, use backslashes as directory separators, and are relative to the BSA's root directory, which is not specified. For example, `/meshes/shovel.nif` is incorrect: `meshes\shovel.nif` is correct. libbsa will automatically correct any incorrect paths to individual files, but will not correct incorrect regular expression paths.
-      - Regular expressions use the <a href="http://www.boost.org/doc/libs/1_51_0/libs/regex/doc/html/boost_regex/syntax/basic_extended.html">POSIX Extended</a> syntax.
+      - File paths are case-sensitive if and only if the underlying file system
+        is case-sensitive.
+      - Paths to files inside BSAs are lowercase, use backslashes as directory
+        separators, and are relative to the BSA's root directory, which is not
+        specified. For example, `/meshes/shovel.nif` is incorrect:
+        `meshes\shovel.nif` is correct. libbsa will automatically correct any
+        incorrect paths to individual files, but will not correct incorrect
+        regular expression paths.
+      - Regular expressions use the
+        [ECMAScript](http://www.cplusplus.com/reference/regex/ECMAScript/)
+        syntax.
 
     @section memory_sec Memory Management
 
-    libbsa manages the memory of strings and arrays it returns internally, so such strings and arrays should not be deallocated by the client.
+    libbsa manages the memory of strings and arrays it returns internally, so
+    such strings and arrays should not be deallocated by the client.
 
-    Data returned by a function lasts until a function is called which returns data of the same type (eg. a string is stored until the client calls another function which returns a string, an integer array lasts until another integer array is returned, etc.).
+    Data returned by a function lasts until a function is called which returns
+    data of the same type (eg. a string is stored until the client calls
+    another function which returns a string, an integer array lasts until
+    another integer array is returned, etc.).
 
-    All allocated memory is freed when bsa_close() is called, except the string allocated by bsa_get_error_message(), which must be freed by calling bsa_cleanup().
+    All allocated memory is freed when bsa_close() is called, except the string
+    returned by bsa_get_error_message(), which is allocated for the lifetime of
+    the library.
 
-    While the source path given in a bsa_asset object must be valid until the next call to bsa_save(), the memory allocated by the client for the path string may be freed at any point after the object's use.
+    While the source path given in a bsa_asset object must be valid until the
+    next call to bsa_save(), the memory allocated by the client for the path
+    string may be freed at any point after the object's use.
 */
 
 #ifndef __LIBBSA_H__
@@ -95,16 +115,23 @@ extern "C"
 
 /**
     @brief A structure that holds all game-specific data used by libbsa.
-    @details Holds an index of all the files inside a BSA file. Abstracts the definition of libbsa' internal state while still providing type safety across the library's functions. Multiple handles can also be made for each BSA file, though it should be kept in mind that libbsa is not thread-safe.
+    @details Holds an index of all the files inside a BSA file. Abstracts the
+             definition of libbsa' internal state while still providing type
+             safety across the library's functions. Multiple handles can also
+             be made for each BSA file, though it should be kept in mind that
+             libbsa is not thread-safe.
 */
     typedef struct _bsa_handle_int * bsa_handle;
 
     /*********************//**
         @name Return Codes
-        @brief Error codes signify an issue that caused a function to exit prematurely. If a function exits prematurely, a reversal of any changes made during its execution is attempted before it exits.
+        @brief Error codes signify an issue that caused a function to exit
+               prematurely. If a function exits prematurely, a reversal of any
+               changes made during its execution is attempted before it exits.
     *************************/
-    ///@{
-    LIBBSA extern const unsigned int LIBBSA_OK;  ///< The function completed successfully.
+    /**@{*/
+    ///< The function completed successfully.
+    LIBBSA extern const unsigned int LIBBSA_OK;
     LIBBSA extern const unsigned int LIBBSA_ERROR_INVALID_ARGS;  ///< Invalid arguments were given for the function.
     LIBBSA extern const unsigned int LIBBSA_ERROR_NO_MEM;  ///< The library was unable to allocate the required memory.
     LIBBSA extern const unsigned int LIBBSA_ERROR_FILESYSTEM_ERROR;  ///< There was an error encountered while performing a filesystem interaction (eg. reading, writing).
@@ -114,27 +141,31 @@ extern "C"
 
     /**
         @brief Matches the value of the highest-numbered return code.
-        @details Provided in case clients wish to incorporate additional return codes in their implementation and desire some method of avoiding value conflicts.
+        @details Provided in case clients wish to incorporate additional return
+                 codes in their implementation and desire some method of
+                 avoiding value conflicts.
     */
     LIBBSA extern const unsigned int LIBBSA_RETURN_MAX;
     /* No doubt there will be more... */
 
-    ///@}
+    /**@}*/
     /*********************//**
         @name BSA Version Flags
-        @brief Used to specify the type of BSA to create. Only one should be specified at any one time.
+        @brief Used to specify the type of BSA to create. Only one should be
+               specified at any one time.
     *************************/
-    ///@{
+    /**@{*/
     LIBBSA extern const unsigned int LIBBSA_VERSION_TES3;  ///< Specifies the BSA structure supported by TES III: Morrowind.
     LIBBSA extern const unsigned int LIBBSA_VERSION_TES4;  ///< Specifies the BSA structure supported by TES IV: Oblivion.
     LIBBSA extern const unsigned int LIBBSA_VERSION_TES5;  ///< Specifies the BSA structure supported by TES V:Skyrim, Fallout 3, Fallout: New Vegas.
 
-    ///@}
+    /**@}*/
     /*********************//**
         @name BSA Compression Flags
-        @brief Used to specify the compression level to use for a BSA. Only one should be specified at any one time.
+        @brief Used to specify the compression level to use for a BSA. Only one
+               should be specified at any one time.
     *************************/
-    ///@{
+    /**@{*/
     LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_0;    ///< Use no compression.
     LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_1;  ///< Use the lowest level of compression.
     LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_2;
@@ -147,154 +178,220 @@ extern "C"
     LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_9;  ///< Use the highest level of compression.
     LIBBSA extern const unsigned int LIBBSA_COMPRESS_LEVEL_NOCHANGE;  ///< Use the same level of compression as was used in the opened BSA.
 
-    ///@}
+    /**@}*/
 
     /*********************//**
         @name Version Functions
     *************************/
-    ///@{
+    /**@{*/
     /**
         @brief Checks for library compatibility.
-        @details Checks whether the loaded libbsa is compatible with the given version of libbsa, abstracting library stability policy away from clients. The version numbering used is major.minor.patch.
+        @details Checks whether the loaded libbsa is compatible with the given
+                 version of libbsa, abstracting library stability policy away
+                 from clients. The version numbering used is major.minor.patch.
         @param versionMajor The major version number to check.
         @param versionMinor The minor version number to check.
         @param versionPatch The patch version number to check.
         @returns True if the library versions are compatible, false otherwise.
     */
-    LIBBSA bool bsa_is_compatible(const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch);
+    LIBBSA bool bsa_is_compatible(const unsigned int versionMajor,
+                                  const unsigned int versionMinor,
+                                  const unsigned int versionPatch);
 
     /**
         @brief Gets the library version.
-        @details Outputs the major, minor and patch version numbers for the loaded libbsa. The version numbering used is major.minor.patch.
+        @details Outputs the major, minor and patch version numbers for the
+                 loaded libbsa. The version numbering used is
+                 major.minor.patch.
         @param versionMajor A pointer to the major version number.
         @param versionMinor A pointer to the minor version number.
         @param versionPatch A pointer to the patch version number.
     */
-    LIBBSA void bsa_get_version(unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch);
+    LIBBSA void bsa_get_version(unsigned int * const versionMajor,
+                                unsigned int * const versionMinor,
+                                unsigned int * const versionPatch);
 
-    ///@}
+    /**@}*/
 
     /*********************************//**
         @name Error Handling Functions
     *************************************/
-    ///@{
+    /**@{*/
     /**
        @brief Returns the message for the last error or warning encountered.
-       @details Outputs a string giving the a message containing the details of the last error or warning encountered by a function. Each time this function is called, the memory for the previous message is freed, so only one error message is available at any one time.
-       @param details A pointer to the error details string outputted by the function.
+       @details Outputs a string giving the a message containing the details of
+                the last error or warning encountered by a function. Each time
+                this function is called, the memory for the previous message is
+                freed, so only one error message is available at any one time.
+       @param details A pointer to the error details string outputted by the
+                      function.
        @returns A return code.
     */
     LIBBSA unsigned int bsa_get_error_message(const char ** const details);
 
-    ///@}
+    /**@}*/
 
     /***************************************//**
         @name Lifecycle Management Functions
     *******************************************/
-    ///@{
+    /**@{*/
     /**
         @brief Initialise a new BSA handle.
-        @details Opens a BSA file, outputting a handle that holds an index of its contents. If the file doesn't exist then a handle for a new file will be created. You can create multiple handles.
+        @details Opens a BSA file, outputting a handle that holds an index of
+                 its contents. If the file doesn't exist then a handle for a
+                 new file will be created. You can create multiple handles.
         @param bh A pointer to the handle that is created by the function.
-        @param path A string containing the relative or absolute path to the BSA file to be opened.
+        @param path A string containing the relative or absolute path to the
+                    BSA file to be opened.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_open(bsa_handle * const bh, const char * const path);
+    LIBBSA unsigned int bsa_open(bsa_handle * const bh,
+                                 const char * const path);
 
     /**
         @brief Save a BSA at the given path. Not yet implemented.
-        @details Opens a BSA file, outputting a handle that holds an index of its contents. If the file doesn't exist then a handle for a new file will be created. You can create multiple handles.
+        @details Opens a BSA file, outputting a handle that holds an index of
+                 its contents. If the file doesn't exist then a handle for a
+                 new file will be created. You can create multiple handles.
         @param bh The handle the function acts on.
-        @param path A string containing the relative or absolute path to the BSA file to be saved to.
-        @param flags A version flag and a compression flag combined using the bitwise OR operator.
+        @param path A string containing the relative or absolute path to the
+                    BSA file to be saved to.
+        @param flags A version flag and a compression flag combined using the
+                     bitwise OR operator.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_save(bsa_handle bh, const char * const path, const unsigned int flags);
+    LIBBSA unsigned int bsa_save(bsa_handle bh,
+                                 const char * const path,
+                                 const unsigned int flags);
 
     /**
         @brief Closes an existing handle.
-        @details Closes an existing handle, freeing any memory allocated during its use.
+        @details Closes an existing handle, freeing any memory allocated during
+                 its use.
         @param bh The handle to be destroyed.
     */
     LIBBSA void bsa_close(bsa_handle bh);
 
-    ///@}
+    /**@}*/
 
     /***************************************//**
         @name Content Reading Functions
     *******************************************/
-    ///@{
+    /**@{*/
     /**
         @brief Selectively outputs asset paths in a BSA.
-        @details Gets all the assets indexed in a handle with internal paths that match the given regular expression.
+        @details Gets all the assets indexed in a handle with internal paths
+                 that match the given regular expression.
         @param bh The handle the function acts on.
         @param contentPath The regular expression to match asset paths against.
-        @param assetPaths The outputted array of asset paths. If no matching assets are found, this will be `NULL`.
-        @param numAssets The size of the outputted array. If no matching assets are found, this will be `0`.
+        @param assetPaths The outputted array of asset paths. If no matching
+                          assets are found, this will be `NULL`.
+        @param numAssets The size of the outputted array. If no matching assets
+                         are found, this will be `0`.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath, char *** const assetPaths, size_t * const numAssets);
+    LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
+                                       const char * const contentPath,
+                                       char *** const assetPaths,
+                                       size_t * const numAssets);
 
     /**
         @brief Checks if a specific asset is in a BSA.
         @param bh The handle the function acts on.
         @param assetPath The internal asset path to look for.
-        @param result The result of the check: `true` if the asset was found, `false` otherwise.
+        @param result The result of the check: `true` if the asset was found,
+                      `false` otherwise.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPath, bool * const result);
+    LIBBSA unsigned int bsa_contains_asset(bsa_handle bh,
+                                           const char * const assetPath,
+                                           bool * const result);
 
-    ///@}
+    /**@}*/
 
     /***************************************//**
         @name Content Extraction Functions
     *******************************************/
-    ///@{
+    /**@{*/
     /**
         @brief Selectively extracts assets from a BSA.
-        @details Extracts all the assets with internal paths that match the given regular expression to the given destination path, maintaining the directory structure they had inside the BSA.
+        @details Extracts all the assets with internal paths that match the
+                 given regular expression to the given destination path,
+                 maintaining the directory structure they had inside the BSA.
         @param bh The handle the function acts on.
         @param contentPath The regular expression to match asset paths against.
         @param destPath The folder path to which assets should be extracted.
-        @param assetPaths An array of the internal paths of the assets extracted. If no assets are extracted, this will be `NULL`.
+        @param assetPaths An array of the internal paths of the assets
+                          extracted. If no assets are extracted, this will be
+                          `NULL`.
         @param numAssets The size of the outputted array.
-        @param overwrite If an asset is to be extracted to a path that already exists, this decides what will happen. If `true`, the existing file will be overwritten, otherwise the asset will not be extracted.
+        @param overwrite If an asset is to be extracted to a path that already
+                         exists, this decides what will happen. If `true`, the
+                         existing file will be overwritten, otherwise the asset
+                         will not be extracted.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const contentPath, const char * const destPath, char *** const assetPaths, size_t * const numAssets, const bool overwrite);
-
-    /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
+    LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
+                                           const char * const contentPath,
+                                           const char * const destPath,
+                                           char *** const assetPaths,
+                                           size_t * const numAssets,
+                                           const bool overwrite);
 
     /**
-        @brief Extracts an asset from a BSA.
-        @details Extracts the given asset to the given location. If a file already exists at the destination path, this function will return with an error code.
+        @brief Extracts an asset from a BSA to the filesystem.
+        @details Extracts the given asset to the given location. If a file
+                 already exists at the destination path, this function will
+                 return with an error code.
         @param bh The handle the function acts on.
         @param assetPath The path of the asset inside the BSA.
         @param destPath The file path to which the asset should be extracted.
-        @param overwrite If the asset is to be extracted to a path that already exists, this decides what will happen. If `true`, the existing file will be overwritten, otherwise the asset will not be extracted.
+        @param overwrite If the asset is to be extracted to a path that already
+                         exists, this decides what will happen. If `true`, the
+                         existing file will be overwritten, otherwise the asset
+                         will not be extracted.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_extract_asset(bsa_handle bh, const char * const assetPath, const char * const destPath, const bool overwrite);
+    LIBBSA unsigned int bsa_extract_asset(bsa_handle bh,
+                                          const char * const assetPath,
+                                          const char * const destPath,
+                                          const bool overwrite);
 
-    LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh, const char * const assetPath, uint8_t** _data, size_t* _size);
+    /**
+        @brief Extracts an asset from a BSA into memory.
+        @details Extracts the given asset to the output array.
+        @param bh The handle the function acts on.
+        @param assetPath The path of the asset inside the BSA.
+        @param data The output byte array containing the asset's data.
+        @param size The size of the output byte array.
+        @returns A return code.
+    */
+    LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh,
+                                                    const char * const assetPath,
+                                                    uint8_t ** data,
+                                                    size_t * size);
 
-    ///@}
+    /**@}*/
 
     /***************************************//**
         @name Misc. Functions
     *******************************************/
-    ///@{
+    /**@{*/
     /**
         @brief Calculates the CRC32 of an asset.
-        @details Calculates the 32-bit CRC of the given asset without extracting it. The CRC parameters are those used by the Boost.CRC library's `crc_32_type` type.
+        @details Calculates the 32-bit CRC of the given asset without
+                 extracting it. The CRC parameters are those used by the
+                 Boost.CRC library's `crc_32_type` type.
         @param bh The handle the function acts on.
         @param assetPath The internal asset path to calculate the CRC32 of.
         @param checksum The calculated checksum.
         @returns A return code.
     */
-    LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh, const char * const assetPath, uint32_t * const checksum);
+    LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh,
+                                          const char * const assetPath,
+                                          uint32_t * const checksum);
 
-    ///@}
+    /**@}*/
 
 #ifdef __cplusplus
 }
