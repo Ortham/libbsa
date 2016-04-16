@@ -118,10 +118,6 @@ LIBBSA unsigned int bsa_get_error_message(const char ** const details) {
     return LIBBSA_OK;
 }
 
-LIBBSA void bsa_cleanup() {
-    extErrorString.clear();
-}
-
 /*----------------------------------
    Lifecycle Management Functions
 ----------------------------------*/

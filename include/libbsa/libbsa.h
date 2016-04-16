@@ -198,11 +198,6 @@ extern "C"
     */
     LIBBSA unsigned int bsa_get_error_message(const char ** const details);
 
-    /**
-       @brief Frees the memory allocated to the last error details string.
-    */
-    LIBBSA void bsa_cleanup();
-
     ///@}
 
     /***************************************//**
