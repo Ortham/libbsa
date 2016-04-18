@@ -21,29 +21,20 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#include "libbsa/libbsa.h"
+#ifdef __GNUC__  // Workaround for GCC linking error.
+#pragma message("GCC detected: Defining BOOST_NO_CXX11_SCOPED_ENUMS to avoid linking errors for boost::filesystem::copy_file().")
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+#endif
 
-#include <stdint.h>
-#include <iostream>
-
-#include <boost/filesystem.hpp>
-#include <gtest/gtest.h>
-
-TEST(bsa_open, shouldFailIfNullHandlePointerIsGiven) {
-    FAIL();
-}
-
-TEST(bsa_open, shouldFailIfNullPathIsGiven) {
-    FAIL();
-}
-
-TEST(bsa_open, shouldFailIfNonExistentPathIsGiven) {
-    FAIL();
-}
-
-TEST(bsa_open, shouldSucceedIfValidPathIsGiven) {
-    FAIL();
-}
+#include "bsa_calc_checksum_test.h"
+#include "bsa_contains_asset_test.h"
+#include "bsa_extract_asset_test.h"
+#include "bsa_extract_asset_to_memory_test.h"
+#include "bsa_extract_assets_test.h"
+#include "bsa_get_assets_test.h"
+#include "bsa_open_test.h"
+#include "bsa_save_test.h"
+#include "libbsa_test.h"
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

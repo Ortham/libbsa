@@ -36,6 +36,13 @@ ExternalProject_Get_Property(GTest SOURCE_DIR BINARY_DIR)
 set (GTEST_INCLUDE_DIRS "${SOURCE_DIR}/include")
 set (GTEST_LIBRARIES "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
+ExternalProject_Add(testing-plugins
+                    PREFIX "external"
+                    URL "https://github.com/WrinklyNinja/testing-plugins/archive/1.1.0.tar.gz"
+                    CONFIGURE_COMMAND ""
+                    BUILD_COMMAND ""
+                    INSTALL_COMMAND "")
+
 set (Boost_USE_STATIC_LIBS ${PROJECT_STATIC_RUNTIME})
 set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME ${PROJECT_STATIC_RUNTIME})
@@ -56,9 +63,20 @@ set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/libbsa/libbsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.h")
 
-source_group("Header Files" FILES ${PROJECT_HEADERS})
-
 set (TEST_SRC "${CMAKE_SOURCE_DIR}/src/test/main.cpp")
+
+set (TEST_HEADERS "${CMAKE_SOURCE_DIR}/src/test/bsa_calc_checksum_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_contains_asset_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_extract_asset_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_extract_asset_to_memory_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_extract_assets_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_get_assets_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_handle_operation_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_open_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/bsa_save_test.h"
+                  "${CMAKE_SOURCE_DIR}/src/test/libbsa_test.h")
+
+source_group("Header Files" FILES ${PROJECT_HEADERS} ${TEST_HEADERS})
 
 include_directories("${CMAKE_SOURCE_DIR}/src"
                     "${CMAKE_SOURCE_DIR}/include"
@@ -111,8 +129,8 @@ add_dependencies      (bsa zlib)
 target_link_libraries (bsa ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 # Build libbsa tester.
-add_executable        (tests ${TEST_SRC})
-add_dependencies      (tests GTest)
+add_executable        (tests ${TEST_SRC} ${TEST_HEADERS})
+add_dependencies      (tests GTest testing-plugins)
 target_link_libraries (tests bsa ${GTEST_LIBRARIES} ${PROJECT_LIBRARIES})
 
 
@@ -133,6 +151,13 @@ ENDIF ()
 ##############################
 # Post-Build Steps
 ##############################
+
+# Copy testing plugins
+ExternalProject_Get_Property(testing-plugins SOURCE_DIR)
+add_custom_command(TARGET tests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${SOURCE_DIR}
+        $<TARGET_FILE_DIR:tests>)
 
 find_package(Doxygen)
 find_package(LATEX)
