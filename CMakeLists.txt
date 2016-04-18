@@ -134,7 +134,9 @@ ENDIF ()
 # Post-Build Steps
 ##############################
 
-IF (NOT DEFINED ENV{TRAVIS})
+find_package(Doxygen)
+
+IF (DOXYGEN_FOUND)
     # Run Doxygen and LaTeX to generate readme
     add_custom_command(TARGET bsa POST_BUILD
         COMMAND doxygen Doxyfile
