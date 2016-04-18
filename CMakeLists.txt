@@ -135,11 +135,12 @@ ENDIF ()
 ##############################
 
 find_package(Doxygen)
+find_package(LATEX)
 
-IF (DOXYGEN_FOUND)
+IF (DOXYGEN_FOUND AND LATEX_FOUND)
     # Run Doxygen and LaTeX to generate readme
     add_custom_command(TARGET bsa POST_BUILD
-        COMMAND doxygen Doxyfile
+        COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
         COMMAND "${CMAKE_SOURCE_DIR}/docs/latex/make.bat"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs")
 ENDIF ()
