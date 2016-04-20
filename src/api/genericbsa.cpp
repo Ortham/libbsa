@@ -60,7 +60,7 @@ namespace libbsa {
         }
     }
 
-    void GenericBsa::Extract(const std::string& assetPath, uint8_t** _data, size_t* _size) {
+    void GenericBsa::Extract(const std::string& assetPath, const uint8_t ** const _data, size_t * const _size) {
         //Get asset data.
         BsaAsset data = GetAsset(assetPath);
         if (data.path.empty())

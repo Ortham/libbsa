@@ -292,7 +292,7 @@ extern "C"
     */
     LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
                                        const char * const contentPath,
-                                       char *** const assetPaths,
+                                       const char *** const assetPaths,
                                        size_t * const numAssets);
 
     /**
@@ -334,7 +334,7 @@ extern "C"
     LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
                                            const char * const contentPath,
                                            const char * const destPath,
-                                           char *** const assetPaths,
+                                           const char * const ** const assetPaths,
                                            size_t * const numAssets,
                                            const bool overwrite);
 
@@ -368,7 +368,7 @@ extern "C"
     */
     LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh,
                                                     const char * const assetPath,
-                                                    uint8_t ** data,
+                                                    const uint8_t ** const data,
                                                     size_t * size);
 
     /**@}*/

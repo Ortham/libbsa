@@ -209,7 +209,10 @@ LIBBSA void bsa_close(bsa_handle bh) {
 /* Gets an array of all the assets in the given BSA that match the contentPath
    given. contentPath is a POSIX Extended regular expression that all asset
    paths within the BSA will be compared to. */
-LIBBSA unsigned int bsa_get_assets(bsa_handle bh, const char * const contentPath, char *** const assetPaths, size_t * const numAssets) {
+LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
+                                   const char * const contentPath,
+                                   const char * const ** const assetPaths,
+                                   size_t * const numAssets) {
     if (bh == NULL || contentPath == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
@@ -273,7 +276,12 @@ LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPa
    given destPath. contentPath is a path ending in a filename given as a POSIX
    Extended regular expression that all asset paths within the BSA will be
    compared to. Directory structure is preserved. */
-LIBBSA unsigned int bsa_extract_assets(bsa_handle bh, const char * const contentPath, const char * destPath, char *** const assetPaths, size_t * const numAssets, const bool overwrite) {
+LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
+                                       const char * const contentPath,
+                                       const char * const destPath,
+                                       const char * const ** const assetPaths,
+                                       size_t * const numAssets,
+                                       const bool overwrite) {
     if (bh == NULL || contentPath == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
@@ -343,7 +351,10 @@ LIBBSA unsigned int bsa_extract_asset(bsa_handle bh, const char * const assetPat
 }
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to memory. */
-LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh, const char * const assetPath, uint8_t** _data, size_t* _size) {
+LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh,
+                                                const char * const assetPath,
+                                                const uint8_t ** const _data,
+                                                size_t * _size) {
     if (bh == NULL || assetPath == NULL || _data == NULL || _size == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
@@ -363,7 +374,9 @@ LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh, const char * cons
    Misc. Functions
 --------------------------------*/
 
-LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh, const char * const assetPath, uint32_t * const checksum) {
+LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh,
+                                      const char * const assetPath,
+                                      uint32_t * const checksum) {
     if (bh == NULL || assetPath == NULL || checksum == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
