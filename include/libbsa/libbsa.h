@@ -283,7 +283,7 @@ extern "C"
         @details Gets all the assets indexed in a handle with internal paths
                  that match the given regular expression.
         @param bh The handle the function acts on.
-        @param contentPath The regular expression to match asset paths against.
+        @param assetRegex The regular expression to match asset paths against.
         @param assetPaths The outputted array of asset paths. If no matching
                           assets are found, this will be `NULL`.
         @param numAssets The size of the outputted array. If no matching assets
@@ -291,8 +291,8 @@ extern "C"
         @returns A return code.
     */
     LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
-                                       const char * const contentPath,
-                                       const char *** const assetPaths,
+                                       const char * const assetRegex,
+                                       const char * const ** const assetPaths,
                                        size_t * const numAssets);
 
     /**
@@ -319,7 +319,8 @@ extern "C"
                  given regular expression to the given destination path,
                  maintaining the directory structure they had inside the BSA.
         @param bh The handle the function acts on.
-        @param contentPath The regular expression to match asset paths against.
+        @param assetRegex The regular expression to match asset paths
+                            against.
         @param destPath The folder path to which assets should be extracted.
         @param assetPaths An array of the internal paths of the assets
                           extracted. If no assets are extracted, this will be
@@ -332,7 +333,7 @@ extern "C"
         @returns A return code.
     */
     LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
-                                           const char * const contentPath,
+                                           const char * const assetRegex,
                                            const char * const destPath,
                                            const char * const ** const assetPaths,
                                            size_t * const numAssets,

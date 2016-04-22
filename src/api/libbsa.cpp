@@ -206,14 +206,11 @@ LIBBSA void bsa_close(bsa_handle bh) {
    Content Reading Functions
 ------------------------------*/
 
-/* Gets an array of all the assets in the given BSA that match the contentPath
-   given. contentPath is a POSIX Extended regular expression that all asset
-   paths within the BSA will be compared to. */
 LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
-                                   const char * const contentPath,
+                                   const char * const assetRegex,
                                    const char * const ** const assetPaths,
                                    size_t * const numAssets) {
-    if (bh == NULL || contentPath == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
+    if (bh == NULL || assetRegex == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
@@ -226,7 +223,7 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
     //Build regex expression. Also check that it is valid.
     regex regex;
     try {
-        regex = std::regex(contentPath, regex::extended | regex::icase);
+        regex = std::regex(assetRegex, regex::extended | regex::icase);
     }
     catch (regex_error& e) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
@@ -272,17 +269,13 @@ LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPa
    Content Extraction Functions
 --------------------------------*/
 
-/* Extracts all the files and folders that match the contentPath given to the
-   given destPath. contentPath is a path ending in a filename given as a POSIX
-   Extended regular expression that all asset paths within the BSA will be
-   compared to. Directory structure is preserved. */
 LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
-                                       const char * const contentPath,
+                                       const char * const assetRegex,
                                        const char * const destPath,
                                        const char * const ** const assetPaths,
                                        size_t * const numAssets,
                                        const bool overwrite) {
-    if (bh == NULL || contentPath == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
+    if (bh == NULL || assetRegex == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
@@ -295,7 +288,7 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
     //Build regex expression. Also check that it is valid.
     regex regex;
     try {
-        regex = std::regex(string(reinterpret_cast<const char*>(contentPath)), regex::extended | regex::icase);
+        regex = std::regex(string(reinterpret_cast<const char*>(assetRegex)), regex::extended | regex::icase);
     }
     catch (regex_error& e) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
