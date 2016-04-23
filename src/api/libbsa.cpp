@@ -278,7 +278,7 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
                                        const char * const ** const assetPaths,
                                        size_t * const numAssets,
                                        const bool overwrite) {
-    if (bh == NULL || assetRegex == NULL || destPath == NULL || assetPaths == NULL) //Check for valid args.
+    if (bh == NULL || assetRegex == NULL || destPath == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     //Free memory if in use.
