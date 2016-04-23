@@ -27,6 +27,8 @@
 #include "tes3bsa.h"
 #include "tes4bsa.h"
 #include "error.h"
+
+#include <bitset>
 #include <codecvt>
 #include <boost/filesystem.hpp>
 #include <locale>
@@ -160,34 +162,26 @@ LIBBSA unsigned int bsa_save(bsa_handle bh, const char * const path, const unsig
     if (bh == NULL || path == NULL)  //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    //Check that flags are valid.
-    unsigned int version = 0, compression = 0;
-
-        //First we need to see what flags are set.
+    //First we need to see what flags are set.
     if (flags & LIBBSA_VERSION_TES3 && !(flags & LIBBSA_COMPRESS_LEVEL_0))
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Morrowind BSAs cannot be compressed.");
 
-    //Check for version flag duplication.
-    if (flags & LIBBSA_VERSION_TES3)
-        version = LIBBSA_VERSION_TES3;
-    if (flags & LIBBSA_VERSION_TES4) {
-        if (version > 0)
-            return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.");
-        version = LIBBSA_VERSION_TES4;
-    }
-    if (flags & LIBBSA_VERSION_TES5) {
-        if (version > 0)
-            return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.");
-        version = LIBBSA_VERSION_TES5;
-    }
+    //Check that the version flag is valid.
+    std::bitset<3> version(flags & (LIBBSA_VERSION_TES3 | LIBBSA_VERSION_TES4 | LIBBSA_VERSION_TES5));
+    if (version.none())
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Must specify one version.");
+    if (version.count() > 1)
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one version.");
 
     //Now remove version flag from flags and check for compression flag duplication.
-    compression = flags ^ version;
-    if (!(compression & (compression - 1)))
-        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Invalid compression level specified.");
+    std::bitset<16> compression(flags ^ version.to_ulong());
+    if (compression.none())
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Must specify one compression level.");
+    if (compression.count() > 1)
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one compression level.");
 
     try {
-        bh->getBsa()->Save(path, version, compression);
+        bh->getBsa()->Save(path, version.to_ulong(), compression.to_ulong());
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
