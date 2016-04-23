@@ -64,7 +64,7 @@ namespace libbsa {
         //Get asset data.
         BsaAsset data = GetAsset(assetPath);
         if (data.path.empty())
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+            throw error(LIBBSA_ERROR_INVALID_ARGS, "Asset not found");
 
         std::pair<uint8_t*, size_t> dataPair;
         try {
@@ -89,7 +89,7 @@ namespace libbsa {
         //Get asset data.
         BsaAsset data = GetAsset(assetPath);
         if (data.path.empty())
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+            throw error(LIBBSA_ERROR_INVALID_ARGS, "Asset not found");
 
         std::pair<uint8_t*, size_t> dataPair;
         fs::path outFilePath = fs::path(outPath) / data.path;
@@ -169,7 +169,7 @@ namespace libbsa {
         //Get asset data.
         BsaAsset data = GetAsset(assetPath);
         if (data.path.empty())
-            throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
+            throw error(LIBBSA_ERROR_INVALID_ARGS, "Asset not found");
 
         std::pair<uint8_t*, size_t> dataPair;
         try {
