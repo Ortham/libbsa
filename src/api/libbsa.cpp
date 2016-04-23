@@ -136,6 +136,9 @@ LIBBSA unsigned int bsa_open(bsa_handle * const bh, const char * const path) {
     std::locale::global(std::locale(std::locale(), new std::codecvt_utf8_utf16<wchar_t>));
     boost::filesystem::path::imbue(std::locale());
 
+    if (!boost::filesystem::exists(path))
+        return c_error(LIBBSA_ERROR_INVALID_ARGS, "Given path does not exist.");
+
     //Create handle for the appropriate BSA type.
     try {
         *bh = new _bsa_handle_int(path);
