@@ -91,11 +91,15 @@ unsigned int c_error(const unsigned int code, const char * what) {
 
 /* Returns whether this version of libbsa is compatible with the given
    version of libbsa. */
-LIBBSA bool bsa_is_compatible(const unsigned int versionMajor, const unsigned int versionMinor, const unsigned int versionPatch) {
+LIBBSA bool bsa_is_compatible(const unsigned int versionMajor,
+                              const unsigned int versionMinor,
+                              const unsigned int versionPatch) {
     return versionMajor == LIBBSA_VERSION_MAJOR;
 }
 
-LIBBSA unsigned int bsa_get_version(unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch) {
+LIBBSA unsigned int bsa_get_version(unsigned int * const versionMajor,
+                                    unsigned int * const versionMinor,
+                                    unsigned int * const versionPatch) {
     if (versionMajor == nullptr || versionMinor == nullptr || versionPatch == nullptr)
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
@@ -158,7 +162,9 @@ LIBBSA unsigned int bsa_open(bsa_handle * const bh, const char * const path) {
 /* Create a BSA at the specified path. The 'flags' argument consists of a set
    of bitwise OR'd constants defining the version of the BSA and the
    compression level used (and whether the compression is forced). */
-LIBBSA unsigned int bsa_save(bsa_handle bh, const char * const path, const unsigned int flags) {
+LIBBSA unsigned int bsa_save(bsa_handle bh,
+                             const char * const path,
+                             const unsigned int flags) {
     if (bh == NULL || path == NULL)  //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
@@ -181,7 +187,7 @@ LIBBSA unsigned int bsa_save(bsa_handle bh, const char * const path, const unsig
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one compression level.");
 
     try {
-        bh->getBsa()->Save(path, version.to_ulong(), compression.to_ulong());
+        bh->getBsa()->Save(boost::filesystem::path(path), version.to_ulong(), compression.to_ulong());
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -210,32 +216,28 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
     if (bh == NULL || assetRegex == NULL || assetPaths == NULL || numAssets == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    //Free memory if in use.
+    // Free memory if in use.
     bh->freeExtAssets();
 
     //Init values.
     *assetPaths = NULL;
     *numAssets = 0;
 
-    //Build regex expression. Also check that it is valid.
-    regex regex;
     try {
-        regex = std::regex(assetRegex, regex::extended | regex::icase);
+        // Build regex expression.
+        regex regex = std::regex(assetRegex, regex::extended | regex::icase);
+
+        //We don't know how many matches there will be, so put all matches into a temporary buffer first.
+        vector<BsaAsset> temp = bh->getBsa()->GetMatchingAssets(regex);
+
+        if (temp.empty())
+            return LIBBSA_OK;
+
+        //Fill external array.
+        bh->setExtAssets(temp);
     }
     catch (regex_error& e) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
-    }
-
-    //We don't know how many matches there will be, so put all matches into a temporary buffer first.
-    list<BsaAsset> temp;
-    bh->getBsa()->GetMatchingAssets(regex, temp);
-
-    if (temp.empty())
-        return LIBBSA_OK;
-
-    //Fill external array.
-    try {
-        bh->setExtAssets(temp);
     }
     catch (bad_alloc& e) {
         return c_error(LIBBSA_ERROR_NO_MEM, e.what());
@@ -251,13 +253,13 @@ LIBBSA unsigned int bsa_get_assets(bsa_handle bh,
 }
 
 /* Checks if a specific asset, found within the BSA at assetPath, is in the given BSA. */
-LIBBSA unsigned int bsa_contains_asset(bsa_handle bh, const char * const assetPath, bool * const result) {
+LIBBSA unsigned int bsa_contains_asset(bsa_handle bh,
+                                       const char * const assetPath,
+                                       bool * const result) {
     if (bh == NULL || assetPath == NULL || result == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    string assetStr = _bsa_handle_int::FixPath(assetPath);
-
-    *result = bh->getBsa()->HasAsset(assetStr);
+    *result = bh->getBsa()->HasAsset(assetPath);
 
     return LIBBSA_OK;
 }
@@ -282,33 +284,22 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
     *assetPaths = NULL;
     *numAssets = 0;
 
-    //Build regex expression. Also check that it is valid.
-    regex regex;
     try {
-        regex = std::regex(string(reinterpret_cast<const char*>(assetRegex)), regex::extended | regex::icase);
+        //Build regex expression.
+        regex regex = std::regex(string(reinterpret_cast<const char*>(assetRegex)), regex::extended | regex::icase);
+
+        //We don't know how many matches there will be, so put all matches into a temporary buffer first.
+        vector<BsaAsset> temp = bh->getBsa()->GetMatchingAssets(regex);
+
+        if (temp.empty())
+            return LIBBSA_OK;
+
+        bh->getBsa()->Extract(temp, string(reinterpret_cast<const char*>(destPath)), overwrite);
+
+        bh->setExtAssets(temp);
     }
     catch (regex_error& e) {
         return c_error(LIBBSA_ERROR_INVALID_ARGS, e.what());
-    }
-
-    //We don't know how many matches there will be, so put all matches into a temporary buffer first.
-    list<BsaAsset> temp;
-    bh->getBsa()->GetMatchingAssets(regex, temp);
-
-    if (temp.empty())
-        return LIBBSA_OK;
-
-    //Extract files.
-    try {
-        bh->getBsa()->Extract(temp, string(reinterpret_cast<const char*>(destPath)), overwrite);
-    }
-    catch (error& e) {
-        return c_error(e.code(), e.what());
-    }
-
-    //Now iterate through temp hashmap, outputting filenames.
-    try {
-        bh->setExtAssets(temp);
     }
     catch (bad_alloc& e) {
         return c_error(LIBBSA_ERROR_NO_MEM, e.what());
@@ -324,14 +315,15 @@ LIBBSA unsigned int bsa_extract_assets(bsa_handle bh,
 }
 
 /* Extracts a specific asset, found at assetPath, from a given BSA, to destPath. */
-LIBBSA unsigned int bsa_extract_asset(bsa_handle bh, const char * const assetPath, const char * const destPath, const bool overwrite) {
+LIBBSA unsigned int bsa_extract_asset(bsa_handle bh,
+                                      const char * const assetPath,
+                                      const char * const destPath,
+                                      const bool overwrite) {
     if (bh == NULL || assetPath == NULL || destPath == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    string assetStr = _bsa_handle_int::FixPath(assetPath);
-
     try {
-        bh->getBsa()->Extract(assetStr, string(reinterpret_cast<const char*>(destPath)), overwrite);
+        bh->getBsa()->Extract(assetPath, string(reinterpret_cast<const char*>(destPath)), overwrite);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -348,10 +340,8 @@ LIBBSA unsigned int bsa_extract_asset_to_memory(bsa_handle bh,
     if (bh == NULL || assetPath == NULL || _data == NULL || _size == NULL) //Check for valid args.
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
-    string assetStr = _bsa_handle_int::FixPath(assetPath);
-
     try {
-        bh->getBsa()->Extract(assetStr, _data, _size);
+        bh->getBsa()->Extract(assetPath, _data, _size);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());
@@ -371,7 +361,7 @@ LIBBSA unsigned int bsa_calc_checksum(bsa_handle bh,
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Null pointer passed.");
 
     try {
-        *checksum = bh->getBsa()->CalcChecksum(_bsa_handle_int::FixPath(assetPath));
+        *checksum = bh->getBsa()->CalcChecksum(assetPath);
     }
     catch (error& e) {
         return c_error(e.code(), e.what());

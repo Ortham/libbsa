@@ -31,18 +31,15 @@ along with libbsa.  If not, see
 //Class for generic BSA data manipulation functions.
 struct _bsa_handle_int {
 public:
-    _bsa_handle_int(const std::string& path);
+    _bsa_handle_int(const boost::filesystem::path& path);
     ~_bsa_handle_int();
 
     libbsa::GenericBsa * getBsa() const;
     char ** getExtAssets() const;
     size_t getExtAssetsNum() const;
 
-    void setExtAssets(const std::list<libbsa::BsaAsset>& assets);
+    void setExtAssets(const std::vector<libbsa::BsaAsset>& assets);
     void freeExtAssets();
-
-    //Replaces all forwardslashes with backslashes, and lowercases letters.
-    static std::string FixPath(const char * path);
 private:
     libbsa::GenericBsa * bsa;
 

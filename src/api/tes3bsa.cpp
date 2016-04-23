@@ -32,12 +32,12 @@ using namespace std;
 
 namespace libbsa {
     namespace tes3 {
-        BSA::BSA(const std::string& path)
+        BSA::BSA(const boost::filesystem::path& path)
             : GenericBsa(path),
             hashOffset(0) {
             //Check if file exists.
             if (fs::exists(path)) {
-                boost::filesystem::ifstream in(fs::path(path), ios::binary);
+                boost::filesystem::ifstream in(path, ios::binary);
                 in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
                 Header header;
@@ -88,7 +88,7 @@ namespace libbsa {
                     //Find position of null pointer.
                     char * nptr = strchr((char*)(filenameRecords + filenameOffsets[i]), '\0');
                     if (nptr == NULL)
-                        throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
+                        throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
 
                     fileData.path = ToUTF8(string((char*)(filenameRecords + filenameOffsets[i]), nptr - (char*)(filenameRecords + filenameOffsets[i])));
 
@@ -105,16 +105,16 @@ namespace libbsa {
             }
         }
 
-        void BSA::Save(std::string path, const uint32_t version, const uint32_t compression) {
+        void BSA::Save(boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
             //Version and compression have been validated.
 
             if (path == filePath)
                 path += ".new";  //Avoid read/write collisions.
 
-            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
+            boost::filesystem::ifstream in(filePath, ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-            boost::filesystem::ofstream out(fs::path(path), ios::binary | ios::trunc);
+            boost::filesystem::ofstream out(path, ios::binary | ios::trunc);
             out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             //Build file header.
@@ -225,7 +225,6 @@ namespace libbsa {
             }
 
             //Update member vars.
-            filePath = path;
             hashOffset = header.hashOffset;
 
             in.close();
@@ -241,7 +240,7 @@ namespace libbsa {
             }*/
         }
 
-        std::pair<uint8_t*, size_t> BSA::ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) {
+        std::pair<uint8_t*, size_t> BSA::ReadData(std::ifstream& in, const BsaAsset& data) const {
             //Just need to use size and offset to write to binary file stream.
             uint8_t * buffer;
 
@@ -307,20 +306,19 @@ namespace libbsa {
         }
 
         //Check if a given file is a Tes3-type BSA.
-        bool BSA::IsBSA(const std::string& path) {
+        bool BSA::IsBSA(const boost::filesystem::path& path) {
             //Check if file exists.
             if (!fs::exists(path))
                 return false;
-            else {
-                uint32_t magic;
-                boost::filesystem::ifstream in(fs::path(path), ios::binary);
-                in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-                in.read((char*)&magic, sizeof(uint32_t));
-                in.close();
+            boost::filesystem::ifstream in(path, ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);
 
-                return magic == VERSION;  //Magic is actually tes3 bsa version.
-            }
+            uint32_t magic;
+            in.read((char*)&magic, sizeof(uint32_t));
+            in.close();
+
+            return magic == VERSION;
         }
     }
 }

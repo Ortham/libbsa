@@ -35,13 +35,13 @@ using namespace std;
 
 namespace libbsa {
     namespace tes4 {
-        BSA::BSA(const std::string& path)
+        BSA::BSA(const boost::filesystem::path& path)
             : GenericBsa(path),
             archiveFlags(0),
             fileFlags(0) {
             //Check if file exists.
             if (fs::exists(path)) {
-                boost::filesystem::ifstream in(fs::path(path), ios::binary);
+                boost::filesystem::ifstream in(path, ios::binary);
                 in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
                 Header header;
@@ -49,7 +49,7 @@ namespace libbsa {
                 in.read((char*)&header, sizeof(Header));
 
                 if ((header.version != BSA_VERSION_TES4 && header.version != BSA_VERSION_TES5) || header.offset != BSA_FOLDER_RECORD_OFFSET)
-                    throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
+                    throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
 
                 //Now we get to the real meat of the file.
                 //Folder records are followed by file records in blocks by folder name, followed by file names.
@@ -107,7 +107,7 @@ namespace libbsa {
                         //Find position of null pointer.
                         char * nptr = strchr(filenameStart, '\0');
                         if (nptr == NULL)
-                            throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
+                            throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
 
                         fileData.path += ToUTF8(string(filenameStart, nptr - filenameStart));
                         fileNameListPos += fileData.path.length() + 1;
@@ -130,19 +130,19 @@ namespace libbsa {
             }
         }
 
-        void BSA::Save(std::string path, const uint32_t version, const uint32_t compression) {
+        void BSA::Save(boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
                     //Version and compression have been validated.
 
             if (fs::exists(path))
-                throw error(LIBBSA_ERROR_INVALID_ARGS, path + " already exists");
+                throw error(LIBBSA_ERROR_INVALID_ARGS, path.string() + " already exists");
 
             if (!fs::exists(filePath))
-                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, filePath + " no longer exists");
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, filePath.string() + " no longer exists");
 
-            boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
+            boost::filesystem::ifstream in(filePath, ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-            boost::filesystem::ofstream out(fs::path(path), ios::binary | ios::trunc);
+            boost::filesystem::ofstream out(path, ios::binary | ios::trunc);
             out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             ///////////////////////////////
@@ -171,7 +171,7 @@ namespace libbsa {
             //Need to sort folder and file names separately into hash-sorted sets before header.folderCount and name lengths can be set.
             list<BsaAsset> folderHashset;
             list<BsaAsset> fileHashset;
-            for (list<BsaAsset>::iterator it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
+            for (auto it = assets.begin(), endIt = assets.end(); it != endIt; ++it) {
                 BsaAsset folderAsset;
                 BsaAsset fileAsset;
 
@@ -317,7 +317,7 @@ namespace libbsa {
                 }
 
                 if (itr == endItr)
-                    throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path + "\" is invalid.");
+                    throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
 
                 //Read data in.
                 in.seekg(itr->offset, ios_base::beg);  //This is the offset in the old BSA.
@@ -334,7 +334,6 @@ namespace libbsa {
             }
 
             //Update member vars.
-            filePath = path;
             archiveFlags = header.archiveFlags;
             fileFlags = header.fileFlags;
 
@@ -351,7 +350,7 @@ namespace libbsa {
             }*/
         }
 
-        std::pair<uint8_t*, size_t> BSA::ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data) {
+        std::pair<uint8_t*, size_t> BSA::ReadData(std::ifstream& in, const BsaAsset& data) const {
             uint8_t * outBuffer = NULL;
             uint32_t outSize = data.size;
             //Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
@@ -465,20 +464,19 @@ namespace libbsa {
         }
 
         //Check if a given file is a Tes4-type BSA.
-        bool BSA::IsBSA(const std::string& path) {
+        bool BSA::IsBSA(const boost::filesystem::path& path) {
             //Check if file exists.
             if (!fs::exists(path))
                 return false;
-            else {
-                uint32_t magic;
-                boost::filesystem::ifstream in(fs::path(path), ios::binary);
-                in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
-                in.read((char*)&magic, sizeof(uint32_t));
-                in.close();
+            boost::filesystem::ifstream in(fs::path(path), ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);
 
-                return magic == BSA_MAGIC;  //Magic is actually tes3 bsa version.
-            }
+            uint32_t magic;
+            in.read((char*)&magic, sizeof(uint32_t));
+            in.close();
+
+            return magic == BSA_MAGIC;
         }
     }
 }

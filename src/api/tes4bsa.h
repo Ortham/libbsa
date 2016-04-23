@@ -55,16 +55,19 @@ namespace libbsa {
 
             static const uint32_t FILE_INVERT_COMPRESSED = 0x40000000;  //Inverts the file data compression status for the specific file this flag is set for.
 
-            BSA(const std::string& path);
-            void Save(std::string path, const uint32_t version, const uint32_t compression);
+            BSA(const boost::filesystem::path& path);
+            void Save(boost::filesystem::path& path,
+                      const uint32_t version,
+                      const uint32_t compression);
 
             //Check if a given file is a Tes4-type BSA.
-            bool IsBSA(const std::string& path);
+            static bool IsBSA(const boost::filesystem::path& path);
         private:
-            std::pair<uint8_t*, size_t> ReadData(boost::filesystem::ifstream& in, const libbsa::BsaAsset& data);
+            std::pair<uint8_t*, size_t> ReadData(std::ifstream& in,
+                                                 const BsaAsset& data) const;
 
-            uint32_t HashString(const std::string& str);
-            uint64_t CalcHash(const std::string& path, const std::string& ext);
+            static uint32_t HashString(const std::string& str);
+            static uint64_t CalcHash(const std::string& assetPath, const std::string& ext);
 
             uint32_t archiveFlags;
             uint32_t fileFlags;

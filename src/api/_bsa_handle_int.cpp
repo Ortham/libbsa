@@ -29,7 +29,7 @@
 
 using namespace libbsa;
 
-_bsa_handle_int::_bsa_handle_int(const std::string& path) :
+_bsa_handle_int::_bsa_handle_int(const boost::filesystem::path& path) :
     extAssets(NULL),
     extAssetsNum(0) {
     if (tes3::BSA::IsBSA(path))
@@ -56,7 +56,7 @@ size_t _bsa_handle_int::getExtAssetsNum() const {
     return extAssetsNum;
 }
 
-void _bsa_handle_int::setExtAssets(const std::list<BsaAsset>& assets) {
+void _bsa_handle_int::setExtAssets(const std::vector<BsaAsset>& assets) {
     extAssetsNum = assets.size();
     extAssets = new char*[extAssetsNum];
 
@@ -75,19 +75,6 @@ void _bsa_handle_int::freeExtAssets() {
         extAssets = NULL;
         extAssetsNum = 0;
     }
-}
-
-//Replaces all forwardslashes with backslashes, and lowercases letters.
-std::string _bsa_handle_int::FixPath(const char * path) {
-    std::string out(path);
-    boost::to_lower(out);
-
-    boost::replace_all(out, "/", "\\");
-
-    if (out[0] == '\\')
-        out = out.substr(1);
-
-    return out;
 }
 
 // std::string to null-terminated char string converter.
