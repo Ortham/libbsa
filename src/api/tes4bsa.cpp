@@ -133,8 +133,8 @@ namespace libbsa {
         void BSA::Save(std::string path, const uint32_t version, const uint32_t compression) {
                     //Version and compression have been validated.
 
-            if (path == filePath)
-                path += ".new";  //Avoid read/write collisions.
+            if (fs::exists(path))
+                throw error(LIBBSA_ERROR_INVALID_ARGS, path + " already exists");
 
             boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
