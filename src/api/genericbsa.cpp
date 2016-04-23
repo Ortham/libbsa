@@ -92,13 +92,13 @@ namespace libbsa {
             throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "Path is empty.");
 
         std::pair<uint8_t*, size_t> dataPair;
-        std::string outFilePath = outPath + '/' + data.path;
+        fs::path outFilePath = fs::path(outPath) / data.path;
         try {
             //Create parent directories.
-            fs::create_directories(fs::path(outFilePath).parent_path());  //This creates any directories in the path that don't already exist.
+            fs::create_directories(outFilePath.parent_path());  //This creates any directories in the path that don't already exist.
 
             if (!overwrite && fs::exists(outFilePath))
-                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath + "\" already exists.");
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath.string() + "\" already exists.");
 
             //Read file data.
             boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
@@ -109,7 +109,7 @@ namespace libbsa {
             in.close();
 
             //Write new file.
-            boost::filesystem::ofstream out(fs::path(outFilePath), ios::binary | ios::trunc);
+            boost::filesystem::ofstream out(outFilePath, ios::binary | ios::trunc);
             out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
             out.write((char*)dataPair.first, dataPair.second);
@@ -134,19 +134,19 @@ namespace libbsa {
 
             //Loop through the map, checking that each path doesn't already exist, creating path components if necessary, and extracting files.
             for (list<BsaAsset>::const_iterator it = assetsToExtract.begin(), endIt = assetsToExtract.end(); it != endIt; ++it) {
-                std::string outFilePath = outPath + '/' + it->path;
+                fs::path outFilePath = fs::path(outPath) / it->path;
 
                 //Create parent directories.
-                fs::create_directories(fs::path(outPath).parent_path());  //This creates any directories in the path that don't already exist.
+                fs::create_directories(outFilePath.parent_path());  //This creates any directories in the path that don't already exist.
 
-                if (!overwrite && fs::exists(outPath))
-                    throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outPath + "\" already exists.");
+                if (!overwrite && fs::exists(outFilePath))
+                    throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, "The file \"" + outFilePath.string() + "\" already exists.");
 
                 //Get file data.
                 dataPair = ReadData(in, *it);
 
                 //Write new file.
-                boost::filesystem::ofstream out(fs::path(outPath) / it->path, ios::binary | ios::trunc);
+                boost::filesystem::ofstream out(outFilePath, ios::binary | ios::trunc);
                 out.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
                 out.write((char*)dataPair.first, dataPair.second);
