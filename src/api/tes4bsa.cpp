@@ -136,6 +136,9 @@ namespace libbsa {
             if (fs::exists(path))
                 throw error(LIBBSA_ERROR_INVALID_ARGS, path + " already exists");
 
+            if (!fs::exists(filePath))
+                throw error(LIBBSA_ERROR_FILESYSTEM_ERROR, filePath + " no longer exists");
+
             boost::filesystem::ifstream in(fs::path(filePath), ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
 
