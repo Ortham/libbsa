@@ -353,61 +353,53 @@ namespace libbsa {
         std::pair<uint8_t*, size_t> BSA::ReadData(std::ifstream& in, const BsaAsset& data) const {
             uint8_t * outBuffer = NULL;
             uint32_t outSize = data.size;
-            //Check if given file is compressed or not. If not, can ofstream straight to path, otherwise need to involve zlib.
-            /* BSA-TYPE-SPECIFIC CHECK */
-            if ((archiveFlags & BSA_COMPRESSED && outSize & FILE_INVERT_COMPRESSED) || (!(archiveFlags & BSA_COMPRESSED) && !(outSize & FILE_INVERT_COMPRESSED))) {
-                /* BSA-TYPE-SPECIFIC CHECK */
-                if (outSize & FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual size.
-                    outSize ^= FILE_INVERT_COMPRESSED;
 
-                try {
-                    outBuffer = new uint8_t[outSize];
-                }
-                catch (bad_alloc& e) {
-                    throw error(LIBBSA_ERROR_NO_MEM, e.what());
-                }
+            // Remove compression flag from size to get actual size.
+            if (outSize & FILE_INVERT_COMPRESSED)
+                outSize ^= FILE_INVERT_COMPRESSED;
 
-                in.seekg(data.offset, ios_base::beg);
-                in.read((char*)outBuffer, outSize);
+            try {
+                outBuffer = new uint8_t[outSize];
             }
-            else {
-             //Use zlib.
-                if (outSize & FILE_INVERT_COMPRESSED)  //Remove compression flag from size to get actual compressed size.
-                    outSize ^= FILE_INVERT_COMPRESSED;
-
-                //Get the uncompressed size.
-                uint32_t uncompressedSize;
-                in.seekg(data.offset, ios_base::beg);
-                in.read((char*)&uncompressedSize, sizeof(uint32_t));
-
-                //in and out are now at their starting locations for reading and writing, and we have the compressed and uncompressed size.
-                //Allocate memory for the compressed file and the uncompressed file.
-                uint8_t * compressedFile;
-                uint8_t * uncompressedFile;
-                outSize -= sizeof(uint32_t);  //First uint32_t of data is the size of the uncompressed data.
-                try {
-                    compressedFile = new uint8_t[outSize];
-                    uncompressedFile = new uint8_t[uncompressedSize];
-                }
-                catch (bad_alloc& e) {
-                    throw error(LIBBSA_ERROR_NO_MEM, e.what());
-                }
-
-                in.read((char*)compressedFile, outSize);
-
-                //We can use a pre-made utility function instead of having to mess around with zlib proper.
-                int ret = uncompress(uncompressedFile, (uLongf*)&uncompressedSize, compressedFile, outSize);
-                if (ret != Z_OK)
-                    throw error(LIBBSA_ERROR_ZLIB_ERROR, "Uncompressing of \"" + data.path + "\" failed.");
-
-                outBuffer = uncompressedFile;
-                outSize = uncompressedSize;
-
-                //Free memory.
-                delete[] compressedFile;
+            catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
             }
 
-            return pair<uint8_t*, size_t>(outBuffer, outSize);
+            in.seekg(data.offset, ios_base::beg);
+            in.read(reinterpret_cast<char*>(outBuffer), outSize);
+
+            // If file is compressed, need to uncompress it with zlib.
+            if ((archiveFlags & BSA_COMPRESSED) != (outSize & FILE_INVERT_COMPRESSED))
+                return uncompressData(data.path, outBuffer, outSize);
+
+            return make_pair(outBuffer, outSize);
+        }
+
+        std::pair<uint8_t*, size_t> BSA::uncompressData(const std::string& assetPath,
+                                                        const uint8_t * data,
+                                                        size_t size) {
+            size_t uncompressedSize = *reinterpret_cast<const uint32_t*>(data);
+            data += sizeof(uint32_t);
+            size -= sizeof(uint32_t);
+
+            uint8_t * uncompressedData;
+            try {
+                uncompressedData = new uint8_t[uncompressedSize];
+            }
+            catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
+            }
+
+            // We can use a pre-made utility function instead of having to mess around with zlib proper.
+            int ret = uncompress(uncompressedData, reinterpret_cast<uLongf*>(&uncompressedSize), data, size);
+            if (ret != Z_OK)
+                throw error(LIBBSA_ERROR_ZLIB_ERROR, "Uncompressing of \"" + assetPath + "\" failed.");
+
+            // Free memory.
+            data -= sizeof(uint32_t);
+            delete[] data;
+
+            return make_pair(uncompressedData, uncompressedSize);
         }
 
         uint32_t BSA::HashString(const std::string& str) {

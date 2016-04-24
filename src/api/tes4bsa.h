@@ -65,6 +65,9 @@ namespace libbsa {
         private:
             std::pair<uint8_t*, size_t> ReadData(std::ifstream& in,
                                                  const BsaAsset& data) const;
+            static std::pair<uint8_t*, size_t> uncompressData(const std::string& assetPath,
+                                                              const uint8_t * data,
+                                                              size_t size);
 
             static uint32_t HashString(const std::string& str);
             static uint64_t CalcHash(const std::string& assetPath, const std::string& ext);
