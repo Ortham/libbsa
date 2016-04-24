@@ -44,7 +44,7 @@ namespace libbsa {
             static const uint32_t VERSION = 0x100;
 
             BSA(const boost::filesystem::path& path);
-            void Save(boost::filesystem::path& path,
+            void Save(const boost::filesystem::path& path,
                       const uint32_t version,
                       const uint32_t compression);
 

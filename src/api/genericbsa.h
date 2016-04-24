@@ -38,7 +38,7 @@ namespace libbsa {
     public:
         GenericBsa(const boost::filesystem::path& path);
 
-        virtual void Save(boost::filesystem::path& path,
+        virtual void Save(const boost::filesystem::path& path,
                           const uint32_t version,
                           const uint32_t compression) = 0;
 

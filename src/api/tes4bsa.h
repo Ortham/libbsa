@@ -56,7 +56,7 @@ namespace libbsa {
             static const uint32_t FILE_INVERT_COMPRESSED = 0x40000000;  //Inverts the file data compression status for the specific file this flag is set for.
 
             BSA(const boost::filesystem::path& path);
-            void Save(boost::filesystem::path& path,
+            void Save(const boost::filesystem::path& path,
                       const uint32_t version,
                       const uint32_t compression);
 

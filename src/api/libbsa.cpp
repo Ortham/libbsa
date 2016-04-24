@@ -187,7 +187,7 @@ LIBBSA unsigned int bsa_save(bsa_handle bh,
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Cannot specify more than one compression level.");
 
     try {
-        bh->getBsa()->Save(boost::filesystem::path(path), version.to_ulong(), compression.to_ulong());
+        bh->getBsa()->Save(path, version.to_ulong(), compression.to_ulong());
     }
     catch (error& e) {
         return c_error(e.code(), e.what());

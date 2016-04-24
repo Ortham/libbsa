@@ -105,11 +105,8 @@ namespace libbsa {
             }
         }
 
-        void BSA::Save(boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
+        void BSA::Save(const boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
             //Version and compression have been validated.
-
-            if (path == filePath)
-                path += ".new";  //Avoid read/write collisions.
 
             boost::filesystem::ifstream in(filePath, ios::binary);
             in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.

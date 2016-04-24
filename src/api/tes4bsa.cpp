@@ -116,7 +116,7 @@ namespace libbsa {
             delete[] fileNames;
         }
 
-        void BSA::Save(boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
+        void BSA::Save(const boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
             if (fs::exists(path))
                 throw error(LIBBSA_ERROR_INVALID_ARGS, path.string() + " already exists");
 
