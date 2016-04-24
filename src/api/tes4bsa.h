@@ -69,6 +69,11 @@ namespace libbsa {
                                                               const uint8_t * data,
                                                               size_t size);
 
+            static std::string getFolderName(const uint8_t * fileRecords,
+                                             uint32_t folderOffset);
+            static std::string getFileName(const uint8_t * fileNames,
+                                           uint32_t offset);
+
             static uint32_t HashString(const std::string& str);
             static uint64_t CalcHash(const std::string& assetPath, const std::string& ext);
 

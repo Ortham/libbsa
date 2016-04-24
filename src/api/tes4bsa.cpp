@@ -35,104 +35,88 @@ using namespace std;
 
 namespace libbsa {
     namespace tes4 {
-        BSA::BSA(const boost::filesystem::path& path)
-            : GenericBsa(path),
+        BSA::BSA(const boost::filesystem::path& path) :
+            GenericBsa(path),
             archiveFlags(0),
             fileFlags(0) {
-            //Check if file exists.
-            if (fs::exists(path)) {
-                boost::filesystem::ifstream in(path, ios::binary);
-                in.exceptions(ios::failbit | ios::badbit | ios::eofbit);  //Causes ifstream::failure to be thrown if problem is encountered.
+            boost::filesystem::ifstream in(path, ios::binary);
+            in.exceptions(ios::failbit | ios::badbit | ios::eofbit);
 
-                Header header;
-                in.seekg(0, ios_base::beg);
-                in.read((char*)&header, sizeof(Header));
+            Header header;
+            in.seekg(0, ios_base::beg);
+            in.read((char*)&header, sizeof(Header));
 
-                if ((header.version != BSA_VERSION_TES4 && header.version != BSA_VERSION_TES5) || header.offset != BSA_FOLDER_RECORD_OFFSET)
-                    throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
+            if ((header.version != BSA_VERSION_TES4 && header.version != BSA_VERSION_TES5) || header.offset != BSA_FOLDER_RECORD_OFFSET)
+                throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
 
-                //Now we get to the real meat of the file.
-                //Folder records are followed by file records in blocks by folder name, followed by file names.
-                //File records and file names have the same ordering.
-                FolderRecord * folderRecords;
-                uint8_t * fileRecords;
-                uint8_t * fileNames;    //A list of null-terminated filenames, one after another.
-                uint32_t fileRecordsSize =
-                    header.folderCount + //Folder name string length (in 1 byte).
-                    header.totalFolderNameLength + //Total length of folder name strings.
-                    sizeof(FileRecord) * header.fileCount;  //Total size of all file records.
-                try {
-                    folderRecords = new FolderRecord[header.folderCount];
-                    in.read((char*)folderRecords, sizeof(FolderRecord) * header.folderCount);
+            //Now we get to the real meat of the file.
+            //Folder records are followed by file records in blocks by folder name, followed by file names.
+            //File records and file names have the same ordering.
+            vector<FolderRecord> folderRecords(header.folderCount);
+            uint8_t * fileRecords;
+            uint8_t * fileNames;    //A list of null-terminated filenames, one after another.
+            uint32_t fileRecordsSize =
+                header.folderCount + //Folder name string length (in 1 byte).
+                header.totalFolderNameLength + //Total length of folder name strings.
+                sizeof(FileRecord) * header.fileCount;  //Total size of all file records.
+            try {
+                in.read(reinterpret_cast<char*>(&folderRecords[0]), sizeof(FolderRecord) * header.folderCount);
 
-                    fileRecords = new uint8_t[fileRecordsSize];
-                    in.read((char*)fileRecords, sizeof(uint8_t) * fileRecordsSize);
+                fileRecords = new uint8_t[fileRecordsSize];
+                in.read(reinterpret_cast<char*>(fileRecords), sizeof(uint8_t) * fileRecordsSize);
 
-                    fileNames = new uint8_t[header.totalFileNameLength];
-                    in.read((char*)fileNames, sizeof(uint8_t) * header.totalFileNameLength);
-                }
-                catch (bad_alloc& e) {
-                    throw error(LIBBSA_ERROR_NO_MEM, e.what());
-                }
-
-                in.close(); //No longer need the file open.
-
-                /* Loop through the folder records, for each folder looking up the file records associated with it,
-                and the filenames associated with those records. */
-                uint32_t fileNameListPos = 0;
-                uint32_t startOfFileRecords = sizeof(Header) + sizeof(FolderRecord) * header.folderCount;
-                for (uint32_t i = 0; i < header.folderCount; i++) {
-                    /* folderRecords[i].count gives the number of file records associated with this folder.
-                        folderRecords[i].offset gives the offset to the file records associated with this folder,
-                        from the beginning of the file, plus the total filenames length.
-                        folderRecords[i].hash can be discarded. */
-
-                    folderRecords[i].offset -= header.totalFileNameLength + startOfFileRecords;  //Get rid of this first.
-
-                    //Need to get folder name to add before file name in internal data store.
-                    uint8_t folderNameLength = *(fileRecords + folderRecords[i].offset) - 1;
-                    string folderName = ToUTF8(string((char*)(fileRecords + folderRecords[i].offset + 1), folderNameLength));
-
-                    //Now loop through file records for this folder record.
-                    uint32_t startOfFolderFileRecords = folderRecords[i].offset + folderNameLength + 2;
-                    for (uint32_t j = 0; j < folderRecords[i].count; j++) {
-                        BsaAsset fileData;
-                        FileRecord fr = *(FileRecord*)(fileRecords + startOfFolderFileRecords + j * sizeof(FileRecord));
-                        fileData.hash = fr.nameHash;
-                        fileData.size = fr.size;
-                        fileData.offset = fr.offset;
-
-                        //Now we need to build the file path. First: file name.
-                        char * filenameStart = (char*)(fileNames + fileNameListPos);
-                        //Find position of null pointer.
-                        char * nptr = strchr(filenameStart, '\0');
-                        if (nptr == NULL)
-                            throw error(LIBBSA_ERROR_PARSE_FAIL, "Structure of \"" + path.string() + "\" is invalid.");
-
-                        fileData.path += ToUTF8(string(filenameStart, nptr - filenameStart));
-                        fileNameListPos += fileData.path.length() + 1;
-
-                        if (!folderName.empty())
-                            fileData.path = folderName + '\\' + fileData.path;
-
-                        //Finally, add file path and object to list.
-                        assets.push_back(fileData);
-                    }
-                }
-
-                //Record the file and archive flags.
-                fileFlags = header.fileFlags;
-                archiveFlags = header.archiveFlags;
-
-                delete[] folderRecords;
-                delete[] fileRecords;
-                delete[] fileNames;
+                fileNames = new uint8_t[header.totalFileNameLength];
+                in.read(reinterpret_cast<char*>(fileNames), sizeof(uint8_t) * header.totalFileNameLength);
             }
+            catch (bad_alloc& e) {
+                throw error(LIBBSA_ERROR_NO_MEM, e.what());
+            }
+
+            in.close(); //No longer need the file open.
+
+            /* Loop through the folder records, for each folder looking up the file records associated with it,
+            and the filenames associated with those records. */
+            uint32_t fileNameListPos = 0;
+            const uint32_t folderRecordOffsetBaseline = sizeof(Header)
+                + sizeof(FolderRecord) * header.folderCount
+                + header.totalFileNameLength;
+            for (auto& folderRecord : folderRecords) {
+                folderRecord.offset -= folderRecordOffsetBaseline;
+
+                //Need to get folder name to add before file name in internal data store.
+                string folderName = getFolderName(fileRecords, folderRecord.offset);
+
+                //Now loop through file records for this folder record.
+                uint32_t startOfFolderFileRecords = folderRecord.offset + folderName.length() + 2;
+                for (uint32_t i = 0; i < folderRecord.count; i++) {
+                    uint8_t * fileRecordOffset = fileRecords + startOfFolderFileRecords + i * sizeof(FileRecord);
+                    FileRecord fileRecord = *reinterpret_cast<FileRecord*>(fileRecordOffset);
+
+                    BsaAsset fileData;
+                    fileData.hash = fileRecord.nameHash;
+                    fileData.size = fileRecord.size;
+                    fileData.offset = fileRecord.offset;
+
+                    if (!folderName.empty())
+                        fileData.path = folderName + '\\';
+
+                    fileData.path += getFileName(fileNames, fileNameListPos);
+                    fileNameListPos += fileData.path.length() + 1;
+
+                    //Finally, store file data.
+                    assets.push_back(fileData);
+                }
+            }
+
+            //Record the file and archive flags.
+            fileFlags = header.fileFlags;
+            archiveFlags = header.archiveFlags;
+
+            delete[] fileRecords;
+            delete[] fileNames;
         }
 
         void BSA::Save(boost::filesystem::path& path, const uint32_t version, const uint32_t compression) {
-                    //Version and compression have been validated.
-
             if (fs::exists(path))
                 throw error(LIBBSA_ERROR_INVALID_ARGS, path.string() + " already exists");
 
@@ -400,6 +384,24 @@ namespace libbsa {
             delete[] data;
 
             return make_pair(uncompressedData, uncompressedSize);
+        }
+
+        std::string BSA::getFolderName(const uint8_t * fileRecords, uint32_t folderOffset) {
+            const char * folderName = reinterpret_cast<const char*>(fileRecords + folderOffset + 1);
+            uint8_t folderNameLength = *(fileRecords + folderOffset) - 1;
+
+            return ToUTF8(string(folderName, folderNameLength));
+        }
+
+        std::string BSA::getFileName(const uint8_t * fileNames, uint32_t offset) {
+            const char * filename = reinterpret_cast<const char*>(fileNames + offset);
+
+            //Find position of null character.
+            char * nullTerminatorPos = strchr(const_cast<char*>(filename), '\0');
+            if (nullTerminatorPos == NULL)
+                throw error(LIBBSA_ERROR_PARSE_FAIL, "String at " + to_string(*(size_t*)filename) + "is not null terminated.");
+
+            return ToUTF8(string(filename, nullTerminatorPos - filename));
         }
 
         uint32_t BSA::HashString(const std::string& str) {
