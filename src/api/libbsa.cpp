@@ -26,6 +26,7 @@
 #include "genericbsa.h"
 #include "tes3bsa.h"
 #include "tes4bsa.h"
+#include "ssebsa.h"
 #include "error.h"
 
 #include <bitset>
@@ -67,6 +68,7 @@ const unsigned int LIBBSA_RETURN_MAX = LIBBSA_ERROR_PARSE_FAIL;
 const unsigned int LIBBSA_VERSION_TES3 = 0x00000001;
 const unsigned int LIBBSA_VERSION_TES4 = 0x00000002;
 const unsigned int LIBBSA_VERSION_TES5 = 0x00000004;
+const unsigned int LIBBSA_VERSION_SSE  = 0x00000005;
 /* Use only one compression flag. */
 const unsigned int LIBBSA_COMPRESS_LEVEL_0 = 0x00000010;
 const unsigned int LIBBSA_COMPRESS_LEVEL_1 = 0x00000020;
@@ -173,7 +175,7 @@ LIBBSA unsigned int bsa_save(bsa_handle bh,
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Morrowind BSAs cannot be compressed.");
 
     //Check that the version flag is valid.
-    std::bitset<3> version(flags & (LIBBSA_VERSION_TES3 | LIBBSA_VERSION_TES4 | LIBBSA_VERSION_TES5));
+    std::bitset<3> version(flags & (LIBBSA_VERSION_TES3 | LIBBSA_VERSION_TES4 | LIBBSA_VERSION_TES5 | LIBBSA_VERSION_SSE));
     if (version.none())
         return c_error(LIBBSA_ERROR_INVALID_ARGS, "Must specify one version.");
     if (version.count() > 1)

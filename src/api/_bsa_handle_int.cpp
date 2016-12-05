@@ -24,6 +24,7 @@
 #include "_bsa_handle_int.h"
 #include "tes3bsa.h"
 #include "tes4bsa.h"
+#include "ssebsa.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -34,6 +35,8 @@ _bsa_handle_int::_bsa_handle_int(const boost::filesystem::path& path) :
     extAssetsNum(0) {
     if (tes3::BSA::IsBSA(path))
         bsa = new tes3::BSA(path);
+		else if (sse::BSA::IsBSA(pathc))
+        bsa = new sse::BSA(pathc);
     else
         bsa = new tes4::BSA(path);
 }
