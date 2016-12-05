@@ -35,7 +35,7 @@ _bsa_handle_int::_bsa_handle_int(const boost::filesystem::path& path) :
     extAssetsNum(0) {
     if (tes3::BSA::IsBSA(path))
         bsa = new tes3::BSA(path);
-		else if (sse::BSA::IsBSA(path))
+    else if (sse::BSA::IsBSA(path))
         bsa = new sse::BSA(path);
     else
         bsa = new tes4::BSA(path);
