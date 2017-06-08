@@ -100,8 +100,9 @@ namespace libbsa {
                     if (!folderName.empty())
                         fileData.path = folderName + '\\';
 
-                    fileData.path += getFileName(fileNames, fileNameListPos);
-                    fileNameListPos += fileData.path.length() + 1;
+                    std::string filename = getFileName(fileNames, fileNameListPos);
+                    fileData.path += filename;
+                    fileNameListPos += filename.length() + 1;
 
                     //Finally, store file data.
                     assets.push_back(fileData);
