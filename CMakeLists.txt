@@ -17,7 +17,7 @@ option(PROJECT_STATIC_RUNTIME "Build with static runtime libs (/MT)" ON)
 
 ExternalProject_Add(zlib
                     PREFIX "external"
-                    URL "http://zlib.net/zlib-1.2.8.tar.gz"
+                    URL "https://zlib.net/zlib-1.2.11.tar.gz"
                     INSTALL_COMMAND "")
 ExternalProject_Get_Property(zlib SOURCE_DIR BINARY_DIR)
 set (ZLIB_INCLUDE_DIRS ${SOURCE_DIR} ${BINARY_DIR})
