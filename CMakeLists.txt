@@ -53,7 +53,8 @@ set (PROJECT_SRC "${CMAKE_SOURCE_DIR}/src/api/_bsa_handle_int.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/genericbsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/libbsa.cpp"
                  "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.cpp"
-                 "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.cpp")
+                 "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.cpp"
+                 "${CMAKE_SOURCE_DIR}/src/api/ssebsa.cpp")
 
 set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/libbsa/libbsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/_bsa_handle_int.h"
@@ -61,7 +62,8 @@ set (PROJECT_HEADERS "${CMAKE_SOURCE_DIR}/include/libbsa/libbsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/error.h"
                      "${CMAKE_SOURCE_DIR}/src/api/genericbsa.h"
                      "${CMAKE_SOURCE_DIR}/src/api/tes3bsa.h"
-                     "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.h")
+                     "${CMAKE_SOURCE_DIR}/src/api/tes4bsa.h"
+                     "${CMAKE_SOURCE_DIR}/src/api/ssebsa.h")
 
 set (TEST_SRC "${CMAKE_SOURCE_DIR}/src/test/main.cpp")
 
